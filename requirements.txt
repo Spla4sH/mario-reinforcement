@@ -1,0 +1,7 @@
+torch
+torchvision
+gym-super-mario-bros==7.4.0
+nes-py
+numpy
+opencv-python
+matplotlib
