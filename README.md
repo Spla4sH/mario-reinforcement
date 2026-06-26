@@ -53,23 +53,47 @@ pip install -r requirements.txt
 
 # Training starten (öffnet Live-Spielfenster)
 python train.py
+
+# Kurzer Probelauf (z. B. zum Testen), optional ohne Fenster
+python train.py --episodes 300
+python train.py --episodes 300 --no-render
 ```
 
 **Voraussetzungen:**
 - Python 3.10+
 - NVIDIA GPU mit CUDA empfohlen (CPU funktioniert, aber deutlich langsamer)
 
+> Erster Probelauf? Folge der Checkliste in [TESTLAUF.md](TESTLAUF.md).
+
 ## Projektstruktur
 
 ```
 mario-reinforcement/
 ├── train.py          # Hauptskript - Training mit Live-Anzeige
+├── play.py           # Trainierten Agenten greedy zuschauen (Originalbild)
 ├── agent.py          # Double DQN Agent + Replay Memory
 ├── model.py          # CNN-Architektur
 ├── wrappers.py       # Bildvorverarbeitung & Environment-Wrapper
+├── metrics.py        # CSV-Logging der Trainingsmetriken
+├── plot.py           # Graphen aus den Metriken erzeugen
 ├── config.py         # Hyperparameter
 └── requirements.txt
 ```
+
+## Zuschauen & Auswerten
+
+```bash
+# Einem trainierten Agenten live im Original-Spielbild zuschauen (kein Training)
+python play.py --episodes 5
+
+# Graphen aus der neuesten Trainings-CSV erzeugen (logs/ -> plots/)
+python plot.py
+```
+
+Während des Trainings werden alle Metriken pro Episode nach `logs/run_*.csv`
+geschrieben und bei jedem Checkpoint automatisch als Graph nach `plots/` geplottet.
+Die ROM ist im Paket `gym-super-mario-bros` enthalten – es muss nichts separat
+heruntergeladen werden.
 
 ## Konfiguration
 
@@ -88,9 +112,10 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] Double DQN Agent
 - [x] Live-Rendering des Original-Spiels
 - [x] Checkpoint-System (Pause & Fortsetzen)
+- [x] Trainingsmetriken & Graphen
+- [x] Wiedergabe-Modus für trainierte Agenten (`play.py`)
 - [ ] Level 1-1 konsistent abschließen
 - [ ] Alle Welten durchspielen
-- [ ] Trainingsmetriken & Graphen
 - [ ] Vortrainiertes Modell bereitstellen
 
 ## Technologien
@@ -98,3 +123,10 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [gym-super-mario-bros](https://github.com/Kautenja/gym-super-mario-bros) - NES-Emulator als Gym-Umgebung
 - [PyTorch](https://pytorch.org/) - Neuronales Netz & Training
 - [OpenCV](https://opencv.org/) - Bildvorverarbeitung
+
+## Entwicklung
+
+Die Architektur- und Design-Entscheidungen (Double DQN, Reward-Strategie, Roadmap)
+stammen von mir. Die Umsetzung entstand AI-assistiert mit [Claude Code](https://claude.com/claude-code)
+als Pair-Programmer – entsprechende Beiträge sind in der Git-History per
+`Co-Authored-By` ausgewiesen.

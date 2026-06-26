@@ -72,18 +72,13 @@ def create_env(world=1, stage=1, render=True):
     Das Original-Spielbild wird im Fenster angezeigt (render=True),
     während das Netz intern verkleinerte Graustufen-Frames bekommt.
     """
-    from nes_py.nes_env import NESEnv
     import gym_super_mario_bros
     from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
-
-    # JoypadSpace importieren
     from nes_py.wrappers import JoypadSpace
 
+    # Suffix -v0 = Originalgrafik des NES-Spiels (ROM ist im Paket enthalten).
     env_id = f"SuperMarioBros-{world}-{stage}-v0"
-    if render:
-        env = gym_super_mario_bros.make(env_id, apply_api_compatibility=False)
-    else:
-        env = gym_super_mario_bros.make(env_id, apply_api_compatibility=False)
+    env = gym_super_mario_bros.make(env_id, apply_api_compatibility=False)
 
     # Vereinfachte Aktionen: SIMPLE_MOVEMENT hat 7 Aktionen
     # [['NOOP'], ['right'], ['right', 'A'], ['right', 'B'], ['right', 'A', 'B'], ['A'], ['left']]

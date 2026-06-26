@@ -2,4 +2,6 @@ __pycache__/
 *.pyc
 checkpoints/
 *.pt
+logs/
+plots/
 .env

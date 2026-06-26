@@ -60,8 +60,25 @@ class MarioAgent:
         self.epsilon = config.EPSILON_START
         self.step_count = 0
 
+    def act(self, state):
+        """Greedy-Aktion: bestes Q-Wert-Argmax ohne Exploration/Seiteneffekte.
+
+        Geeignet für Evaluation/Wiedergabe (siehe play.py) – verändert weder
+        Epsilon noch step_count.
+        """
+        # State vorbereiten: (H, W, C) -> (1, C, H, W)
+        state_t = (
+            torch.tensor(state, dtype=torch.uint8)
+            .permute(2, 0, 1)
+            .unsqueeze(0)
+            .to(self.device)
+        )
+        with torch.no_grad():
+            q_values = self.online_net(state_t)
+        return q_values.argmax(dim=1).item()
+
     def select_action(self, state):
-        """Wählt eine Aktion mit Epsilon-Greedy-Strategie."""
+        """Wählt eine Aktion mit Epsilon-Greedy-Strategie (fürs Training)."""
         # Epsilon linear abbauen
         self.epsilon = max(
             config.EPSILON_END,
@@ -75,16 +92,7 @@ class MarioAgent:
         if random.random() < self.epsilon:
             return random.randrange(self.num_actions)
 
-        # State vorbereiten: (H, W, C) -> (1, C, H, W)
-        state_t = (
-            torch.tensor(state, dtype=torch.uint8)
-            .permute(2, 0, 1)
-            .unsqueeze(0)
-            .to(self.device)
-        )
-        with torch.no_grad():
-            q_values = self.online_net(state_t)
-        return q_values.argmax(dim=1).item()
+        return self.act(state)
 
     def learn(self):
         """Führt einen Trainingsschritt mit Double DQN durch."""

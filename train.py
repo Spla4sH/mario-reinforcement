@@ -8,6 +8,8 @@ from pathlib import Path
 import config
 from wrappers import create_env
 from agent import MarioAgent
+from metrics import MetricsLogger
+from plot import generate_plots
 
 
 def print_stats(episode, reward, x_pos, best_reward, best_x, epsilon, loss, fps):
@@ -58,74 +60,114 @@ def train():
     best_reward = -float("inf")
     best_x_pos = 0
     recent_rewards = []
+    logger = MetricsLogger()
+    print(f"Metriken werden geloggt nach: {logger.csv_path}")
 
     print("Training startet... Schließe das Spielfenster NICHT!")
+    print("(Mit Strg+C abbrechen – Checkpoint & Graphen werden noch gespeichert.)")
     print("-" * 70)
 
-    for episode in range(1, config.MAX_EPISODES + 1):
-        state = env.reset()
-        total_reward = 0.0
-        last_loss = None
-        steps = 0
-        start_time = time.time()
+    try:
+        for episode in range(1, config.MAX_EPISODES + 1):
+            state = env.reset()
+            total_reward = 0.0
+            loss_sum = 0.0
+            loss_count = 0
+            steps = 0
+            start_time = time.time()
 
-        while True:
-            # Live-Rendering des Original-Spiels
-            if config.RENDER:
-                env.render()
+            while True:
+                # Live-Rendering des Original-Spiels
+                if config.RENDER:
+                    env.render()
 
-            # Aktion wählen und ausführen
-            action = agent.select_action(state)
-            next_state, reward, done, info = env.step(action)
+                # Aktion wählen und ausführen
+                action = agent.select_action(state)
+                next_state, reward, done, info = env.step(action)
 
-            # Erfahrung speichern
-            agent.memory.push(state, action, reward, next_state, done)
+                # Erfahrung speichern
+                agent.memory.push(state, action, reward, next_state, done)
 
-            # Lernen
-            loss = agent.learn()
-            if loss is not None:
-                last_loss = loss
+                # Lernen
+                loss = agent.learn()
+                if loss is not None:
+                    loss_sum += loss
+                    loss_count += 1
 
-            state = next_state
-            total_reward += reward
-            steps += 1
+                state = next_state
+                total_reward += reward
+                steps += 1
 
-            if done:
-                break
+                if done:
+                    break
 
-        # Statistiken
-        elapsed = time.time() - start_time
-        fps = (steps * 4) / elapsed if elapsed > 0 else 0  # *4 wegen SkipFrame
-        x_pos = info.get("x_pos", 0)
+            # Statistiken
+            elapsed = time.time() - start_time
+            fps = (steps * 4) / elapsed if elapsed > 0 else 0  # *4 wegen SkipFrame
+            x_pos = info.get("x_pos", 0)
+            avg_loss = loss_sum / loss_count if loss_count > 0 else None
+            flag_get = info.get("flag_get", False)
 
-        if total_reward > best_reward:
-            best_reward = total_reward
-        if x_pos > best_x_pos:
-            best_x_pos = x_pos
+            if total_reward > best_reward:
+                best_reward = total_reward
+            if x_pos > best_x_pos:
+                best_x_pos = x_pos
 
-        recent_rewards.append(total_reward)
-        if len(recent_rewards) > 100:
-            recent_rewards.pop(0)
+            recent_rewards.append(total_reward)
+            if len(recent_rewards) > 100:
+                recent_rewards.pop(0)
 
-        print_stats(
-            episode, total_reward, x_pos, best_reward, best_x_pos,
-            agent.epsilon, last_loss, fps
-        )
+            print_stats(
+                episode, total_reward, x_pos, best_reward, best_x_pos,
+                agent.epsilon, avg_loss, fps
+            )
+            logger.log_episode(
+                episode, total_reward, x_pos, steps,
+                agent.epsilon, avg_loss, fps, flag_get
+            )
 
-        # Checkpoint speichern
-        if episode % config.SAVE_INTERVAL == 0:
-            agent.save()
-            avg = np.mean(recent_rewards)
-            print(f"  -> Checkpoint gespeichert! Durchschnitt letzte {len(recent_rewards)} Episoden: {avg:.1f}")
+            # Checkpoint speichern + Graphen aktualisieren
+            if episode % config.SAVE_INTERVAL == 0:
+                agent.save()
+                generate_plots(logger.csv_path)
+                avg = np.mean(recent_rewards)
+                print(f"  -> Checkpoint & Graphen gespeichert! Durchschnitt letzte {len(recent_rewards)} Episoden: {avg:.1f}")
 
-        # Level geschafft?
-        if info.get("flag_get", False):
-            print(f"\n  *** LEVEL GESCHAFFT in Episode {episode}! ***\n")
-            agent.save()
+            # Level geschafft?
+            if flag_get:
+                print(f"\n  *** LEVEL GESCHAFFT in Episode {episode}! ***\n")
+                agent.save()
+    except KeyboardInterrupt:
+        print("\nTraining abgebrochen – speichere Checkpoint & Graphen...")
+    finally:
+        agent.save()
+        generate_plots(logger.csv_path)
+        logger.close()
+        env.close()
 
-    env.close()
     print("Training beendet!")
 
 
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Mario-Agent trainieren.")
+    parser.add_argument(
+        "--episodes",
+        type=int,
+        default=None,
+        help="Anzahl Episoden (überschreibt config.MAX_EPISODES, z. B. für einen kurzen Probelauf)",
+    )
+    parser.add_argument(
+        "--no-render",
+        action="store_true",
+        help="Ohne Live-Fenster trainieren (schneller, weniger Ablenkung)",
+    )
+    args = parser.parse_args()
+
+    if args.episodes is not None:
+        config.MAX_EPISODES = args.episodes
+    if args.no_render:
+        config.RENDER = False
+
     train()
