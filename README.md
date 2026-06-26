@@ -118,6 +118,14 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [ ] Alle Welten durchspielen
 - [ ] Vortrainiertes Modell bereitstellen
 
+### Vision / Weiterentwicklung
+
+- [ ] Algorithmus-Upgrade: Double DQN → **PPO** (Stable-Baselines3) für stabileres Training
+- [ ] Generalisierung: zweite Umgebung (Atari) über dieselbe Pixel-Pipeline
+- [ ] **Highlight-Feature** (in Planung – siehe unten)
+
+Detaillierter Fahrplan: [NAECHSTE_SCHRITTE.md](NAECHSTE_SCHRITTE.md).
+
 ## Technologien
 
 - [gym-super-mario-bros](https://github.com/Kautenja/gym-super-mario-bros) - NES-Emulator als Gym-Umgebung
