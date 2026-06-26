@@ -5,3 +5,4 @@ nes-py
 numpy
 opencv-python
 matplotlib
+imageio

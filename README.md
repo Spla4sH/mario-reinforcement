@@ -71,6 +71,7 @@ python train.py --episodes 300 --no-render
 mario-reinforcement/
 ├── train.py          # Hauptskript - Training mit Live-Anzeige
 ├── play.py           # Trainierten Agenten greedy zuschauen (Originalbild)
+├── visualize.py      # KI-Vision-Overlay (Grad-CAM) - was sieht die KI?
 ├── agent.py          # Double DQN Agent + Replay Memory
 ├── model.py          # CNN-Architektur
 ├── wrappers.py       # Bildvorverarbeitung & Environment-Wrapper
@@ -89,6 +90,21 @@ python play.py --episodes 5
 # Graphen aus der neuesten Trainings-CSV erzeugen (logs/ -> plots/)
 python plot.py
 ```
+
+### KI-Vision: Was sieht die KI? (Grad-CAM)
+
+```bash
+# Heatmap-Overlay live anzeigen – rot = wichtig für die gewählte Aktion
+python visualize.py --episodes 2
+
+# Zusätzlich als GIF speichern (z. B. für dieses README)
+python visualize.py --episodes 1 --save vision.gif
+```
+
+Per **Grad-CAM** wird der letzte Convolution-Layer ausgewertet und als Heatmap über
+das Original-Spielbild gelegt. So wird sichtbar, **welche Bildregionen** (Gegner, Lücken,
+Plattformen) die Entscheidung des Netzes gerade antreiben – ein direkter Blick „in den Kopf"
+des Agenten.
 
 Während des Trainings werden alle Metriken pro Episode nach `logs/run_*.csv`
 geschrieben und bei jedem Checkpoint automatisch als Graph nach `plots/` geplottet.
@@ -120,9 +136,9 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 
 ### Vision / Weiterentwicklung
 
+- [x] **KI-Vision-Overlay** (Grad-CAM) – sichtbar machen, worauf das CNN achtet
 - [ ] Algorithmus-Upgrade: Double DQN → **PPO** (Stable-Baselines3) für stabileres Training
 - [ ] Generalisierung: zweite Umgebung (Atari) über dieselbe Pixel-Pipeline
-- [ ] **Highlight-Feature** (in Planung – siehe unten)
 
 Detaillierter Fahrplan: [NAECHSTE_SCHRITTE.md](NAECHSTE_SCHRITTE.md).
 
