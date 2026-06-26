@@ -16,6 +16,14 @@ python play.py --episodes 3
 - ✅ Ja → weiter zu Phase B.
 - ❌ Flach/instabil → zuerst Phase B-Punkt 1+2 (Reward & Decay) angehen, dann erneut testen.
 
+**Vision-GIF fürs README aufnehmen** (sobald ein halbwegs brauchbarer Checkpoint da ist –
+auch ein teiltrainierter Agent gibt schon ein cooles GIF):
+```bash
+python visualize.py --episodes 1 --save vision.gif
+```
+Dann ins README einbinden (`![KI-Vision](vision.gif)`). Nach Phase B nochmal mit dem
+finalen `mario_best.pt` neu aufnehmen für die polierte Version.
+
 ---
 
 ## Phase B — Level 1-1 konsistent lösen
@@ -64,6 +72,39 @@ Aufgaben, nach Hebelwirkung sortiert:
 1. **Weitere Welten/Stages** – mit funktionierendem 1-1 als Basis. Curriculum (1-1 → 1-2 …)
    oder zufällige Stage-Auswahl pro Episode, um Generalisierung zu erzwingen.
 2. **Stärkerer Algorithmus statt anderes Spiel** (siehe unten) – der größere Lerneffekt.
+
+---
+
+## Phase D — Containerisierung & MLOps (Docker / Kubernetes)
+
+Verbindet das RL-Projekt mit deiner aktuellen Docker/K8s-Weiterbildung – **RL + MLOps ist
+eine seltene, gefragte Kombination** und macht das Portfolio rund.
+
+**Ehrliche Einordnung:**
+- **Docker** ist hier *echter* Mehrwert: reproduzierbare Umgebung (CUDA, Deps, Code), das
+  Training läuft headless überall gleich (`train.py --no-render`). Klares Engineering-Signal.
+- **Kubernetes** ist für eine einzelne Hobby-GPU technisch Overkill – aber als **Lern-Showcase
+  legitim und beeindruckend**, wenn richtig gerahmt: Training als **Job**, Checkpoints/Logs auf
+  einem **PersistentVolume**, später **Hyperparameter-Sweeps als parallele Jobs**. Genau diese
+  Sweeps zahlen direkt auf Phase B (Tuning) ein.
+
+**Starter-Artefakte sind bereits im Repo** (zum Studieren angelegt):
+- `Dockerfile` – PyTorch-CUDA-Basis, OpenCV-System-Deps, Standard-CMD = headless Training.
+- `.dockerignore` – hält Checkpoints/Logs/Git aus dem Image.
+- `k8s/train-job.yaml` – kommentierter Job + PVC (GPU-Request, Checkpoints/Logs via `subPath`).
+
+**Schritte:**
+1. Image lokal bauen & testen: `docker build -t mario-rl .` → `docker run --gpus all mario-rl`
+   (kurz mit `--episodes 50` testen).
+2. Image in eine Registry pushen (z. B. GHCR), Image-Name in `k8s/train-job.yaml` anpassen.
+3. Im Cluster: `kubectl apply -f k8s/train-job.yaml`, Logs mit `kubectl logs -f job/mario-train`.
+4. **Ausbaustufe (zahlt auf Phase B ein):** Hyperparameter über Umgebungsvariablen in `config.py`
+   überschreibbar machen (z. B. `LEARNING_RATE`, `EPSILON_DECAY`), dann mehrere Jobs mit
+   unterschiedlichen Werten als **Sweep** starten und die `logs/`-CSVs vergleichen.
+
+> Hinweis: GUI-Features (`play.py`, `visualize.py` mit Live-Fenster) laufen **nicht** im Container –
+> die sind fürs lokale Zuschauen. Im Cluster läuft nur das headless Training. (Headless-GIF-Export
+> wäre möglich, bräuchte aber eine kleine Anpassung in `visualize.py`: das `cv2.imshow` überspringen.)
 
 ---
 

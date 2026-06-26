@@ -1,0 +1,50 @@
+# Kubernetes Job: ein headless Mario-Trainingslauf im Cluster.
+#
+# Voraussetzungen:
+#   - GPU-Nodes + installiertes NVIDIA device plugin (für nvidia.com/gpu)
+#   - Image in einer Registry (Image-Namen unten anpassen)
+#
+# Anwenden:  kubectl apply -f k8s/train-job.yaml
+# Logs:      kubectl logs -f job/mario-train
+# Aufräumen: kubectl delete -f k8s/train-job.yaml
+---
+# Persistenter Speicher für Checkpoints und Logs – überlebt das Ende des Pods.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mario-data
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mario-train
+spec:
+  backoffLimit: 2          # max. 2 Wiederholungen bei Fehler
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: trainer
+          # An deine Registry anpassen (z. B. GHCR):
+          image: ghcr.io/spla4sh/mario-reinforcement:latest
+          args: ["python", "train.py", "--no-render", "--episodes", "2000"]
+          resources:
+            limits:
+              nvidia.com/gpu: 1   # eine GPU anfordern
+          volumeMounts:
+            # Eine PVC, getrennte Unterordner via subPath:
+            - name: data
+              mountPath: /app/checkpoints
+              subPath: checkpoints
+            - name: data
+              mountPath: /app/logs
+              subPath: logs
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: mario-data

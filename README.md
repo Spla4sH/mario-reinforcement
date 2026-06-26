@@ -65,6 +65,20 @@ python train.py --episodes 300 --no-render
 
 > Erster Probelauf? Folge der Checkliste in [TESTLAUF.md](TESTLAUF.md).
 
+### Mit Docker (headless Training)
+
+```bash
+# Image bauen
+docker build -t mario-rl .
+
+# Training im Container starten (GPU durchreichen)
+docker run --gpus all mario-rl python train.py --no-render --episodes 2000
+```
+
+Für den Cluster liegt unter [k8s/](k8s/) ein Kubernetes-`Job` inkl. `PersistentVolumeClaim`
+(GPU-Request, Checkpoints/Logs persistent). Details & Sweep-Ideen in
+[NAECHSTE_SCHRITTE.md](NAECHSTE_SCHRITTE.md) (Phase D).
+
 ## Projektstruktur
 
 ```
@@ -78,6 +92,8 @@ mario-reinforcement/
 ├── metrics.py        # CSV-Logging der Trainingsmetriken
 ├── plot.py           # Graphen aus den Metriken erzeugen
 ├── config.py         # Hyperparameter
+├── Dockerfile        # Headless-Training als Container
+├── k8s/              # Kubernetes Job + PersistentVolume
 └── requirements.txt
 ```
 
@@ -137,8 +153,10 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 ### Vision / Weiterentwicklung
 
 - [x] **KI-Vision-Overlay** (Grad-CAM) – sichtbar machen, worauf das CNN achtet
+- [x] Containerisierung: Docker-Image + Kubernetes-Job für headless Training
 - [ ] Algorithmus-Upgrade: Double DQN → **PPO** (Stable-Baselines3) für stabileres Training
 - [ ] Generalisierung: zweite Umgebung (Atari) über dieselbe Pixel-Pipeline
+- [ ] MLOps-Ausbau: Hyperparameter-Sweeps als parallele K8s-Jobs
 
 Detaillierter Fahrplan: [NAECHSTE_SCHRITTE.md](NAECHSTE_SCHRITTE.md).
 

@@ -1,0 +1,10 @@
+# Nicht ins Image kopieren (kleiner Build-Kontext, keine lokalen Artefakte im Image)
+.git/
+__pycache__/
+*.pyc
+checkpoints/
+logs/
+plots/
+*.pt
+*.gif
+.env
