@@ -92,6 +92,18 @@ Die Tests laufen ohne Emulator/GPU (sie prüfen Replay-Memory, Metriken, Plots,
 Reward-Shaping, Greedy-Eval, Grad-CAM-Logik und die Config) und werden bei jedem
 Push automatisch per [GitHub Actions](.github/workflows/ci.yml) ausgeführt.
 
+### Experiment-Tracking (optional, Weights & Biases)
+
+```bash
+pip install wandb && wandb login
+USE_WANDB=1 python train.py --no-render
+```
+
+Loggt Live-Metriken (Reward, x-Position, Epsilon, Loss) und die Greedy-Eval in ein
+**W&B-Dashboard** – ideal, um Trainingsläufe zu vergleichen und Hyperparameter-Sweeps
+auszuwerten. Ist `wandb` nicht installiert oder `USE_WANDB` nicht gesetzt, läuft das
+Training unverändert ohne Tracking weiter.
+
 ## Projektstruktur
 
 ```
@@ -106,6 +118,7 @@ mario-reinforcement/
 ├── evaluate.py       # Greedy-Evaluation (flag_get-Rate, x-Position)
 ├── metrics.py        # CSV-Logging der Trainingsmetriken
 ├── plot.py           # Graphen aus den Metriken erzeugen
+├── tracking.py       # Optionales W&B-Experiment-Tracking (ausfallsicher)
 ├── config.py         # Hyperparameter (per Env-Variablen überschreibbar)
 ├── tests/            # pytest-Suite
 ├── Dockerfile        # Headless-Training als Container
@@ -173,6 +186,7 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] Containerisierung: Docker-Image + Kubernetes-Job für headless Training
 - [x] Tests + CI (pytest, ruff, GitHub Actions)
 - [x] Reward-Shaping + Greedy-Evaluation (Basis für „1-1 konsistent")
+- [x] Experiment-Tracking mit Weights & Biases (optional)
 - [ ] Algorithmus-Upgrade: Double DQN → **PPO** (Stable-Baselines3) für stabileres Training
 - [ ] Generalisierung: zweite Umgebung (Atari) über dieselbe Pixel-Pipeline
 - [ ] MLOps-Ausbau: Hyperparameter-Sweeps als parallele K8s-Jobs

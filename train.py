@@ -13,6 +13,7 @@ from agent import MarioAgent
 from evaluate import evaluate
 from metrics import MetricsLogger
 from plot import generate_plots
+from tracking import Tracker
 from wrappers import create_env
 
 
@@ -25,15 +26,18 @@ def set_seed(seed):
         torch.cuda.manual_seed_all(seed)
 
 
+# Hyperparameter, die ausgegeben und (falls aktiv) an W&B übergeben werden
+_CONFIG_KEYS = [
+    "WORLD", "STAGE", "SEED", "LEARNING_RATE", "GAMMA", "BATCH_SIZE",
+    "MEMORY_SIZE", "EPSILON_DECAY", "TARGET_UPDATE",
+    "REWARD_SCALE", "REWARD_CLIP", "EVAL_INTERVAL", "EVAL_EPISODES",
+]
+
+
 def print_config():
     """Gibt die effektiven Hyperparameter aus (landet so auch im Log/stdout)."""
-    keys = [
-        "WORLD", "STAGE", "SEED", "LEARNING_RATE", "GAMMA", "BATCH_SIZE",
-        "MEMORY_SIZE", "EPSILON_DECAY", "TARGET_UPDATE",
-        "REWARD_SCALE", "REWARD_CLIP", "EVAL_INTERVAL", "EVAL_EPISODES",
-    ]
     print("Konfiguration:")
-    for key in keys:
+    for key in _CONFIG_KEYS:
         print(f"  {key:14s} = {getattr(config, key)}")
     print()
 
@@ -102,6 +106,14 @@ def train():
     logger = MetricsLogger()
     print(f"Metriken werden geloggt nach: {logger.csv_path}")
 
+    # Optionales W&B-Tracking (ausfallsicher; aktivieren mit USE_WANDB=1)
+    tracker = Tracker(
+        config.USE_WANDB,
+        config_dict={k: getattr(config, k) for k in _CONFIG_KEYS},
+        project=config.WANDB_PROJECT,
+        run_name=logger.run_name,
+    )
+
     print("Training startet... Schließe das Spielfenster NICHT!")
     print("(Mit Strg+C abbrechen – Checkpoint & Graphen werden noch gespeichert.)")
     print("-" * 70)
@@ -164,6 +176,17 @@ def train():
                 episode, total_reward, x_pos, steps,
                 agent.epsilon, avg_loss, fps, flag_get
             )
+            ep_metrics = {
+                "reward": total_reward,
+                "x_pos": x_pos,
+                "steps": steps,
+                "epsilon": agent.epsilon,
+                "fps": fps,
+                "flag_get": int(bool(flag_get)),
+            }
+            if avg_loss is not None:
+                ep_metrics["loss"] = avg_loss
+            tracker.log(ep_metrics, step=episode)
 
             # Checkpoint speichern + Graphen aktualisieren
             if episode % config.SAVE_INTERVAL == 0:
@@ -180,6 +203,15 @@ def train():
                     f"Ø x: {ev['mean_x']:.0f} | max x: {ev['max_x']} | "
                     f"Ø Reward: {ev['mean_reward']:.1f}"
                 )
+                tracker.log(
+                    {
+                        "eval/flag_rate": ev["flag_rate"],
+                        "eval/mean_x": ev["mean_x"],
+                        "eval/max_x": ev["max_x"],
+                        "eval/mean_reward": ev["mean_reward"],
+                    },
+                    step=episode,
+                )
                 if (ev["flag_rate"], ev["mean_x"]) > best_eval:
                     best_eval = (ev["flag_rate"], ev["mean_x"])
                     agent.save(name="mario_best.pt")
@@ -195,6 +227,7 @@ def train():
         agent.save()
         generate_plots(logger.csv_path)
         logger.close()
+        tracker.finish()
         env.close()
 
     print("Training beendet!")

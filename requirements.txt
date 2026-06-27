@@ -6,3 +6,4 @@ numpy
 opencv-python
 matplotlib
 imageio
+wandb  # optional: Experiment-Tracking, nur bei USE_WANDB=1 aktiv

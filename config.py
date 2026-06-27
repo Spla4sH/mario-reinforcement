@@ -25,6 +25,13 @@ def _env_float_or_none(name: str, default: float | None) -> float | None:
     return float(value) if value not in (None, "") else default
 
 
+def _env_bool(name: str, default: bool) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.lower() in ("1", "true", "yes", "on")
+
+
 # Umgebung
 WORLD = _env_int("WORLD", 1)
 STAGE = _env_int("STAGE", 1)
@@ -51,6 +58,10 @@ TARGET_UPDATE = _env_int("TARGET_UPDATE", 10_000)  # Schritte zwischen Target-Up
 SAVE_INTERVAL = _env_int("SAVE_INTERVAL", 50)  # Episoden zwischen Checkpoints
 MAX_EPISODES = _env_int("MAX_EPISODES", 50_000)
 SEED = _env_int("SEED", 42)  # Reproduzierbarkeit (für Sweeps pro Job variieren)
+
+# Experiment-Tracking (optional, siehe tracking.py) – aktivieren mit USE_WANDB=1
+USE_WANDB = _env_bool("USE_WANDB", False)
+WANDB_PROJECT = os.environ.get("WANDB_PROJECT", "mario-rl")
 
 # Greedy-Evaluation (echter Fortschritt ohne Exploration)
 EVAL_INTERVAL = _env_int("EVAL_INTERVAL", 50)  # Episoden zwischen Evaluationen
