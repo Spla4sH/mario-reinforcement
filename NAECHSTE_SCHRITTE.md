@@ -32,6 +32,11 @@ Ziel-Definition **vorab festlegen**, damit „konsistent" messbar ist:
 > **Erfolgskriterium:** In einer Greedy-Evaluation (epsilon=0) erreicht Mario in
 > **≥ 80 % von 20 Episoden** die Flagge (`flag_get`).
 
+> **Bereits im Code vorbereitet** (nur noch nutzen/tunen): Greedy-Eval + Best-Checkpoint
+> (`evaluate.py`, läuft alle `EVAL_INTERVAL` Episoden, speichert `mario_best.pt`),
+> Reward-Shaping (`reward.py` / `RewardWrapper`, via `REWARD_SCALE`/`REWARD_CLIP`),
+> Hyperparameter per Env-Variablen (`config.py`). Nächste Woche bleibt v. a. **Tuning**.
+
 Aufgaben, nach Hebelwirkung sortiert:
 
 ### 1. Greedy-Evaluation + Erfolgsmetrik (zuerst – ohne Messung kein Tuning)

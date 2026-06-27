@@ -1,10 +1,14 @@
 """Environment-Wrapper für Bildvorverarbeitung."""
 
-import cv2
-import numpy as np
-import gym
-from gym.spaces import Box
 from collections import deque
+
+import cv2
+import gym
+import numpy as np
+from gym.spaces import Box
+
+import config
+from reward import shape_reward
 
 
 class SkipFrame(gym.Wrapper):
@@ -22,6 +26,18 @@ class SkipFrame(gym.Wrapper):
             if done:
                 break
         return obs, total_reward, done, info
+
+
+class RewardWrapper(gym.RewardWrapper):
+    """Skaliert und/oder beschneidet die Belohnung (siehe reward.shape_reward)."""
+
+    def __init__(self, env, scale=1.0, clip=None):
+        super().__init__(env)
+        self._scale = scale
+        self._clip = clip
+
+    def reward(self, reward):
+        return shape_reward(reward, self._scale, self._clip)
 
 
 class GrayScaleResize(gym.ObservationWrapper):
@@ -86,7 +102,9 @@ def create_env(world=1, stage=1, render=True):
 
     # Wrapper anwenden
     env = SkipFrame(env, skip=4)
-    env = GrayScaleResize(env, size=84)
-    env = FrameStack(env, num_stack=4)
+    # Reward-Shaping (Default scale=1.0/clip=None => unverändert; per config/Env tunebar)
+    env = RewardWrapper(env, scale=config.REWARD_SCALE, clip=config.REWARD_CLIP)
+    env = GrayScaleResize(env, size=config.FRAME_SIZE)
+    env = FrameStack(env, num_stack=config.FRAME_STACK)
 
     return env

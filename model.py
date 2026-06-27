@@ -1,6 +1,5 @@
 """Convolutional Neural Network für den DQN-Agenten."""
 
-import torch
 import torch.nn as nn
 
 

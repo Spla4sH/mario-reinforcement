@@ -4,6 +4,7 @@
 
 Eine KI lernt Super Mario Bros zu spielen - mit Live-Fenster zum Zuschauen!
 
+![CI](https://github.com/Spla4sH/mario-reinforcement/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/Python-3.10+-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red)
 ![Status](https://img.shields.io/badge/Status-Work%20in%20Progress-yellow)
@@ -79,6 +80,18 @@ Für den Cluster liegt unter [k8s/](k8s/) ein Kubernetes-`Job` inkl. `Persistent
 (GPU-Request, Checkpoints/Logs persistent). Details & Sweep-Ideen in
 [NAECHSTE_SCHRITTE.md](NAECHSTE_SCHRITTE.md) (Phase D).
 
+### Tests & Linting
+
+```bash
+pip install -r requirements-dev.txt
+ruff check .   # Linting
+pytest         # Tests
+```
+
+Die Tests laufen ohne Emulator/GPU (sie prüfen Replay-Memory, Metriken, Plots,
+Reward-Shaping, Greedy-Eval, Grad-CAM-Logik und die Config) und werden bei jedem
+Push automatisch per [GitHub Actions](.github/workflows/ci.yml) ausgeführt.
+
 ## Projektstruktur
 
 ```
@@ -89,11 +102,15 @@ mario-reinforcement/
 ├── agent.py          # Double DQN Agent + Replay Memory
 ├── model.py          # CNN-Architektur
 ├── wrappers.py       # Bildvorverarbeitung & Environment-Wrapper
+├── reward.py         # Reward-Shaping (Skalierung/Clipping)
+├── evaluate.py       # Greedy-Evaluation (flag_get-Rate, x-Position)
 ├── metrics.py        # CSV-Logging der Trainingsmetriken
 ├── plot.py           # Graphen aus den Metriken erzeugen
-├── config.py         # Hyperparameter
+├── config.py         # Hyperparameter (per Env-Variablen überschreibbar)
+├── tests/            # pytest-Suite
 ├── Dockerfile        # Headless-Training als Container
 ├── k8s/              # Kubernetes Job + PersistentVolume
+├── .github/          # GitHub-Actions-CI (Lint + Tests)
 └── requirements.txt
 ```
 
@@ -154,6 +171,8 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 
 - [x] **KI-Vision-Overlay** (Grad-CAM) – sichtbar machen, worauf das CNN achtet
 - [x] Containerisierung: Docker-Image + Kubernetes-Job für headless Training
+- [x] Tests + CI (pytest, ruff, GitHub Actions)
+- [x] Reward-Shaping + Greedy-Evaluation (Basis für „1-1 konsistent")
 - [ ] Algorithmus-Upgrade: Double DQN → **PPO** (Stable-Baselines3) für stabileres Training
 - [ ] Generalisierung: zweite Umgebung (Atari) über dieselbe Pixel-Pipeline
 - [ ] MLOps-Ausbau: Hyperparameter-Sweeps als parallele K8s-Jobs

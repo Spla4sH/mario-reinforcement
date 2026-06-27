@@ -1,0 +1,3 @@
+# Entwicklungs-/CI-Abhängigkeiten (zusätzlich zu requirements.txt)
+pytest
+ruff

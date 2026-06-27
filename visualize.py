@@ -1,22 +1,24 @@
 """KI-Vision-Overlay: zeigt per Grad-CAM, worauf das CNN beim Spielen achtet.
 
 Legt eine Heatmap (rot = wichtig für die gewählte Aktion) über das Original-
-Spielbild. Optional als GIF speichern – ideal fürs README.
+Spielbild. Optional als GIF speichern – ideal fürs README. Mit ``--no-window``
+läuft es auch headless (z. B. im Container) und exportiert nur das GIF.
 
 Aufruf:
-    python visualize.py [--episodes N] [--checkpoint pfad] [--save out.gif] [--scale 2]
+    python visualize.py [--episodes N] [--checkpoint pfad] [--save out.gif]
+                        [--scale 2] [--no-window]
 """
+
+from __future__ import annotations
 
 import argparse
 from pathlib import Path
 
-import cv2
 import numpy as np
 import torch
 import torch.nn.functional as F
 
 import config
-from wrappers import create_env
 from agent import MarioAgent
 
 
@@ -25,22 +27,25 @@ class GradCAM:
 
     Liefert pro Frame die gewählte (greedy) Aktion und eine normalisierte
     Heatmap, die zeigt, welche Bildregionen den Q-Wert dieser Aktion treiben.
+
+    Hinweis: bewusst frei von OpenCV-Importen, damit die Kernlogik ohne
+    ``cv2`` (z. B. in Tests) nutzbar ist.
     """
 
-    def __init__(self, net, target_layer):
+    def __init__(self, net: torch.nn.Module, target_layer: torch.nn.Module) -> None:
         self.net = net
-        self._activations = None
-        self._gradients = None
+        self._activations: torch.Tensor | None = None
+        self._gradients: torch.Tensor | None = None
         target_layer.register_forward_hook(self._save_activation)
         target_layer.register_full_backward_hook(self._save_gradient)
 
-    def _save_activation(self, module, inp, out):
+    def _save_activation(self, module, inp, out) -> None:
         self._activations = out
 
-    def _save_gradient(self, module, grad_in, grad_out):
+    def _save_gradient(self, module, grad_in, grad_out) -> None:
         self._gradients = grad_out[0]
 
-    def __call__(self, state_t):
+    def __call__(self, state_t: torch.Tensor) -> tuple[int, np.ndarray]:
         """state_t: (1, C, H, W) uint8. Gibt (action, cam[h,w] float32) zurück."""
         q_values = self.net(state_t)
         action = int(q_values.argmax(dim=1).item())
@@ -55,8 +60,10 @@ class GradCAM:
         return action, cam.detach().cpu().numpy()
 
 
-def make_overlay(rgb_frame, cam, scale=2, alpha=0.5):
+def make_overlay(rgb_frame: np.ndarray, cam: np.ndarray, scale: int = 2, alpha: float = 0.5) -> np.ndarray:
     """Legt die Grad-CAM-Heatmap über das RGB-Originalbild (Rückgabe in RGB)."""
+    import cv2  # lazy: nur nötig, wenn wirklich gerendert wird
+
     h, w = rgb_frame.shape[:2]
     cam_resized = cv2.resize(cam, (w, h), interpolation=cv2.INTER_CUBIC)
     cam_uint8 = np.uint8(np.clip(cam_resized, 0, 1) * 255)
@@ -71,12 +78,22 @@ def make_overlay(rgb_frame, cam, scale=2, alpha=0.5):
     return overlay
 
 
-def visualize(episodes=2, checkpoint="checkpoints/mario_agent.pt", save=None, scale=2):
+def visualize(
+    episodes: int = 2,
+    checkpoint: str = "checkpoints/mario_agent.pt",
+    save: str | None = None,
+    scale: int = 2,
+    show_window: bool = True,
+) -> None:
     checkpoint_path = Path(checkpoint)
     if not checkpoint_path.exists():
         print(f"Kein Checkpoint gefunden unter: {checkpoint_path}")
         print("Trainiere zuerst mit 'python train.py'.")
         return
+
+    import cv2  # lazy: nur für Anzeige/Overlay nötig
+
+    from wrappers import create_env  # lazy: zieht cv2/gym nach sich
 
     env = create_env(world=config.WORLD, stage=config.STAGE, render=False)
     agent = MarioAgent(env.action_space.n)
@@ -87,7 +104,10 @@ def visualize(episodes=2, checkpoint="checkpoints/mario_agent.pt", save=None, sc
     cam = GradCAM(agent.online_net, agent.online_net.features[4])
 
     frames = []  # für optionales GIF
-    print("Fenster mit Vision-Overlay öffnet sich. Beenden mit 'q'.")
+    if show_window:
+        print("Fenster mit Vision-Overlay öffnet sich. Beenden mit 'q'.")
+    else:
+        print("Headless-Modus: kein Fenster, sammle Frames für GIF.")
 
     for episode in range(1, episodes + 1):
         state = env.reset()
@@ -106,15 +126,16 @@ def visualize(episodes=2, checkpoint="checkpoints/mario_agent.pt", save=None, sc
             if save:
                 frames.append(overlay)
 
-            cv2.imshow(
-                "Mario - KI-Vision (Grad-CAM)",
-                cv2.cvtColor(overlay, cv2.COLOR_RGB2BGR),
-            )
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                env.close()
-                cv2.destroyAllWindows()
-                _save_gif(frames, save)
-                return
+            if show_window:
+                cv2.imshow(
+                    "Mario - KI-Vision (Grad-CAM)",
+                    cv2.cvtColor(overlay, cv2.COLOR_RGB2BGR),
+                )
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    env.close()
+                    cv2.destroyAllWindows()
+                    _save_gif(frames, save)
+                    return
 
             state, _, done, info = env.step(action)
             if done:
@@ -123,12 +144,13 @@ def visualize(episodes=2, checkpoint="checkpoints/mario_agent.pt", save=None, sc
         print(f"Episode {episode}: Position {info.get('x_pos', 0)}")
 
     env.close()
-    cv2.destroyAllWindows()
+    if show_window:
+        cv2.destroyAllWindows()
     _save_gif(frames, save)
     print("Fertig.")
 
 
-def _save_gif(frames, save):
+def _save_gif(frames: list, save: str | None) -> None:
     if not save or not frames:
         return
     try:
@@ -140,14 +162,19 @@ def _save_gif(frames, save):
     print(f"GIF gespeichert: {save} ({len(frames)} Frames)")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="KI-Vision-Overlay (Grad-CAM).")
     parser.add_argument("--episodes", type=int, default=2)
     parser.add_argument("--checkpoint", type=str, default="checkpoints/mario_agent.pt")
     parser.add_argument("--save", type=str, default=None, help="Pfad für ein GIF, z. B. vision.gif")
     parser.add_argument("--scale", type=int, default=2, help="Vergrößerungsfaktor der Anzeige")
+    parser.add_argument(
+        "--no-window",
+        action="store_true",
+        help="Ohne Live-Fenster (headless, z. B. im Container) – nur GIF-Export",
+    )
     args = parser.parse_args()
-    visualize(args.episodes, args.checkpoint, args.save, args.scale)
+    visualize(args.episodes, args.checkpoint, args.save, args.scale, show_window=not args.no_window)
 
 
 if __name__ == "__main__":

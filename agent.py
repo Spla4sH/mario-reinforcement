@@ -145,8 +145,8 @@ class MarioAgent:
 
         return loss.item()
 
-    def save(self, path="checkpoints"):
-        """Speichert den Agenten."""
+    def save(self, path="checkpoints", name="mario_agent.pt"):
+        """Speichert den Agenten unter ``path/name``."""
         save_dir = Path(path)
         save_dir.mkdir(exist_ok=True)
         torch.save(
@@ -157,7 +157,7 @@ class MarioAgent:
                 "epsilon": self.epsilon,
                 "step_count": self.step_count,
             },
-            save_dir / "mario_agent.pt",
+            save_dir / name,
         )
 
     def load(self, path="checkpoints/mario_agent.pt"):

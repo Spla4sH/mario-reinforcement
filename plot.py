@@ -11,11 +11,11 @@ import csv
 import glob
 from pathlib import Path
 
-import numpy as np
 import matplotlib
+import numpy as np
 
 matplotlib.use("Agg")  # Kein GUI-Backend nötig, wir speichern nur PNGs
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # noqa: E402  (muss nach matplotlib.use stehen)
 
 
 def latest_csv(log_dir="logs"):

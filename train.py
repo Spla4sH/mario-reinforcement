@@ -1,15 +1,17 @@
 """Hauptskript: Trainiert den Mario-Agenten mit Live-Anzeige."""
 
-import sys
+import argparse
 import time
-import numpy as np
 from pathlib import Path
 
+import numpy as np
+
 import config
-from wrappers import create_env
 from agent import MarioAgent
+from evaluate import evaluate
 from metrics import MetricsLogger
 from plot import generate_plots
+from wrappers import create_env
 
 
 def print_stats(episode, reward, x_pos, best_reward, best_x, epsilon, loss, fps):
@@ -59,6 +61,7 @@ def train():
     # Tracking
     best_reward = -float("inf")
     best_x_pos = 0
+    best_eval = (0.0, 0.0)  # (flag_rate, mean_x) des bisher besten Modells
     recent_rewards = []
     logger = MetricsLogger()
     print(f"Metriken werden geloggt nach: {logger.csv_path}")
@@ -133,6 +136,19 @@ def train():
                 avg = np.mean(recent_rewards)
                 print(f"  -> Checkpoint & Graphen gespeichert! Durchschnitt letzte {len(recent_rewards)} Episoden: {avg:.1f}")
 
+            # Greedy-Evaluation: echter Fortschritt ohne Exploration -> bestes Modell sichern
+            if episode % config.EVAL_INTERVAL == 0:
+                ev = evaluate(agent, env, config.EVAL_EPISODES)
+                print(
+                    f"  [Eval] Flagge: {ev['flag_rate'] * 100:.0f}% | "
+                    f"Ø x: {ev['mean_x']:.0f} | max x: {ev['max_x']} | "
+                    f"Ø Reward: {ev['mean_reward']:.1f}"
+                )
+                if (ev["flag_rate"], ev["mean_x"]) > best_eval:
+                    best_eval = (ev["flag_rate"], ev["mean_x"])
+                    agent.save(name="mario_best.pt")
+                    print("  -> Neues bestes Modell gespeichert (mario_best.pt)")
+
             # Level geschafft?
             if flag_get:
                 print(f"\n  *** LEVEL GESCHAFFT in Episode {episode}! ***\n")
@@ -149,8 +165,6 @@ def train():
 
 
 if __name__ == "__main__":
-    import argparse
-
     parser = argparse.ArgumentParser(description="Mario-Agent trainieren.")
     parser.add_argument(
         "--episodes",
