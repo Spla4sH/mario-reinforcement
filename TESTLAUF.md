@@ -13,6 +13,18 @@ python -c "import torch; print('CUDA:', torch.cuda.is_available())"
 ```
 - [ ] `CUDA: True` → läuft auf der GPU (bei `False` trainiert es auf der CPU, viel langsamer)
 
+### ⚠️ Bekannte Stolperfalle beim ersten Lauf (gym-Version)
+Der Code nutzt die **alte gym-API** (4er-Tupel `obs, reward, done, info`; `reset()` gibt nur `obs`).
+Ein frischer Install (besonders im **Docker-Build**) zieht evtl. ein neueres gym (≥0.26) und crasht
+dann z. B. mit „too many values to unpack" oder „tuple has no attribute ...".
+
+**Falls das passiert:** eine alte-API-Version pinnen und neu installieren:
+```bash
+pip install "gym==0.25.2"
+```
+Wenn dein lokales Env schon läuft, ist nichts zu tun – relevant v. a. für frische Installs/Container.
+Bei Bedarf den funktionierenden Versionsstand danach mit `pip freeze > requirements.lock` festhalten.
+
 ## 1. Kurzer Probelauf starten
 ```bash
 python train.py --episodes 300

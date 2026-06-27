@@ -1,10 +1,12 @@
 """Hauptskript: Trainiert den Mario-Agenten mit Live-Anzeige."""
 
 import argparse
+import random
 import time
 from pathlib import Path
 
 import numpy as np
+import torch
 
 import config
 from agent import MarioAgent
@@ -12,6 +14,28 @@ from evaluate import evaluate
 from metrics import MetricsLogger
 from plot import generate_plots
 from wrappers import create_env
+
+
+def set_seed(seed):
+    """Setzt alle Zufallsquellen für reproduzierbare Läufe."""
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
+
+def print_config():
+    """Gibt die effektiven Hyperparameter aus (landet so auch im Log/stdout)."""
+    keys = [
+        "WORLD", "STAGE", "SEED", "LEARNING_RATE", "GAMMA", "BATCH_SIZE",
+        "MEMORY_SIZE", "EPSILON_DECAY", "TARGET_UPDATE",
+        "REWARD_SCALE", "REWARD_CLIP", "EVAL_INTERVAL", "EVAL_EPISODES",
+    ]
+    print("Konfiguration:")
+    for key in keys:
+        print(f"  {key:14s} = {getattr(config, key)}")
+    print()
 
 
 def print_stats(episode, reward, x_pos, best_reward, best_x, epsilon, loss, fps):
@@ -37,6 +61,9 @@ def train():
     print("=" * 70)
     print()
 
+    set_seed(config.SEED)
+    print_config()
+
     # Umgebung erstellen
     print(f"Erstelle Umgebung: World {config.WORLD}-{config.STAGE}...")
     env = create_env(
@@ -44,6 +71,15 @@ def train():
         stage=config.STAGE,
         render=config.RENDER,
     )
+    # Env-Zufall ebenfalls seeden (best effort, API je nach gym-Version)
+    try:
+        env.seed(config.SEED)
+    except (AttributeError, TypeError):
+        pass
+    try:
+        env.action_space.seed(config.SEED)
+    except (AttributeError, TypeError):
+        pass
     num_actions = env.action_space.n
     print(f"Aktionen: {num_actions}")
     print()

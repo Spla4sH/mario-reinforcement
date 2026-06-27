@@ -50,6 +50,7 @@ REWARD_CLIP = _env_float_or_none("REWARD_CLIP", None)  # z. B. 1.0 für [-1, 1]
 TARGET_UPDATE = _env_int("TARGET_UPDATE", 10_000)  # Schritte zwischen Target-Updates
 SAVE_INTERVAL = _env_int("SAVE_INTERVAL", 50)  # Episoden zwischen Checkpoints
 MAX_EPISODES = _env_int("MAX_EPISODES", 50_000)
+SEED = _env_int("SEED", 42)  # Reproduzierbarkeit (für Sweeps pro Job variieren)
 
 # Greedy-Evaluation (echter Fortschritt ohne Exploration)
 EVAL_INTERVAL = _env_int("EVAL_INTERVAL", 50)  # Episoden zwischen Evaluationen
