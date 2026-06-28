@@ -1,0 +1,10 @@
+# Abhängigkeiten für den Hugging Face Space (CPU-Inferenz, headless).
+# Beim Anlegen des Space als requirements.txt im Space-Root hochladen.
+torch
+gym==0.25.2                 # alte gym-API (passt zum Code, s. DEPLOY.md)
+gym-super-mario-bros==7.4.0
+nes-py
+numpy
+opencv-python-headless      # headless-Variante: kein libGL/X nötig
+imageio
+gradio

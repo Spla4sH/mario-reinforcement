@@ -125,6 +125,7 @@ mario-reinforcement/
 ├── tests/            # pytest-Suite
 ├── Dockerfile        # Headless-Training als Container
 ├── k8s/              # Kubernetes Job + PersistentVolume
+├── deploy/           # Hugging Face Space (requirements/packages) – siehe DEPLOY.md
 ├── .github/          # GitHub-Actions-CI (Lint + Tests)
 └── requirements.txt
 ```
@@ -164,6 +165,7 @@ python app.py        # öffnet eine lokale Web-Demo
 Eine **Gradio-App** lässt den trainierten Agenten auf Knopfdruck spielen und zeigt den Lauf
 inkl. Grad-CAM-Overlay direkt im Browser – ohne Installation für den Betrachter. Deploybar als
 **Hugging Face Space** (CPU-Inferenz genügt), ideal als klickbarer Portfolio-Link.
+Schritt-für-Schritt-Anleitung: [DEPLOY.md](DEPLOY.md) (Dateien liegen in [deploy/](deploy/)).
 
 > **Auto-Highlight:** Während des Trainings wird bei jedem neuen Bestmodell automatisch die beste
 > Episode als `highlights/best_run.gif` gespeichert – fertige Portfolio-Assets ohne Handarbeit.
