@@ -111,6 +111,8 @@ mario-reinforcement/
 ├── train.py          # Hauptskript - Training mit Live-Anzeige
 ├── play.py           # Trainierten Agenten greedy zuschauen (Originalbild)
 ├── visualize.py      # KI-Vision-Overlay (Grad-CAM) - was sieht die KI?
+├── app.py            # Gradio-Live-Demo (KI-Vision im Browser)
+├── record.py         # Episode als GIF aufnehmen (Auto-Highlight + Demo)
 ├── agent.py          # Double DQN Agent + Replay Memory
 ├── model.py          # CNN-Architektur
 ├── wrappers.py       # Bildvorverarbeitung & Environment-Wrapper
@@ -152,6 +154,20 @@ das Original-Spielbild gelegt. So wird sichtbar, **welche Bildregionen** (Gegner
 Plattformen) die Entscheidung des Netzes gerade antreiben – ein direkter Blick „in den Kopf"
 des Agenten.
 
+### Live-Demo im Browser (Gradio)
+
+```bash
+pip install gradio
+python app.py        # öffnet eine lokale Web-Demo
+```
+
+Eine **Gradio-App** lässt den trainierten Agenten auf Knopfdruck spielen und zeigt den Lauf
+inkl. Grad-CAM-Overlay direkt im Browser – ohne Installation für den Betrachter. Deploybar als
+**Hugging Face Space** (CPU-Inferenz genügt), ideal als klickbarer Portfolio-Link.
+
+> **Auto-Highlight:** Während des Trainings wird bei jedem neuen Bestmodell automatisch die beste
+> Episode als `highlights/best_run.gif` gespeichert – fertige Portfolio-Assets ohne Handarbeit.
+
 Während des Trainings werden alle Metriken pro Episode nach `logs/run_*.csv`
 geschrieben und bei jedem Checkpoint automatisch als Graph nach `plots/` geplottet.
 Die ROM ist im Paket `gym-super-mario-bros` enthalten – es muss nichts separat
@@ -187,6 +203,7 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] Tests + CI (pytest, ruff, GitHub Actions)
 - [x] Reward-Shaping + Greedy-Evaluation (Basis für „1-1 konsistent")
 - [x] Experiment-Tracking mit Weights & Biases (optional)
+- [x] Live-Demo (Gradio) + Auto-Highlight-GIF des besten Laufs
 - [ ] Algorithmus-Upgrade: Double DQN → **PPO** (Stable-Baselines3) für stabileres Training
 - [ ] Generalisierung: zweite Umgebung (Atari) über dieselbe Pixel-Pipeline
 - [ ] MLOps-Ausbau: Hyperparameter-Sweeps als parallele K8s-Jobs

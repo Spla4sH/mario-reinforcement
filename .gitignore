@@ -4,6 +4,7 @@ checkpoints/
 *.pt
 logs/
 plots/
+highlights/
 .env
 
 # Persönliche Interview-Vorbereitung (nicht veröffentlichen)

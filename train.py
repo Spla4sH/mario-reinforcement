@@ -13,6 +13,7 @@ from agent import MarioAgent
 from evaluate import evaluate
 from metrics import MetricsLogger
 from plot import generate_plots
+from record import record_frames, save_gif
 from tracking import Tracker
 from wrappers import create_env
 
@@ -216,6 +217,14 @@ def train():
                     best_eval = (ev["flag_rate"], ev["mean_x"])
                     agent.save(name="mario_best.pt")
                     print("  -> Neues bestes Modell gespeichert (mario_best.pt)")
+                    # Auto-Highlight: beste Episode als GIF festhalten (ausfallsicher)
+                    try:
+                        frames, rec_info = record_frames(agent, env)
+                        Path("highlights").mkdir(exist_ok=True)
+                        if save_gif(frames, "highlights/best_run.gif"):
+                            print(f"  -> Highlight-GIF aktualisiert (x_pos {rec_info.get('x_pos', 0)})")
+                    except Exception as exc:
+                        print(f"  [Highlight] Aufnahme übersprungen ({exc})")
 
             # Level geschafft?
             if flag_get:
