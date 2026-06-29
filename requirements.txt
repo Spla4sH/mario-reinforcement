@@ -1,9 +1,10 @@
 torch
 torchvision
+gym==0.25.2                 # alte gym-API; bewusst gepinnt (siehe TESTLAUF.md)
 gym-super-mario-bros==7.4.0
 nes-py
-numpy
-opencv-python
+numpy<2                     # gym 0.25.2 verträgt kein NumPy 2.0
+opencv-python<4.11          # 4.11+ verlangt NumPy>=2 -> Konflikt mit gym
 matplotlib
 imageio
 wandb  # optional: Experiment-Tracking, nur bei USE_WANDB=1 aktiv

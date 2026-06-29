@@ -18,12 +18,14 @@ Der Code nutzt die **alte gym-API** (4er-Tupel `obs, reward, done, info`; `reset
 Ein frischer Install (besonders im **Docker-Build**) zieht evtl. ein neueres gym (≥0.26) und crasht
 dann z. B. mit „too many values to unpack" oder „tuple has no attribute ...".
 
-**Falls das passiert:** eine alte-API-Version pinnen und neu installieren:
+**Getesteter funktionierender Versionsstand** (in `requirements.txt` gepinnt):
 ```bash
-pip install "gym==0.25.2"
+pip install "gym==0.25.2" "numpy<2" "opencv-python<4.11"
 ```
-Wenn dein lokales Env schon läuft, ist nichts zu tun – relevant v. a. für frische Installs/Container.
-Bei Bedarf den funktionierenden Versionsstand danach mit `pip freeze > requirements.lock` festhalten.
+Hintergrund: gym 0.25.2 verträgt **kein NumPy 2.0**, und neue OpenCV-Versionen (≥4.11)
+verlangen NumPy≥2 → Konflikt. Außerdem darf `gym_super_mario_bros.make(...)` **nicht** mit
+`apply_api_compatibility` aufgerufen werden (in 0.25.2 ungültig). Wenn dein Env schon läuft,
+ist nichts zu tun – relevant v. a. für frische Installs/Container.
 
 ## 1. Kurzer Probelauf starten
 ```bash

@@ -94,7 +94,7 @@ def create_env(world=1, stage=1, render=True):
 
     # Suffix -v0 = Originalgrafik des NES-Spiels (ROM ist im Paket enthalten).
     env_id = f"SuperMarioBros-{world}-{stage}-v0"
-    env = gym_super_mario_bros.make(env_id, apply_api_compatibility=False)
+    env = gym_super_mario_bros.make(env_id)
 
     # Vereinfachte Aktionen: SIMPLE_MOVEMENT hat 7 Aktionen
     # [['NOOP'], ['right'], ['right', 'A'], ['right', 'B'], ['right', 'A', 'B'], ['A'], ['left']]
