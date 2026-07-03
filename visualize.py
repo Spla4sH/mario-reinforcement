@@ -60,17 +60,25 @@ class GradCAM:
         return action, cam.detach().cpu().numpy()
 
 
-def make_overlay(rgb_frame: np.ndarray, cam: np.ndarray, scale: int = 2, alpha: float = 0.5) -> np.ndarray:
-    """Legt die Grad-CAM-Heatmap über das RGB-Originalbild (Rückgabe in RGB)."""
+def make_overlay(rgb_frame: np.ndarray, cam: np.ndarray, scale: int = 2, alpha: float = 0.7) -> np.ndarray:
+    """Legt die Grad-CAM-Heatmap über das RGB-Originalbild (Rückgabe in RGB).
+
+    Die Einfärbung ist **proportional zur Wichtigkeit**: unwichtige Regionen
+    (niedriger CAM-Wert) bleiben nahezu Originalbild, nur die Hotspots werden
+    kräftig eingefärbt. So entsteht kein flächiger blauer Schleier über dem
+    ganzen Bild – man sieht das Spiel klar und die Aufmerksamkeit als Leuchten.
+    """
     import cv2  # lazy: nur nötig, wenn wirklich gerendert wird
 
     h, w = rgb_frame.shape[:2]
-    cam_resized = cv2.resize(cam, (w, h), interpolation=cv2.INTER_CUBIC)
-    cam_uint8 = np.uint8(np.clip(cam_resized, 0, 1) * 255)
+    cam_resized = np.clip(cv2.resize(cam, (w, h), interpolation=cv2.INTER_CUBIC), 0, 1)
+    cam_uint8 = np.uint8(cam_resized * 255)
     heatmap_bgr = cv2.applyColorMap(cam_uint8, cv2.COLORMAP_JET)
     heatmap_rgb = cv2.cvtColor(heatmap_bgr, cv2.COLOR_BGR2RGB)
 
-    overlay = cv2.addWeighted(rgb_frame, 1 - alpha, heatmap_rgb, alpha, 0)
+    # Per-Pixel-Alpha: 0 wo unwichtig -> Original, bis alpha wo wichtig -> Heatmap.
+    a = (cam_resized * alpha)[..., None]
+    overlay = np.clip(rgb_frame * (1 - a) + heatmap_rgb * a, 0, 255).astype(np.uint8)
     if scale != 1:
         overlay = cv2.resize(
             overlay, (w * scale, h * scale), interpolation=cv2.INTER_NEAREST

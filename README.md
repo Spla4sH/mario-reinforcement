@@ -11,7 +11,9 @@ Eine KI lernt Super Mario Bros zu spielen - mit Live-Fenster zum Zuschauen!
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red)
 ![Status](https://img.shields.io/badge/Status-Work%20in%20Progress-yellow)
 
-https://github.com/user-attachments/assets/placeholder
+![Mario KI-Vision – Grad-CAM-Overlay eines greedy-Durchlaufs von Level 1-1](vision.gif)
+
+*Der trainierte Agent löst 1-1 – das rote Leuchten (Grad-CAM) zeigt, worauf das CNN pro Aktion achtet.*
 
 ## Was passiert hier?
 
