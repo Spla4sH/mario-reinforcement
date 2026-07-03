@@ -26,3 +26,18 @@ def test_defaults_without_env():
     importlib.reload(config_module)
     assert config_module.REWARD_SCALE == 1.0
     assert config_module.REWARD_CLIP is None
+    assert config_module.CHECKPOINT_DIR == "checkpoints"
+    assert config_module.HIGHLIGHT_DIR == "highlights"
+
+
+def test_output_dir_overrides(monkeypatch):
+    monkeypatch.setenv("CHECKPOINT_DIR", "checkpoints_sweep_a")
+    monkeypatch.setenv("HIGHLIGHT_DIR", "highlights_sweep_a")
+    try:
+        importlib.reload(config_module)
+        assert config_module.CHECKPOINT_DIR == "checkpoints_sweep_a"
+        assert config_module.HIGHLIGHT_DIR == "highlights_sweep_a"
+    finally:
+        monkeypatch.delenv("CHECKPOINT_DIR", raising=False)
+        monkeypatch.delenv("HIGHLIGHT_DIR", raising=False)
+        importlib.reload(config_module)

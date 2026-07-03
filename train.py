@@ -2,6 +2,7 @@
 
 import argparse
 import random
+import sys
 import time
 from pathlib import Path
 
@@ -16,6 +17,14 @@ from plot import generate_plots
 from record import record_frames, save_gif
 from tracking import Tracker
 from wrappers import create_env
+
+# Ausgabe auf UTF-8 zwingen: Windows schreibt beim Umleiten in eine Datei sonst
+# in cp1252 – Umlaute/ß/Ø erscheinen dann in UTF-8-Editoren als �. Best effort.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except (AttributeError, ValueError):
+        pass
 
 
 def set_seed(seed):
@@ -93,7 +102,7 @@ def train():
     agent = MarioAgent(num_actions)
 
     # Checkpoint laden falls vorhanden
-    checkpoint_path = Path("checkpoints/mario_agent.pt")
+    checkpoint_path = Path(config.CHECKPOINT_DIR) / "mario_agent.pt"
     if checkpoint_path.exists():
         agent.load(str(checkpoint_path))
         print("Vorheriger Checkpoint geladen!")
@@ -191,7 +200,7 @@ def train():
 
             # Checkpoint speichern + Graphen aktualisieren
             if episode % config.SAVE_INTERVAL == 0:
-                agent.save()
+                agent.save(path=config.CHECKPOINT_DIR)
                 generate_plots(logger.csv_path)
                 avg = np.mean(recent_rewards)
                 print(f"  -> Checkpoint & Graphen gespeichert! Durchschnitt letzte {len(recent_rewards)} Episoden: {avg:.1f}")
@@ -215,13 +224,13 @@ def train():
                 )
                 if (ev["flag_rate"], ev["mean_x"]) > best_eval:
                     best_eval = (ev["flag_rate"], ev["mean_x"])
-                    agent.save(name="mario_best.pt")
+                    agent.save(path=config.CHECKPOINT_DIR, name="mario_best.pt")
                     print("  -> Neues bestes Modell gespeichert (mario_best.pt)")
                     # Auto-Highlight: beste Episode als GIF festhalten (ausfallsicher)
                     try:
                         frames, rec_info = record_frames(agent, env)
-                        Path("highlights").mkdir(exist_ok=True)
-                        if save_gif(frames, "highlights/best_run.gif"):
+                        Path(config.HIGHLIGHT_DIR).mkdir(exist_ok=True)
+                        if save_gif(frames, f"{config.HIGHLIGHT_DIR}/best_run.gif"):
                             print(f"  -> Highlight-GIF aktualisiert (x_pos {rec_info.get('x_pos', 0)})")
                     except Exception as exc:
                         print(f"  [Highlight] Aufnahme übersprungen ({exc})")
@@ -229,11 +238,11 @@ def train():
             # Level geschafft?
             if flag_get:
                 print(f"\n  *** LEVEL GESCHAFFT in Episode {episode}! ***\n")
-                agent.save()
+                agent.save(path=config.CHECKPOINT_DIR)
     except KeyboardInterrupt:
         print("\nTraining abgebrochen – speichere Checkpoint & Graphen...")
     finally:
-        agent.save()
+        agent.save(path=config.CHECKPOINT_DIR)
         generate_plots(logger.csv_path)
         logger.close()
         tracker.finish()

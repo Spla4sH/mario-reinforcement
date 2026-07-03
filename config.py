@@ -59,6 +59,11 @@ SAVE_INTERVAL = _env_int("SAVE_INTERVAL", 50)  # Episoden zwischen Checkpoints
 MAX_EPISODES = _env_int("MAX_EPISODES", 50_000)
 SEED = _env_int("SEED", 42)  # Reproduzierbarkeit (für Sweeps pro Job variieren)
 
+# Ausgabeorte – für parallele Läufe / Sweeps isolierbar, damit sich Checkpoints
+# und Highlight-GIFs nicht gegenseitig überschreiben.
+CHECKPOINT_DIR = os.environ.get("CHECKPOINT_DIR", "checkpoints")
+HIGHLIGHT_DIR = os.environ.get("HIGHLIGHT_DIR", "highlights")
+
 # Experiment-Tracking (optional, siehe tracking.py) – aktivieren mit USE_WANDB=1
 USE_WANDB = _env_bool("USE_WANDB", False)
 WANDB_PROJECT = os.environ.get("WANDB_PROJECT", "mario-rl")
