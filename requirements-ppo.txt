@@ -1,0 +1,23 @@
+# PPO-Experiment-Stack (Phase E) – BEWUSST GETRENNT vom DQN-.venv!
+# Nicht in das gepinnte Haupt-.venv installieren (gym 0.25.2 / numpy<2 wuerde brechen).
+#
+# Setup in einem separaten venv:
+#   python -m venv .venv-ppo
+#   .venv-ppo\Scripts\python -m pip install --upgrade pip
+#   .venv-ppo\Scripts\python -m pip install -r requirements-ppo.txt
+#
+# torch mit CUDA separat (grosser Download, einmalig):
+#   .venv-ppo\Scripts\python -m pip install torch --index-url https://download.pytorch.org/whl/cu124
+
+# --- RL-Engine (PPO) ---
+stable-baselines3==2.3.2
+gymnasium==0.29.1
+shimmy==1.3.0            # Farama-Adapter: altes gym -> Gymnasium (kein Env-Port)
+tensorboard             # SB3-Logging
+
+# --- Mario-Env bleibt wie gehabt (alte gym-API, via shimmy gebrueckt) ---
+gym==0.25.2
+gym-super-mario-bros==7.4.0
+nes-py
+numpy<2                 # nes-py/gym 0.25.2 vertragen kein NumPy 2.0
+opencv-python-headless<4.11
