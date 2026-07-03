@@ -131,6 +131,37 @@ eine seltene, gefragte Kombination** und macht das Portfolio rund.
 
 ---
 
+## Phase E — Umstieg auf PPO (konkreter Plan)
+
+**Motivation:** DQN löst 1-1 zuverlässig, wird auf schwereren Leveln (1-2) aber zäh/instabil.
+Genau da setzt **PPO** an: on-policy Policy-Gradient, sample-effizienter und stabiler,
+Industriestandard für Pixel-RL. **Wichtig:** Das ist *kein* Modelltausch – die Lern-Engine
+(`agent.py`: Replay, ε-Greedy, Target-Netz) wird ersetzt, nicht nur `model.py`.
+
+**Weg: Stable-Baselines3 (SB3), nicht selbst implementieren.** To-dos:
+1. **Env-API-Brücke (Hauptarbeit):** SB3 v2 will **Gymnasium** (5er-Tupel), unser Mario-Env ist
+   altes **gym** (4er-Tupel). `nes-py`/`gym-super-mario-bros` sind auf altem gym gepinnt und
+   **unmaintained** → es gibt keine Gymnasium-native Version. Lösung: **`shimmy`** (offizieller
+   Farama-Adapter, ~2 Zeilen) hüllt das Legacy-Env in eine echte Gymnasium-Schnittstelle.
+   Das ist ein dünner Adapter, **kein Port** – der reibungsloseste Weg.
+   *Alternative B (größer):* Env-Quelle auf **Stable-Retro** (Gymnasium-nativ, Farama) wechseln –
+   nur sinnvoll, wenn wir bewusst einen komplett modernen Stack / mehrere Spiele wollen
+   (ROM-Import + Pipeline neu verifizieren).
+2. **Vektorisierte Envs** (`SubprocVecEnv`): PPO lebt von parallelen Rollouts.
+3. **Preprocessing:** `wrappers.py` weiternutzen oder SB3s `VecFrameStack` (84×84, 4 Frames).
+4. **Policy:** SB3s `CnnPolicy` (≈ unser Nature-CNN) – kein eigenes Netz nötig.
+5. **`train_ppo.py`** mit `PPO("CnnPolicy", env).learn(...)` + Callbacks (Eval/Checkpoints/Logging).
+6. **Hyperparameter:** `n_steps`, `n_epochs`, `clip_range`, `gae_lambda`, `ent_coef` (nicht ε/Decay/Replay).
+7. **Neue Deps:** `stable-baselines3`, `shimmy`, `gymnasium`.
+
+**Wiederverwendbar:** Env-Erzeugung (+Adapter), Bildvorverarbeitung, Eval-Konzept (flag_get/x_pos),
+Grad-CAM (auf PPO-CNN adaptierbar), Docker/K8s/CI. **Gradio-Demo** müsste ein SB3-Modell laden.
+
+**Erstes PPO-Ziel:** 1-2 (das für DQN zu harte Level) – schlägt zwei Fliegen: härteres Level *und*
+stärkerer Algorithmus.
+
+---
+
 ## Frage: später ein anderes / komplexeres Spiel?
 
 **Kurzantwort:** Für dein Portfolio bringt ein *stärkerer Algorithmus* mehr als ein neues Spiel.
