@@ -1,11 +1,17 @@
-# Nächste Schritte (ab nächster Woche)
+# Nächste Schritte
 
 Reihenfolge bewusst: **erst Smoke Test, dann 1-1 konsistent lösen, dann erst Ausbau.**
 Nicht skalieren, bevor das Fundament bewiesen ist.
 
+> **Stand (03.07.2026):** Phase A ✅ bestanden. Phase B **läuft**: Im ersten langen Lauf
+> löst der Agent 1-1 bereits (bis Ep. ~4.500 **38× Flagge**, erster Durchlauf Ep. 1.191,
+> Frequenz steigend). **Offen:** greedy-**Konsistenz** (Erfolgskriterium ≥ 80 % in 20 greedy-Episoden)
+> – die reine Greedy-Eval steht noch bei 0 %. Beim ersten Lauf gefixt: `view`→`reshape`-Crash
+> in `model.py` (non-contiguous States nach `permute`), siehe TESTLAUF.md.
+
 ---
 
-## Phase A — Smoke Test (Tag 1)
+## Phase A — Smoke Test (Tag 1) ✅ bestanden
 Komplett in [TESTLAUF.md](TESTLAUF.md) beschrieben. Kurz:
 ```bash
 python train.py --episodes 300
@@ -36,6 +42,15 @@ Ziel-Definition **vorab festlegen**, damit „konsistent" messbar ist:
 > (`evaluate.py`, läuft alle `EVAL_INTERVAL` Episoden, speichert `mario_best.pt`),
 > Reward-Shaping (`reward.py` / `RewardWrapper`, via `REWARD_SCALE`/`REWARD_CLIP`),
 > Hyperparameter per Env-Variablen (`config.py`). Nächste Woche bleibt v. a. **Tuning**.
+
+> **Beobachtung 1. Lauf → konkreter Konsistenz-Fokus:** Training löst 1-1 (38×), greedy-Eval
+> aber 0 %. Zwei Ansatzpunkte, in dieser Reihenfolge testen:
+> 1. **Exploration verlängern** (Punkt 3 unten): Beim Fortsetzen fiel ε durch den Einstieg bei
+>    Step 72.573 quasi sofort auf 0.02 – der Agent hatte kaum noch Explorationsbudget. Für einen
+>    sauberen Vergleich einen **frischen** Lauf mit größerem `EPSILON_DECAY` (500k–1M) fahren.
+> 2. **Mehr Training bei Ziel-ε**: Die greedy-Konsistenz kommt oft erst deutlich nach den ersten
+>    Flaggen – Rate steigt bereits (18→13 pro 1.000 Ep.). Eval-Kurve (`grep '\[Eval\]'`) beobachten,
+>    ob greedy > 0 % zieht, bevor an Hyperparametern gedreht wird.
 
 Aufgaben, nach Hebelwirkung sortiert:
 
