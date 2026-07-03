@@ -30,11 +30,14 @@ def record_frames(agent, env, max_steps: int = 100_000):
     return frames, info
 
 
-def save_gif(frames, path: str, fps: int = 30) -> bool:
-    """Speichert Frames als GIF. Gibt True bei Erfolg zurück."""
+def save_gif(frames, path: str, fps: int = 30, loop: int = 0) -> bool:
+    """Speichert Frames als GIF. Gibt True bei Erfolg zurück.
+
+    ``loop=0`` bedeutet Endlos-Schleife (sonst spielt das GIF nur einmal ab).
+    """
     if not frames:
         return False
     import imageio
 
-    imageio.mimsave(path, frames, fps=fps)
+    imageio.mimsave(path, frames, fps=fps, loop=loop)
     return True
