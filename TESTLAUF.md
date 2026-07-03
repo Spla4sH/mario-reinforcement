@@ -27,6 +27,20 @@ verlangen NumPy≥2 → Konflikt. Außerdem darf `gym_super_mario_bros.make(...)
 `apply_api_compatibility` aufgerufen werden (in 0.25.2 ungültig). Wenn dein Env schon läuft,
 ist nichts zu tun – relevant v. a. für frische Installs/Container.
 
+### ✅ Gefixt: Crash in `learn()` nach ~1000 Steps (view vs. reshape)
+Beim ersten echten Smoke Test crashte das Training reproduzierbar in Episode 2–3, **sobald der
+Replay-Buffer `MIN_MEMORY` erreichte** und `agent.learn()` das erste Mal lief:
+```
+RuntimeError: view size is not compatible with input tensor's size and stride ...
+Use .reshape(...) instead.  (model.py, forward)
+```
+Ursache: Im Batch werden States via `permute(0, 3, 1, 2)` (B,H,W,C → B,C,H,W) umsortiert und sind
+danach **nicht mehr contiguous**; `x.view(...)` in `MarioNet.forward` kann so einen Tensor nicht
+flach machen. Fix: `.view()` → `.reshape()` (verkraftet beide Layouts, deckt Trainings- **und**
+`act()`-Pfad ab). Abgesichert durch zwei Regressionstests in `tests/test_agent.py`
+(non-contiguous Forward + voller `learn()`-Schritt) – vorher prüften die Tests nur den leeren
+Replay-Buffer, deshalb rutschte der Bug durch die grüne CI.
+
 ## 1. Kurzer Probelauf starten
 ```bash
 python train.py --episodes 300

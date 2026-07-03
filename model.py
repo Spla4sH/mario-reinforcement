@@ -31,5 +31,5 @@ class MarioNet(nn.Module):
         # Eingabe: (batch, channels, 84, 84), Werte 0-255 -> normalisieren
         x = x.float() / 255.0
         x = self.features(x)
-        x = x.view(x.size(0), -1)
+        x = x.reshape(x.size(0), -1)
         return self.fc(x)
