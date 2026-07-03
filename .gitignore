@@ -3,10 +3,12 @@ __pycache__/
 .venv/
 venv/
 checkpoints/
+checkpoints*/
 *.pt
 logs/
 plots/
 highlights/
+highlights*/
 .env
 
 # Persönliche Interview-Vorbereitung (nicht veröffentlichen)

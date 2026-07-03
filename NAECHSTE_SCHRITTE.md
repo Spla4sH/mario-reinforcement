@@ -3,11 +3,13 @@
 Reihenfolge bewusst: **erst Smoke Test, dann 1-1 konsistent lösen, dann erst Ausbau.**
 Nicht skalieren, bevor das Fundament bewiesen ist.
 
-> **Stand (03.07.2026):** Phase A ✅ bestanden. Phase B **läuft**: Im ersten langen Lauf
-> löst der Agent 1-1 bereits (bis Ep. ~4.500 **38× Flagge**, erster Durchlauf Ep. 1.191,
-> Frequenz steigend). **Offen:** greedy-**Konsistenz** (Erfolgskriterium ≥ 80 % in 20 greedy-Episoden)
-> – die reine Greedy-Eval steht noch bei 0 %. Beim ersten Lauf gefixt: `view`→`reshape`-Crash
-> in `model.py` (non-contiguous States nach `permute`), siehe TESTLAUF.md.
+> **Stand (03.07.2026):** Phase A ✅ und Phase B ✅ **abgeschlossen**. Der Hauptlauf löste 1-1
+> im Training 93× und erreichte ab Ep. ~5.250 die greedy-Konsistenz. **Erfolgskriterium erfüllt:**
+> ein separater 20-Episoden-Greedy-Test gegen `mario_best.pt` ergab **20/20 Flagge** (x 3161).
+> Hinweis: Die Env ist bei greedy-Spiel deterministisch → „deterministisch gelöst", nicht
+> stochastische Robustheit. Beim ersten Lauf gefixt: `view`→`reshape`-Crash in `model.py`
+> (non-contiguous States nach `permute`) + UTF-8-Logausgabe, siehe TESTLAUF.md.
+> **Nächster Schritt:** Phase C (weitere Welten) bzw. Algorithmus-Upgrade auf PPO.
 
 ---
 
@@ -32,11 +34,12 @@ finalen `mario_best.pt` neu aufnehmen für die polierte Version.
 
 ---
 
-## Phase B — Level 1-1 konsistent lösen
+## Phase B — Level 1-1 konsistent lösen ✅ erreicht
 Ziel-Definition **vorab festlegen**, damit „konsistent" messbar ist:
 
 > **Erfolgskriterium:** In einer Greedy-Evaluation (epsilon=0) erreicht Mario in
 > **≥ 80 % von 20 Episoden** die Flagge (`flag_get`).
+> → **Erreicht (03.07.2026): 20/20 Flagge** gegen `mario_best.pt`.
 
 > **Bereits im Code vorbereitet** (nur noch nutzen/tunen): Greedy-Eval + Best-Checkpoint
 > (`evaluate.py`, läuft alle `EVAL_INTERVAL` Episoden, speichert `mario_best.pt`),

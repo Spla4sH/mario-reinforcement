@@ -1,6 +1,8 @@
 # Super Mario Bros - Reinforcement Learning
 
 > **WIP** - Dieses Projekt befindet sich in aktiver Entwicklung.
+> **Meilenstein:** Level 1-1 ist gelöst – der greedy-Agent erreicht in **20/20 Evaluationsepisoden**
+> die Flagge. Als Nächstes: weitere Welten & Algorithmus-Upgrade auf PPO (siehe Roadmap).
 
 Eine KI lernt Super Mario Bros zu spielen - mit Live-Fenster zum Zuschauen!
 
@@ -194,7 +196,7 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] Checkpoint-System (Pause & Fortsetzen)
 - [x] Trainingsmetriken & Graphen
 - [x] Wiedergabe-Modus für trainierte Agenten (`play.py`)
-- [ ] Level 1-1 konsistent abschließen
+- [x] **Level 1-1 konsistent abschließen** – 20/20 greedy-Episoden erreichen die Flagge (Kriterium ≥ 80 %)
 - [ ] Alle Welten durchspielen
 - [ ] Vortrainiertes Modell bereitstellen
 
