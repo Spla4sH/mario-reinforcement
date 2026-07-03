@@ -64,6 +64,11 @@ SEED = _env_int("SEED", 42)  # Reproduzierbarkeit (für Sweeps pro Job variieren
 CHECKPOINT_DIR = os.environ.get("CHECKPOINT_DIR", "checkpoints")
 HIGHLIGHT_DIR = os.environ.get("HIGHLIGHT_DIR", "highlights")
 
+# Warm-Start / Transfer fürs Curriculum: Pfad zu einem Checkpoint, dessen
+# Netzgewichte beim Start übernommen werden (Epsilon/Step bleiben frisch).
+# Greift nur, wenn im CHECKPOINT_DIR noch kein eigener Checkpoint liegt.
+INIT_FROM = os.environ.get("INIT_FROM", "")
+
 # Experiment-Tracking (optional, siehe tracking.py) – aktivieren mit USE_WANDB=1
 USE_WANDB = _env_bool("USE_WANDB", False)
 WANDB_PROJECT = os.environ.get("WANDB_PROJECT", "mario-rl")

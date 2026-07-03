@@ -169,3 +169,18 @@ class MarioAgent:
         self.epsilon = checkpoint["epsilon"]
         self.step_count = checkpoint["step_count"]
         print(f"Agent geladen (Step {self.step_count}, Epsilon {self.epsilon:.3f})")
+
+    def load_weights(self, path):
+        """Übernimmt nur die Netzgewichte (Warm-Start / Transfer fürs Curriculum).
+
+        Anders als ``load`` bleiben Epsilon, Step-Count und Optimizer unangetastet –
+        der Agent startet also mit dem gelernten Feature-Extraktor eines Levels,
+        aber **frischer Exploration** auf dem neuen Level.
+        """
+        checkpoint = torch.load(path, map_location=self.device)
+        self.online_net.load_state_dict(checkpoint["online_net"])
+        self.target_net.load_state_dict(checkpoint["target_net"])
+        print(
+            f"Warm-Start: Netzgewichte aus {path} übernommen "
+            f"(Epsilon {self.epsilon:.3f}, Step {self.step_count})"
+        )

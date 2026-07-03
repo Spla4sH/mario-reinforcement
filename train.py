@@ -101,11 +101,14 @@ def train():
     # Agent erstellen
     agent = MarioAgent(num_actions)
 
-    # Checkpoint laden falls vorhanden
+    # Checkpoint laden falls vorhanden – sonst optional Warm-Start (Curriculum)
     checkpoint_path = Path(config.CHECKPOINT_DIR) / "mario_agent.pt"
     if checkpoint_path.exists():
         agent.load(str(checkpoint_path))
         print("Vorheriger Checkpoint geladen!")
+    elif config.INIT_FROM:
+        agent.load_weights(config.INIT_FROM)
+        print(f"Warm-Start aus {config.INIT_FROM} – frische Exploration auf neuem Level.")
     print()
 
     # Tracking

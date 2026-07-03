@@ -51,6 +51,28 @@ def test_forward_handles_non_contiguous_input():
     assert out.shape == (8, 7)
 
 
+def test_load_weights_transfers_net_but_keeps_exploration(tmp_path):
+    """Warm-Start: Netzgewichte übernehmen, aber Epsilon/Step-Count frisch lassen."""
+    source = _agent()
+    source.step_count = 12345
+    source.epsilon = 0.02
+    ckpt = tmp_path / "src.pt"
+    source.save(path=str(tmp_path), name="src.pt")
+
+    target = _agent()  # frischer Agent: Epsilon=EPSILON_START, step_count=0
+    fresh_epsilon, fresh_steps = target.epsilon, target.step_count
+    target.load_weights(str(ckpt))
+
+    # Gewichte wurden übernommen ...
+    for p_src, p_tgt in zip(
+        source.online_net.parameters(), target.online_net.parameters()
+    ):
+        assert torch.equal(p_src, p_tgt)
+    # ... aber Exploration/Step-Count blieben frisch (nicht 0.02 / 12345).
+    assert target.epsilon == fresh_epsilon
+    assert target.step_count == fresh_steps
+
+
 def test_learn_runs_full_step_and_returns_loss():
     """Regression: ein echter Lernschritt (voller Batch) muss durchlaufen.
 
