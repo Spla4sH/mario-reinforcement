@@ -131,7 +131,14 @@ eine seltene, gefragte Kombination** und macht das Portfolio rund.
 
 ---
 
-## Phase E — Umstieg auf PPO (konkreter Plan)
+## Phase E — Umstieg auf PPO ✅ (Migration + erstes Ziel erreicht)
+
+> **Stand (05.07.2026): Level 1-2 mit PPO GELÖST — 20/20 greedy-Episoden Flagge** (x 3161,
+> Ø Reward 2834). Weg dahin: DQN scheiterte an 1-2 (2 Läufe, Plateau ~x1800), vanilla-PPO
+> mit 5M Steps ebenfalls (Kollaps-Oszillation, Reward pendelte 137↔800). Diagnose: instabile
+> Value-Targets durch stark schwankende Reward-Skala. Fix: **VecNormalize (nur Rewards) +
+> linearer LR-Decay** → monotoner Anstieg auf ep_rew_mean ~2830 in 3M Steps (16 parallele Envs).
+> Modell: `checkpoints_ppo/mario_ppo_tuned.zip`. Gleiche Determinismus-Fußnote wie bei 1-1.
 
 **Motivation:** DQN löst 1-1 zuverlässig, wird auf schwereren Leveln (1-2) aber zäh/instabil.
 Genau da setzt **PPO** an: on-policy Policy-Gradient, sample-effizienter und stabiler,

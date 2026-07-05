@@ -1,8 +1,9 @@
 # Super Mario Bros - Reinforcement Learning
 
 > **WIP** - Dieses Projekt befindet sich in aktiver Entwicklung.
-> **Meilenstein:** Level 1-1 ist gelöst – der greedy-Agent erreicht in **20/20 Evaluationsepisoden**
-> die Flagge. Als Nächstes: weitere Welten & Algorithmus-Upgrade auf PPO (siehe Roadmap).
+> **Meilensteine:** Level **1-1 gelöst** (Double DQN, 20/20 greedy-Episoden Flagge) und Level
+> **1-2 gelöst** (PPO via Stable-Baselines3, ebenfalls 20/20 – DQN scheiterte an diesem Level).
+> Als Nächstes: weitere Welten mit dem PPO-Rezept (siehe Roadmap).
 
 Eine KI lernt Super Mario Bros zu spielen - mit Live-Fenster zum Zuschauen!
 
@@ -199,6 +200,7 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] Trainingsmetriken & Graphen
 - [x] Wiedergabe-Modus für trainierte Agenten (`play.py`)
 - [x] **Level 1-1 konsistent abschließen** – 20/20 greedy-Episoden erreichen die Flagge (Kriterium ≥ 80 %)
+- [x] **Level 1-2 mit PPO gelöst** – 20/20 greedy-Episoden Flagge (DQN scheiterte hier; Details unten)
 - [ ] Alle Welten durchspielen
 - [ ] Vortrainiertes Modell bereitstellen
 
@@ -210,7 +212,7 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] Reward-Shaping + Greedy-Evaluation (Basis für „1-1 konsistent")
 - [x] Experiment-Tracking mit Weights & Biases (optional)
 - [x] Live-Demo (Gradio) + Auto-Highlight-GIF des besten Laufs
-- [ ] Algorithmus-Upgrade: Double DQN → **PPO** (Stable-Baselines3) für stabileres Training
+- [x] Algorithmus-Upgrade: Double DQN → **PPO** (Stable-Baselines3 + shimmy) – löst 1-2, wo DQN scheiterte
 - [ ] Generalisierung: zweite Umgebung (Atari) über dieselbe Pixel-Pipeline
 - [ ] MLOps-Ausbau: Hyperparameter-Sweeps als parallele K8s-Jobs
 
