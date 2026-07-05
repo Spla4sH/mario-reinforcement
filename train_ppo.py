@@ -14,6 +14,7 @@ Erstes Ziel: Level 1-2 (für DQN zu hart). Fortschritt live via TensorBoard:
 from __future__ import annotations
 
 import argparse
+import os
 
 
 def main() -> None:
@@ -24,6 +25,12 @@ def main() -> None:
     parser.add_argument("--n-envs", type=int, default=8, help="Parallele Umgebungen")
     parser.add_argument("--logdir", type=str, default="runs_ppo")
     parser.add_argument("--save", type=str, default="checkpoints_ppo/mario_ppo")
+    parser.add_argument(
+        "--resume-from",
+        type=str,
+        default="",
+        help="Pfad zu einem PPO-.zip: laden und weitertrainieren (Steps zählen weiter).",
+    )
     args = parser.parse_args()
 
     from stable_baselines3 import PPO
@@ -42,21 +49,27 @@ def main() -> None:
 
     # PPO mit CNN-Policy (SB3s NatureCNN ≈ unser DQN-Netz). Hyperparameter an
     # der Atari-PPO-Praxis orientiert – Startpunkt zum Tunen.
-    model = PPO(
-        "CnnPolicy",
-        env,
-        verbose=1,
-        tensorboard_log=args.logdir,
-        n_steps=512,
-        batch_size=256,
-        n_epochs=4,
-        gamma=0.99,
-        gae_lambda=0.95,
-        clip_range=0.1,
-        ent_coef=0.01,
-        vf_coef=0.5,
-        learning_rate=2.5e-4,
-    )
+    if args.resume_from and os.path.exists(args.resume_from):
+        model = PPO.load(args.resume_from, env=env, tensorboard_log=args.logdir)
+        reset_timesteps = False
+        print(f"Fortsetzen von {args.resume_from} (bisher {model.num_timesteps:,} Steps)")
+    else:
+        model = PPO(
+            "CnnPolicy",
+            env,
+            verbose=1,
+            tensorboard_log=args.logdir,
+            n_steps=512,
+            batch_size=256,
+            n_epochs=4,
+            gamma=0.99,
+            gae_lambda=0.95,
+            clip_range=0.1,
+            ent_coef=0.01,
+            vf_coef=0.5,
+            learning_rate=2.5e-4,
+        )
+        reset_timesteps = True
 
     print(
         f"PPO-Training startet: World {args.world}-{args.stage} | "
@@ -70,7 +83,12 @@ def main() -> None:
         name_prefix=run_name,
     )
 
-    model.learn(total_timesteps=args.timesteps, callback=ckpt, tb_log_name=run_name)
+    model.learn(
+        total_timesteps=args.timesteps,
+        callback=ckpt,
+        tb_log_name=run_name,
+        reset_num_timesteps=reset_timesteps,
+    )
     model.save(args.save)
     env.close()
     print(f"Fertig. Modell gespeichert: {args.save}.zip")
