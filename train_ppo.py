@@ -45,6 +45,12 @@ def main() -> None:
         default="",
         help="Pfad zu einem PPO-.zip: laden und weitertrainieren (Steps zählen weiter).",
     )
+    parser.add_argument(
+        "--ent-coef",
+        type=float,
+        default=0.01,
+        help="Entropie-Bonus: höher = länger explorieren (gegen vorzeitige Konvergenz).",
+    )
     args = parser.parse_args()
 
     from stable_baselines3 import PPO
@@ -94,7 +100,7 @@ def main() -> None:
             gamma=0.99,
             gae_lambda=0.95,
             clip_range=0.1,
-            ent_coef=0.01,
+            ent_coef=args.ent_coef,
             vf_coef=0.5,
             learning_rate=linear_schedule(2.5e-4),
         )
