@@ -35,6 +35,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Mario-Agent mit PPO trainieren.")
     parser.add_argument("--world", type=int, default=1)
     parser.add_argument("--stage", type=int, default=2, help="Standard: 1-2 (DQN-Grenze)")
+    parser.add_argument(
+        "--stages",
+        type=str,
+        default="",
+        help='Generalist: mehrere Stages, z. B. "1,2,3,4" – die parallelen Envs werden '
+        "round-robin darauf verteilt (überschreibt --stage).",
+    )
     parser.add_argument("--timesteps", type=int, default=2_000_000)
     parser.add_argument("--n-envs", type=int, default=8, help="Parallele Umgebungen")
     parser.add_argument("--logdir", type=str, default="runs_ppo")
@@ -63,11 +70,20 @@ def main() -> None:
 
     from mario_ppo_env import mario_env_thunk
 
-    run_name = f"ppo_{args.world}-{args.stage}"
+    # Generalist-Modus: parallele Envs round-robin auf mehrere Stages verteilen,
+    # damit jeder Rollout-Batch alle Level gleichzeitig enthält.
+    if args.stages:
+        stages = [int(s) for s in args.stages.split(",")]
+        run_name = f"ppo_{args.world}-gen{''.join(map(str, stages))}"
+    else:
+        stages = [args.stage]
+        run_name = f"ppo_{args.world}-{args.stage}"
+    env_stages = [stages[i % len(stages)] for i in range(args.n_envs)]
+    print(f"Env-Verteilung (Stage je Env): {env_stages}")
 
     # Parallele Umgebungen (je eigener Prozess – robuster für den NES-Emulator).
     env = SubprocVecEnv(
-        [mario_env_thunk(args.world, args.stage) for _ in range(args.n_envs)]
+        [mario_env_thunk(args.world, s) for s in env_stages]
     )
     env = VecMonitor(env)  # loggt ROHE Episoden-Rewards (vor Normalisierung)
 
@@ -107,7 +123,7 @@ def main() -> None:
         reset_timesteps = True
 
     print(
-        f"PPO-Training startet: World {args.world}-{args.stage} | "
+        f"PPO-Training startet: World {args.world}, Stage(s) {stages} | "
         f"{args.n_envs} Envs | {args.timesteps:,} Steps"
     )
 
