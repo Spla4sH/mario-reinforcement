@@ -15,6 +15,20 @@ from __future__ import annotations
 
 import argparse
 import os
+from typing import Callable
+
+
+def linear_schedule(initial_value: float) -> Callable[[float], float]:
+    """Linearer Decay: LR fällt über den Lauf von initial_value auf ~0.
+
+    Stabilisiert die späte Trainingsphase (weniger Zappeln, wenn die Policy
+    schon gut ist). SB3 ruft die Funktion mit ``progress_remaining`` (1→0) auf.
+    """
+
+    def func(progress_remaining: float) -> float:
+        return progress_remaining * initial_value
+
+    return func
 
 
 def main() -> None:
@@ -35,7 +49,11 @@ def main() -> None:
 
     from stable_baselines3 import PPO
     from stable_baselines3.common.callbacks import CheckpointCallback
-    from stable_baselines3.common.vec_env import SubprocVecEnv, VecMonitor
+    from stable_baselines3.common.vec_env import (
+        SubprocVecEnv,
+        VecMonitor,
+        VecNormalize,
+    )
 
     from mario_ppo_env import mario_env_thunk
 
@@ -45,7 +63,18 @@ def main() -> None:
     env = SubprocVecEnv(
         [mario_env_thunk(args.world, args.stage) for _ in range(args.n_envs)]
     )
-    env = VecMonitor(env)  # loggt Episoden-Reward/-Länge
+    env = VecMonitor(env)  # loggt ROHE Episoden-Rewards (vor Normalisierung)
+
+    # Reward-Normalisierung stabilisiert PPO bei stark schwankenden Returns
+    # (gegen die Kollaps-Oszillation). Bilder NICHT normalisieren – nur Rewards.
+    vecnorm_path = (
+        args.resume_from.replace(".zip", "_vecnormalize.pkl") if args.resume_from else ""
+    )
+    if vecnorm_path and os.path.exists(vecnorm_path):
+        env = VecNormalize.load(vecnorm_path, env)
+        print(f"VecNormalize-Statistik geladen: {vecnorm_path}")
+    else:
+        env = VecNormalize(env, norm_obs=False, norm_reward=True, clip_reward=10.0)
 
     # PPO mit CNN-Policy (SB3s NatureCNN ≈ unser DQN-Netz). Hyperparameter an
     # der Atari-PPO-Praxis orientiert – Startpunkt zum Tunen.
@@ -67,7 +96,7 @@ def main() -> None:
             clip_range=0.1,
             ent_coef=0.01,
             vf_coef=0.5,
-            learning_rate=2.5e-4,
+            learning_rate=linear_schedule(2.5e-4),
         )
         reset_timesteps = True
 
@@ -90,8 +119,9 @@ def main() -> None:
         reset_num_timesteps=reset_timesteps,
     )
     model.save(args.save)
+    env.save(f"{args.save}_vecnormalize.pkl")  # Normalisierungs-Statistik mitsichern
     env.close()
-    print(f"Fertig. Modell gespeichert: {args.save}.zip")
+    print(f"Fertig. Modell gespeichert: {args.save}.zip (+ _vecnormalize.pkl)")
 
 
 if __name__ == "__main__":
