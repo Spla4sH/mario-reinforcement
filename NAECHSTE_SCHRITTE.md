@@ -133,12 +133,14 @@ eine seltene, gefragte Kombination** und macht das Portfolio rund.
 
 ## Phase E — Umstieg auf PPO ✅ (Migration + erstes Ziel erreicht)
 
-> **Stand (05.07.2026): Level 1-2 mit PPO GELÖST — 20/20 greedy-Episoden Flagge** (x 3161,
-> Ø Reward 2834). Weg dahin: DQN scheiterte an 1-2 (2 Läufe, Plateau ~x1800), vanilla-PPO
-> mit 5M Steps ebenfalls (Kollaps-Oszillation, Reward pendelte 137↔800). Diagnose: instabile
-> Value-Targets durch stark schwankende Reward-Skala. Fix: **VecNormalize (nur Rewards) +
-> linearer LR-Decay** → monotoner Anstieg auf ep_rew_mean ~2830 in 3M Steps (16 parallele Envs).
-> Modell: `checkpoints_ppo/mario_ppo_tuned.zip`. Gleiche Determinismus-Fußnote wie bei 1-1.
+> **Stand (05.07.2026): WELT 1 KOMPLETT — alle vier Level 20/20 greedy gelöst.**
+> 1-1 (DQN), 1-2/1-3/1-4 (PPO, je 3M Steps, 16 Envs). Jedes Level hatte seine eigene Hürde:
+> **1-2** Instabilität (Kollaps-Oszillation) → Fix VecNormalize + LR-Decay; **1-3** vorzeitige
+> Konvergenz (1.4M Steps flach bei ~710, starb an derselben Lücke) → Fix ent_coef 0.01→0.03;
+> **1-4** (Schloss) fiel mit dem Rezept direkt. Modelle: `checkpoints_ppo/mario_ppo_tuned.zip`
+> (1-2), `mario_ppo_1-3_ent03.zip`, `mario_ppo_1-4.zip` (+ je `_vecnormalize.pkl`).
+> Gleiche Determinismus-Fußnote wie bei 1-1. **Nächstes Ziel: Generalist-Modell**
+> (ein PPO-Modell, zufällige Level pro Episode).
 
 **Motivation:** DQN löst 1-1 zuverlässig, wird auf schwereren Leveln (1-2) aber zäh/instabil.
 Genau da setzt **PPO** an: on-policy Policy-Gradient, sample-effizienter und stabiler,

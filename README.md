@@ -1,9 +1,10 @@
 # Super Mario Bros - Reinforcement Learning
 
 > **WIP** - Dieses Projekt befindet sich in aktiver Entwicklung.
-> **Meilensteine:** Level **1-1 gelöst** (Double DQN, 20/20 greedy-Episoden Flagge) und Level
-> **1-2 gelöst** (PPO via Stable-Baselines3, ebenfalls 20/20 – DQN scheiterte an diesem Level).
-> Als Nächstes: weitere Welten mit dem PPO-Rezept (siehe Roadmap).
+> **Meilenstein: Welt 1 komplett!** Alle vier Level werden in **20/20 greedy-Episoden** gelöst –
+> 1-1 mit Double DQN, 1-2 bis 1-4 mit PPO (Stable-Baselines3). Jedes Level brauchte dabei einen
+> anderen Fix (Reward-Normalisierung, Entropie-Tuning) – Details im PPO-Abschnitt.
+> Als Nächstes: ein Generalist-Modell für mehrere Level (siehe Roadmap).
 
 Eine KI lernt Super Mario Bros zu spielen - mit Live-Fenster zum Zuschauen!
 
@@ -135,13 +136,23 @@ mario-reinforcement/
 └── requirements.txt
 ```
 
-## PPO-Agent: Level 1-2 (Stable-Baselines3)
+## PPO-Agent: Welt 1 komplett (Stable-Baselines3)
 
 ![PPO-Agent löst Level 1-2 – deterministischer Durchlauf bis zur Flagge](ppo_1-2.gif)
 
-*Der PPO-Agent löst Level 1-2 in 20/20 greedy-Episoden – das Level, an dem Double DQN
-scheiterte. Training: `train_ppo.py` (separates venv, siehe `requirements-ppo.txt`);
-entscheidend waren Reward-Normalisierung + linearer LR-Decay.*
+*Der PPO-Agent löst Level 1-2 – das Level, an dem Double DQN scheiterte. Training:
+`train_ppo.py` (separates venv, siehe `requirements-ppo.txt`).*
+
+| Level | Algorithmus | Greedy-Eval | Der entscheidende Hebel |
+|---|---|---|---|
+| 1-1 | Double DQN | **20/20** 🏁 | langer Trainingslauf (~5.250 Episoden) |
+| 1-2 | PPO | **20/20** 🏁 | **Reward-Normalisierung + LR-Decay** (vanilla-PPO oszillierte 5M Steps lang) |
+| 1-3 | PPO | **20/20** 🏁 | **Entropie-Bonus 0.01→0.03** (Policy war in lokalem Optimum eingerastet) |
+| 1-4 | PPO | **20/20** 🏁 | Rezept aus 1-2/1-3 reichte direkt (Schloss/Feuerstäbe) |
+
+Jedes Level zeigte eine andere RL-„Krankheit" mit eigenem Gegenmittel: **Instabilität →
+Reward-Normalisierung**, **vorzeitige Konvergenz → mehr Entropie**. Die Diagnosen sind in
+den Trainingskurven (`runs_ppo/`, TensorBoard) nachvollziehbar.
 
 ## Zuschauen & Auswerten
 
@@ -209,6 +220,8 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] Wiedergabe-Modus für trainierte Agenten (`play.py`)
 - [x] **Level 1-1 konsistent abschließen** – 20/20 greedy-Episoden erreichen die Flagge (Kriterium ≥ 80 %)
 - [x] **Level 1-2 mit PPO gelöst** – 20/20 greedy-Episoden Flagge (DQN scheiterte hier; Details unten)
+- [x] **Welt 1 komplett** – auch 1-3 und 1-4 mit PPO gelöst (je 20/20)
+- [ ] Generalist: ein Modell für mehrere Level (statt Spezialisten)
 - [ ] Alle Welten durchspielen
 - [ ] Vortrainiertes Modell bereitstellen
 
