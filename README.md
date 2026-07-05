@@ -135,6 +135,14 @@ mario-reinforcement/
 └── requirements.txt
 ```
 
+## PPO-Agent: Level 1-2 (Stable-Baselines3)
+
+![PPO-Agent löst Level 1-2 – deterministischer Durchlauf bis zur Flagge](ppo_1-2.gif)
+
+*Der PPO-Agent löst Level 1-2 in 20/20 greedy-Episoden – das Level, an dem Double DQN
+scheiterte. Training: `train_ppo.py` (separates venv, siehe `requirements-ppo.txt`);
+entscheidend waren Reward-Normalisierung + linearer LR-Decay.*
+
 ## Zuschauen & Auswerten
 
 ```bash
