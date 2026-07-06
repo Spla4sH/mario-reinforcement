@@ -19,11 +19,15 @@ def record_frames(agent, env, max_steps: int = 100_000):
     Returns:
         ``(frames, info)`` – Liste der RGB-Frames und das letzte info-Dict.
     """
+    import numpy as np
+
     state = env.reset()
     frames = []
     info: dict = {}
     for _ in range(max_steps):
-        frames.append(env.render(mode="rgb_array"))
+        # copy: nes-py recycelt den Render-Puffer – ohne Kopie wären am Ende
+        # alle gesammelten Frames identisch (statisches GIF).
+        frames.append(np.array(env.render(mode="rgb_array"), copy=True))
         state, _, done, info = env.step(agent.act(state))
         if done:
             break
