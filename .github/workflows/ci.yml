@@ -20,7 +20,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           # Nur das für Lint + Tests Nötige (CPU-Torch, kein Emulator/OpenCV).
-          pip install torch --index-url https://download.pytorch.org/whl/cpu
+          # Fallback auf PyPI: der PyTorch-Index fiel schon per SSL-Fehler aus
+          # (download-r2.pytorch.org, 06.07.2026) - PyPI-Wheel ist größer, geht aber.
+          pip install torch --index-url https://download.pytorch.org/whl/cpu \
+            || pip install torch
           pip install numpy matplotlib
           pip install -r requirements-dev.txt
 
