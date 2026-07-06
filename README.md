@@ -154,6 +154,16 @@ Jedes Level zeigte eine andere RL-„Krankheit" mit eigenem Gegenmittel: **Insta
 Reward-Normalisierung**, **vorzeitige Konvergenz → mehr Entropie**. Die Diagnosen sind in
 den Trainingskurven (`runs_ppo/`, TensorBoard) nachvollziehbar.
 
+## Analyse: Wo stirbt Mario?
+
+![Death-Heatmap: Todespositionen in Level 1-1 über das DQN-Training](death_heatmap.png)
+
+*Todespositionen aus 5.409 DQN-Trainingsepisoden (Level 1-1), aufgeteilt in sechs
+Trainingsphasen. Früh dominiert das Rohr-Cluster (x&nbsp;600–900), in der Mitte wird die
+Grube bei x&nbsp;≈&nbsp;1450 zum Hotspot, später wandern die Tode immer weiter nach rechts –
+während die Flaggen-Quote (rechte Spalte) von 0&nbsp;% auf 6&nbsp;% steigt. Man sieht dem
+Agenten beim Lernen zu: Das Level wird von links nach rechts „erobert".*
+
 ## Zuschauen & Auswerten
 
 ```bash
