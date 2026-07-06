@@ -156,6 +156,21 @@ mario-reinforcement/
 | 1-3 | PPO | **20/20** 🏁 | **Entropie-Bonus 0.01→0.03** (Policy war in lokalem Optimum eingerastet) |
 | 1-4 | PPO | **20/20** 🏁 | Rezept aus 1-2/1-3 reichte direkt (Schloss/Feuerstäbe) |
 
+**Generalist-Experiment:** Ein *einziges* PPO-Modell, auf allen vier Leveln gleichzeitig trainiert
+(15M Steps, parallele Envs round-robin über die Level):
+
+| Level | Generalist (1 Modell) | Anmerkung |
+|---|---|---|
+| 1-1 | **20/20** 🏁 | fiel erst durch Verlängerung 10M→15M |
+| 1-2 | 0/20 (x 3055 ≈ 95 %) | strandet kurz vor dem Ausgang |
+| 1-3 | 0/20 (x 783) | dieselbe Lücke wie einst DQN – 15M Steps ohne Bewegung |
+| 1-4 | **20/20** 🏁 | |
+
+Ehrliches Ergebnis: **Multi-Task kostet** – zwei Level löst das eine Modell, an den
+Präzisionsstellen der anderen beiden verliert es gegen die Spezialisten. Interessantes Detail:
+Der aggregierte Trainings-Reward wirkte über die letzten 5M Steps flach, während 1-1 darunter
+von 0/20 auf 20/20 kippte – Mittelwerte über Level verstecken per-Level-Fortschritt.
+
 Jedes Level zeigte eine andere RL-„Krankheit" mit eigenem Gegenmittel: **Instabilität →
 Reward-Normalisierung**, **vorzeitige Konvergenz → mehr Entropie**. Die Diagnosen sind in
 den Trainingskurven (`runs_ppo/`, TensorBoard) nachvollziehbar.
@@ -245,7 +260,7 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] **Level 1-1 konsistent abschließen** – 20/20 greedy-Episoden erreichen die Flagge (Kriterium ≥ 80 %)
 - [x] **Level 1-2 mit PPO gelöst** – 20/20 greedy-Episoden Flagge (DQN scheiterte hier; Details unten)
 - [x] **Welt 1 komplett** – auch 1-3 und 1-4 mit PPO gelöst (je 20/20)
-- [ ] Generalist: ein Modell für mehrere Level (statt Spezialisten)
+- [x] Generalist-Experiment: ein Modell für alle Welt-1-Level (löst 2 von 4, Details oben)
 - [ ] Alle Welten durchspielen
 - [ ] Vortrainiertes Modell bereitstellen
 
