@@ -19,7 +19,10 @@ Eine KI lernt Super Mario Bros zu spielen - mit Live-Fenster zum Zuschauen!
 
 ## Was passiert hier?
 
-Ein neuronales Netz lernt durch **Double DQN** (Deep Q-Network), Super Mario Bros Level 1-1 zu meistern. Die KI sieht nur die Pixel des Spielbildschirms und lernt selbstständig zu laufen, zu springen und Gegnern auszuweichen.
+Ein neuronales Netz lernt **Super Mario Bros nur aus den Pixeln** – und hat damit die komplette
+**Welt 1 gelöst**: Level 1-1 per **Double DQN** (selbst implementiert), die härteren Level 1-2
+bis 1-4 per **PPO** (Stable-Baselines3). Die KI sieht denselben Bildschirm wie ein Mensch und
+lernt selbstständig zu laufen, zu springen und Gegnern auszuweichen.
 
 **Du kannst live zuschauen**, wie Mario anfangs planlos herumläuft und nach und nach besser wird.
 
@@ -27,7 +30,7 @@ Ein neuronales Netz lernt durch **Double DQN** (Deep Q-Network), Super Mario Bro
 
 | Komponente | Beschreibung |
 |---|---|
-| **Algorithmus** | Double DQN mit Experience Replay |
+| **Algorithmen** | Double DQN mit Experience Replay (1-1) · PPO via Stable-Baselines3 (1-2…1-4) |
 | **Input** | 4 gestapelte Graustufen-Frames (84x84) |
 | **Output** | 7 Aktionen (laufen, springen, Kombos) |
 | **Belohnung** | Fortschritt nach rechts, Münzen, Überleben |
@@ -114,7 +117,10 @@ Training unverändert ohne Tracking weiter.
 
 ```
 mario-reinforcement/
-├── train.py          # Hauptskript - Training mit Live-Anzeige
+├── train.py          # Hauptskript - DQN-Training mit Live-Anzeige
+├── train_ppo.py      # PPO-Training (Stable-Baselines3, separates venv, s. requirements-ppo.txt)
+├── mario_ppo_env.py  # Gymnasium-Brücke (shimmy) für PPO
+├── human_vs_ki.py    # Eigenen Lauf aufnehmen + Side-by-Side-GIF gegen den Agenten
 ├── play.py           # Trainierten Agenten greedy zuschauen (Originalbild)
 ├── visualize.py      # KI-Vision-Overlay (Grad-CAM) - was sieht die KI?
 ├── app.py            # Gradio-Live-Demo (KI-Vision im Browser)
@@ -260,7 +266,8 @@ Detaillierter Fahrplan: [NAECHSTE_SCHRITTE.md](NAECHSTE_SCHRITTE.md).
 ## Technologien
 
 - [gym-super-mario-bros](https://github.com/Kautenja/gym-super-mario-bros) - NES-Emulator als Gym-Umgebung
-- [PyTorch](https://pytorch.org/) - Neuronales Netz & Training
+- [PyTorch](https://pytorch.org/) - Neuronales Netz & Training (DQN)
+- [Stable-Baselines3](https://stable-baselines3.readthedocs.io/) + [shimmy](https://shimmy.farama.org/) - PPO auf der Legacy-Gym-Umgebung
 - [OpenCV](https://opencv.org/) - Bildvorverarbeitung
 
 ## Entwicklung
