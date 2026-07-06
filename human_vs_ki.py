@@ -41,23 +41,31 @@ def record_human(world: int, stage: int, out: str) -> None:
 
     def on_step(obs, action, reward, done, next_obs):
         # Offizieller play_human-Callback: nach jedem Schritt aufgerufen.
-        if not state["done"]:
-            frames.append(np.array(env.unwrapped.screen, copy=True))
-            if done:
-                state["done"] = True
+        # WICHTIG: sofort beim Episodenende speichern – play_human schließt das
+        # Env beim Beenden selbst, auf den Code NACH play_human ist kein Verlass.
+        if state["done"]:
+            return
+        frames.append(np.array(env.unwrapped.screen, copy=True))
+        if done:
+            state["done"] = True
+            np.savez_compressed(out, frames=np.array(frames[::4]))  # jede 4. (wie SkipFrame)
+            print(f"\nEpisode beendet – {len(frames)} Frames gespeichert -> {out}")
+            print("Fenster jetzt mit ESC schließen, dann 'compose' ausführen.")
 
     print("Fenster öffnet sich. Pfeiltasten = laufen, O = springen, P = rennen/Feuer.")
     print("Aufgenommen wird bis zum ersten Tod / zur Flagge. Danach mit ESC schließen.")
     try:
         play_human(env, callback=on_step)
     finally:
-        env.close()
+        # play_human schließt das Env normalerweise selbst – doppelter close
+        # wirft in nes-py einen ValueError, daher hier nur als Absicherung.
+        try:
+            env.close()
+        except Exception:
+            pass
 
-    if not frames:
-        print("Keine Frames aufgenommen – Fenster zu früh geschlossen?")
-        return
-    np.savez_compressed(out, frames=np.array(frames[::4]))  # alle 4 NES-Frames (wie SkipFrame)
-    print(f"{len(frames)} Frames aufgenommen (gespeichert: jede 4.) -> {out}")
+    if not state["done"]:
+        print("Keine vollständige Episode aufgenommen – Fenster zu früh geschlossen?")
 
 
 def compose(human_path: str, out: str, checkpoint: str, world: int, stage: int) -> None:
