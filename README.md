@@ -154,6 +154,14 @@ Jedes Level zeigte eine andere RL-„Krankheit" mit eigenem Gegenmittel: **Insta
 Reward-Normalisierung**, **vorzeitige Konvergenz → mehr Entropie**. Die Diagnosen sind in
 den Trainingskurven (`runs_ppo/`, TensorBoard) nachvollziehbar.
 
+## Mensch vs. KI
+
+![Mensch und KI spielen Level 1-1 Seite an Seite](mensch_vs_ki.gif)
+
+*Gleiches Level, gleiche 7 Aktionen – links Mensch, rechts der trainierte DQN-Agent.
+Beide erreichen die Flagge, die KI ist rund 25 Spielsekunden schneller (Restzeit 329 vs. 304).
+Eigenen Lauf aufnehmen: `python human_vs_ki.py record`, dann `compose`.*
+
 ## Analyse: Wo stirbt Mario?
 
 ![Death-Heatmap: Todespositionen in Level 1-1 über das DQN-Training](death_heatmap.png)
