@@ -6,6 +6,7 @@ venv/
 checkpoints/
 checkpoints*/
 *.pt
+*.npz
 logs/
 plots/
 highlights/
