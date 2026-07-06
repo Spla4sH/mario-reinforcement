@@ -45,6 +45,10 @@ def record_human(world: int, stage: int, out: str) -> None:
         # Env beim Beenden selbst, auf den Code NACH play_human ist kein Verlass.
         if state["done"]:
             return
+        # Erst ab der ersten echten Eingabe aufnehmen (Aktion 0 = NOOP) –
+        # Fenster zurechtziehen/orientieren landet so nicht im GIF.
+        if not frames and action == 0:
+            return
         frames.append(np.array(env.unwrapped.screen, copy=True))
         if done:
             state["done"] = True
@@ -68,7 +72,10 @@ def record_human(world: int, stage: int, out: str) -> None:
         print("Keine vollständige Episode aufgenommen – Fenster zu früh geschlossen?")
 
 
-def compose(human_path: str, out: str, checkpoint: str, world: int, stage: int) -> None:
+def compose(
+    human_path: str, out: str, checkpoint: str, world: int, stage: int,
+    trim_start: int = 0,
+) -> None:
     """Baut das Side-by-Side-GIF: links Mensch, rechts Agent (greedy)."""
     from PIL import Image, ImageDraw
 
@@ -83,7 +90,11 @@ def compose(human_path: str, out: str, checkpoint: str, world: int, stage: int) 
         print("Zuerst den eigenen Lauf aufnehmen:  python human_vs_ki.py record")
         return
     human = list(np.load(human_path)["frames"])
-    print(f"Mensch: {len(human)} Frames geladen")
+    if trim_start:
+        human = human[trim_start:]
+        print(f"Mensch: {len(human)} Frames (erste {trim_start} abgeschnitten)")
+    else:
+        print(f"Mensch: {len(human)} Frames geladen")
 
     env = create_env(world=world, stage=stage, render=False)
     agent = MarioAgent(env.action_space.n)
@@ -133,12 +144,16 @@ def main() -> None:
     p_cmp.add_argument("--world", type=int, default=config.WORLD)
     p_cmp.add_argument("--stage", type=int, default=config.STAGE)
     p_cmp.add_argument("--out", default="mensch_vs_ki.gif")
+    p_cmp.add_argument(
+        "--trim-start", type=int, default=0,
+        help="So viele Frames vom Anfang der Mensch-Aufnahme abschneiden (15 ≈ 1 Sek.)",
+    )
 
     args = parser.parse_args()
     if args.cmd == "record":
         record_human(args.world, args.stage, args.out)
     else:
-        compose(args.human, args.out, args.checkpoint, args.world, args.stage)
+        compose(args.human, args.out, args.checkpoint, args.world, args.stage, args.trim_start)
 
 
 if __name__ == "__main__":
