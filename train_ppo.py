@@ -55,8 +55,10 @@ def main() -> None:
     parser.add_argument(
         "--ent-coef",
         type=float,
-        default=0.01,
-        help="Entropie-Bonus: höher = länger explorieren (gegen vorzeitige Konvergenz).",
+        default=None,
+        help="Entropie-Bonus: höher = länger explorieren (gegen vorzeitige Konvergenz). "
+        "Default: 0.01 bei frischem Start; beim Resume bleibt ohne Angabe der "
+        "gespeicherte Wert erhalten.",
     )
     args = parser.parse_args()
 
@@ -101,7 +103,16 @@ def main() -> None:
     # PPO mit CNN-Policy (SB3s NatureCNN ≈ unser DQN-Netz). Hyperparameter an
     # der Atari-PPO-Praxis orientiert – Startpunkt zum Tunen.
     if args.resume_from and os.path.exists(args.resume_from):
-        model = PPO.load(args.resume_from, env=env, tensorboard_log=args.logdir)
+        # Beim Resume gespeicherte Hyperparameter behalten – ausser --ent-coef
+        # wurde explizit gesetzt (gezielter Explorations-Boost, z. B. 2-1-Trampolin).
+        overrides = {}
+        if args.ent_coef is not None:
+            overrides["ent_coef"] = args.ent_coef
+            print(f"ent_coef-Override beim Resume: {args.ent_coef}")
+        model = PPO.load(
+            args.resume_from, env=env, tensorboard_log=args.logdir,
+            custom_objects=overrides,
+        )
         reset_timesteps = False
         print(f"Fortsetzen von {args.resume_from} (bisher {model.num_timesteps:,} Steps)")
     else:
@@ -116,7 +127,7 @@ def main() -> None:
             gamma=0.99,
             gae_lambda=0.95,
             clip_range=0.1,
-            ent_coef=args.ent_coef,
+            ent_coef=args.ent_coef if args.ent_coef is not None else 0.01,
             vf_coef=0.5,
             learning_rate=linear_schedule(2.5e-4),
         )
