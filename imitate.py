@@ -12,6 +12,15 @@ Ablauf (alles im .venv-ppo):
            --out checkpoints_ppo/mario_ppo_2-1_bc.zip
   3) PPO-Feintuning wie gewohnt:
        python train_ppo.py --world 2 --stage 1 --resume-from checkpoints_ppo/mario_ppo_2-1_bc.zip ...
+
+Drittes Subkommando `bc-seq`: kloniert eine von `goexplore.py` gefundene
+Lösungssequenz (Policy-Anlauf + Such-Tail) in die Policy. Anders als beim
+menschlichen Demo-BC gibt es hier keinen Distribution Shift – der Anlauf IST
+das greedy-Verhalten der Policy. Trainiert bis die Policy den Lauf greedy
+exakt reproduziert (deterministisches Env → Flagge):
+       python imitate.py bc-seq --seq tower_seq_2-1.npz \
+           --model checkpoints_ppo/mario_ppo_2-1.zip \
+           --out checkpoints_ppo/mario_ppo_2-1_tower.zip
 """
 
 from __future__ import annotations
@@ -173,6 +182,112 @@ def bc(demo: str, model_path: str, out: str, epochs: int, lr: float, batch_size:
     print(f"BC-Modell gespeichert: {out}")
 
 
+def bc_seq(seq_path: str, model_path: str, out: str, epochs: int, lr: float, batch_size: int) -> None:
+    """Kloniert eine goexplore-Lösungssequenz in die Policy (bis zur Reproduktion).
+
+    Fehler-Steps werden übergewichtet und ab 97 % Trefferquote wird jede Epoche
+    greedy verifiziert – Stopp, sobald der Rollout die Flagge erreicht.
+    """
+    import shutil
+
+    import torch
+    from stable_baselines3 import PPO
+
+    import config
+    from wrappers import create_env
+
+    data = np.load(seq_path)
+    if int(data["frame_skip"]) != config.FRAME_SKIP:
+        raise SystemExit(
+            f"Sequenz wurde mit FRAME_SKIP={int(data['frame_skip'])} gesucht, "
+            f"aktuell ist {config.FRAME_SKIP} – FRAME_SKIP passend setzen!"
+        )
+    seq = np.concatenate([data["head"], data["tail"]]).astype(int)
+    world, stage = int(data["world"]), int(data["stage"])
+    print(f"Sequenz {world}-{stage}: {len(data['head'])} Anlauf- + {len(data['tail'])} Tail-Steps")
+
+    # 1) Replay durch den Wrapper-Stack -> (obs, action)-Paare im Agenten-Format
+    env = create_env(world=world, stage=stage, render=False)
+    obs = env.reset()
+    obs_list, act_list = [], []
+    info: dict = {}
+    for a in seq:
+        obs_list.append(obs)
+        act_list.append(int(a))
+        obs, _, done, info = env.step(int(a))
+        if done:
+            break
+    print(f"Replay: x={info.get('x_pos')} | Flagge: {bool(info.get('flag_get'))} | {len(obs_list)} Paare")
+    if not info.get("flag_get"):
+        raise SystemExit("Replay erreicht die Flagge nicht – Sequenz ungültig (FRAME_SKIP? Env-Version?).")
+    obs_arr = np.array(obs_list, dtype=np.uint8)
+    act_arr = np.array(act_list, dtype=np.int64)
+
+    # 2) BC bis die Policy den Lauf greedy exakt reproduziert
+    model = PPO.load(model_path)
+    policy = model.policy
+    optimizer = torch.optim.Adam(policy.parameters(), lr=lr)
+
+    def verify() -> tuple[int, bool]:
+        policy.set_training_mode(False)
+        o = env.reset()
+        done = False
+        while not done:
+            action, _ = model.predict(o, deterministic=True)
+            o, _, done, i = env.step(int(action))
+        policy.set_training_mode(True)
+        return int(i.get("x_pos", 0)), bool(i.get("flag_get"))
+
+    policy.set_training_mode(True)
+    n = len(obs_arr)
+    wrong = np.arange(n)  # Fehler-Steps der letzten Epoche (Start: alle)
+    flag = False
+    for epoch in range(1, epochs + 1):
+        idx = np.concatenate([np.arange(n)] + [wrong] * 4)  # Fehler 4x übergewichten
+        np.random.shuffle(idx)
+        losses = []
+        for start in range(0, len(idx), batch_size):
+            batch = idx[start : start + batch_size]
+            obs_t, _ = policy.obs_to_tensor(obs_arr[batch])
+            act_t = torch.as_tensor(act_arr[batch], device=policy.device)
+            dist = policy.get_distribution(obs_t)
+            loss = -dist.log_prob(act_t).mean()
+            optimizer.zero_grad()
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(policy.parameters(), 0.5)
+            optimizer.step()
+            losses.append(float(loss))
+        with torch.no_grad():
+            preds = []
+            for start in range(0, n, 256):
+                obs_t, _ = policy.obs_to_tensor(obs_arr[start : start + 256])
+                preds.append(policy.get_distribution(obs_t).distribution.probs.argmax(dim=1).cpu().numpy())
+        wrong = np.where(np.concatenate(preds) != act_arr)[0]
+        acc = (n - len(wrong)) / n * 100
+        line = f"Epoche {epoch:2d} | Loss {np.mean(losses):.4f} | Treffer {acc:.1f}%"
+        if acc >= 97.0:
+            x, flag = verify()
+            line += f" | greedy: x={x}{' FLAGGE!' if flag else ''}"
+        print(line)
+        if flag:
+            break
+
+    policy.set_training_mode(False)
+    x, flag = verify()
+    env.close()
+    print(f"Greedy-Verifikation: x={x} | Flagge: {flag}")
+
+    model.save(out)
+    src_pkl = model_path.replace(".zip", "_vecnormalize.pkl")
+    dst_pkl = out.replace(".zip", "_vecnormalize.pkl")
+    if src_pkl != dst_pkl:
+        try:
+            shutil.copyfile(src_pkl, dst_pkl)
+        except FileNotFoundError:
+            pass
+    print(f"Modell gespeichert: {out}")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Imitation-Warmstart (Demo + Behavior Cloning).")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -190,11 +305,21 @@ def main() -> None:
     p_bc.add_argument("--lr", type=float, default=3e-5)
     p_bc.add_argument("--batch-size", type=int, default=64)
 
+    p_seq = sub.add_parser("bc-seq", help="goexplore-Lösungssequenz in die Policy klonen")
+    p_seq.add_argument("--seq", required=True, help=".npz aus goexplore.py --save-best")
+    p_seq.add_argument("--model", default="checkpoints_ppo/mario_ppo_2-1.zip")
+    p_seq.add_argument("--out", default="checkpoints_ppo/mario_ppo_2-1_tower.zip")
+    p_seq.add_argument("--epochs", type=int, default=60)
+    p_seq.add_argument("--lr", type=float, default=3e-5)
+    p_seq.add_argument("--batch-size", type=int, default=64)
+
     args = parser.parse_args()
     if args.cmd == "record":
         record(args.world, args.stage, args.out)
-    else:
+    elif args.cmd == "bc":
         bc(args.demo, args.model, args.out, args.epochs, args.lr, args.batch_size)
+    else:
+        bc_seq(args.seq, args.model, args.out, args.epochs, args.lr, args.batch_size)
 
 
 if __name__ == "__main__":

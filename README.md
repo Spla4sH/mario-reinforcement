@@ -120,8 +120,11 @@ mario-reinforcement/
 ├── train.py          # Hauptskript - DQN-Training mit Live-Anzeige
 ├── train_ppo.py      # PPO-Training (Stable-Baselines3, separates venv, s. requirements-ppo.txt)
 ├── mario_ppo_env.py  # Gymnasium-Brücke (shimmy) für PPO
+├── goexplore.py      # Savestate-Suche gegen Hard-Exploration-Stellen (Go-Explore-Idee)
+├── imitate.py        # Demo aufnehmen + Behavior Cloning (bc / bc-seq)
 ├── human_vs_ki.py    # Eigenen Lauf aufnehmen + Side-by-Side-GIF gegen den Agenten
 ├── play.py           # Trainierten Agenten greedy zuschauen (Originalbild)
+├── play_ppo.py       # PPO-Agenten live zuschauen (auch Zwischenstände)
 ├── visualize.py      # KI-Vision-Overlay (Grad-CAM) - was sieht die KI?
 ├── app.py            # Gradio-Live-Demo (KI-Vision im Browser)
 ├── record.py         # Episode als GIF aufnehmen (Auto-Highlight + Demo)
@@ -174,6 +177,35 @@ von 0/20 auf 20/20 kippte – Mittelwerte über Level verstecken per-Level-Forts
 Jedes Level zeigte eine andere RL-„Krankheit" mit eigenem Gegenmittel: **Instabilität →
 Reward-Normalisierung**, **vorzeitige Konvergenz → mehr Entropie**. Die Diagnosen sind in
 den Trainingskurven (`runs_ppo/`, TensorBoard) nachvollziehbar.
+
+## Welt 2: Hard Exploration am Trampolin-Turm
+
+![PPO-Agent löst Level 2-1 – Superbounce über den Trampolin-Turm bis zur Flagge](ppo_2-1.gif)
+
+*Level 2-1, gelöst: 20/20 greedy-Episoden Flagge. Der Sprung über den Turm am Ende ist ein
+Trampolin-„Superbounce" – die Stelle, an der reines RL 12 Millionen Steps lang scheiterte.*
+
+| Level | Ergebnis | Der entscheidende Hebel |
+|---|---|---|
+| 2-1 | **20/20** 🏁 | **Savestate-Suche (Go-Explore-Idee) + Behavior Cloning** – s. unten |
+
+Die Stelle ist ein klassisches **Hard-Exploration-Problem**: Die Policy erreicht den Turm
+zuverlässig, aber der Abprall-Sprung ist eine so unwahrscheinliche Aktionsfolge, dass
+Zufalls-Exploration sie nie würfelt – jede Probe kostet einen kompletten Level-Anlauf.
+Was alles *nicht* half: 12M Steps PPO, Entropie-Boosts, Behavior Cloning einer menschlichen
+Demo (Distribution Shift), sogar ein Wechsel der Aktions-Taktung (`FRAME_SKIP` 4→2).
+
+Die Lösung (`goexplore.py`, inspiriert von [Go-Explore](https://arxiv.org/abs/1901.10995)):
+**Zustand sichern statt immer neu anlaufen.** Die Policy spielt bis kurz vor den Turm, der
+NES-Emulator-Zustand wird gesichert, dann werden tausende zufällige Aktionssequenzen direkt
+ab dem Savestate getestet – Kandidat 81 fand den Superbounce bis zur Flagge. Diese
+Lösungssequenz wird per `imitate.py bc-seq` in die Policy geklont; da der Anlauf ihr
+eigenes greedy-Verhalten ist, gibt es keinen Distribution Shift, und das deterministische
+Env macht die Reproduktion exakt.
+
+Nebenbefund mit Lehrwert: Eine erste Probe mit 45 *handgeskripteten* Sprungvarianten legte
+nahe, der Sprung sei bei 4-Frame-Taktung physikalisch unmöglich. Die breite Zufallssuche
+widerlegte das – die Hypothese war ein Artefakt des zu engen Suchraums.
 
 ## Mensch vs. KI
 
@@ -261,6 +293,7 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] **Level 1-2 mit PPO gelöst** – 20/20 greedy-Episoden Flagge (DQN scheiterte hier; Details unten)
 - [x] **Welt 1 komplett** – auch 1-3 und 1-4 mit PPO gelöst (je 20/20)
 - [x] Generalist-Experiment: ein Modell für alle Welt-1-Level (löst 2 von 4, Details oben)
+- [x] **Level 2-1 gelöst** – Hard-Exploration-Stelle per Savestate-Suche + Behavior Cloning geknackt
 - [ ] Alle Welten durchspielen
 - [ ] Vortrainiertes Modell bereitstellen
 

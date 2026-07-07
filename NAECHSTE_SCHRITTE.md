@@ -171,6 +171,36 @@ stärkerer Algorithmus.
 
 ---
 
+## Phase F — Welt 2 & Hard Exploration ✅ (2-1 gelöst, 07.07.2026)
+
+> **Stand: 2-1 = 20/20 greedy.** Modell `checkpoints_ppo/mario_ppo_2-1_tower.zip`,
+> Lösungssequenz `tower_seq_2-1.npz` (reproduzierbar, Seed 0).
+
+Der Trampolin-Turm am Levelende war ein echtes **Hard-Exploration-Problem**: Die Policy kam
+zuverlässig hin (x 3026), fand den Superbounce aber in 12M Steps nie – Entropie-Boosts,
+menschliche Demo + Behavior Cloning und ein Frame-Skip-Wechsel (4→2) halfen alle nicht.
+
+**Was es gelöst hat** (neue, wiederverwendbare Pipeline für alle künftigen Hängestellen):
+1. `goexplore.py` — Policy-Anlauf bis zur Hängestelle, **NES-Savestate** sichern, tausende
+   zufällige Aktionssequenzen ab dem Savestate testen (`_restore` statt Neuanlauf).
+   Fand die Flagge nach 81 Kandidaten.
+2. `imitate.py bc-seq` — die gefundene Sequenz per Behavior Cloning in die Policy klonen
+   (kein Distribution Shift, da der Anlauf ihr eigenes greedy-Verhalten ist), mit
+   Greedy-Verifikation je Epoche.
+
+Lehrstück nebenbei: Die 45-Varianten-Skriptprobe hatte „Skip-4 kann es physikalisch nicht"
+nahegelegt — die breite Zufallssuche widerlegte das (zu enger Suchraum). `FRAME_SKIP` ist
+seitdem trotzdem konfigurierbar (nützlich für spätere Präzisionsstellen).
+
+**Nächste Schritte:**
+1. **2-2 (Wasser-Level):** neue Physik (Schwimmen), Standard-PPO-Rezept zuerst; bei
+   Hängestellen direkt die goexplore-Pipeline.
+2. Generalist nachschärfen (gewichtetes Sampling) / Curiosity-ICM bleibt als Option, falls
+   ein Level *flächig* (nicht punktuell) an Exploration scheitert.
+3. HF-Space-Deployment (vorbereitet in `hf_space/`), Grad-CAM für PPO, K8s-Sweep.
+
+---
+
 ## Frage: später ein anderes / komplexeres Spiel?
 
 **Kurzantwort:** Für dein Portfolio bringt ein *stärkerer Algorithmus* mehr als ein neues Spiel.
