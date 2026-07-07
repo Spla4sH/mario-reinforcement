@@ -171,10 +171,11 @@ stärkerer Algorithmus.
 
 ---
 
-## Phase F — Welt 2 & Hard Exploration ✅ (2-1 + 2-2 gelöst, 07.07.2026)
+## Phase F — Welt 2 & Hard Exploration ✅ (KOMPLETT, 07.07.2026)
 
-> **Stand: 2-1 und 2-2 je 20/20 greedy.** Modelle `checkpoints_ppo/mario_ppo_2-1_tower.zip`
-> und `mario_ppo_2-2.zip`; 2-1-Lösungssequenz `tower_seq_2-1.npz` (reproduzierbar, Seed 0).
+> **Stand: Welt 2 komplett — alle vier Level 20/20 greedy.** Modelle:
+> `mario_ppo_2-1_tower.zip` (+ Lösungssequenz `tower_seq_2-1.npz`, Seed 0),
+> `mario_ppo_2-2.zip` (6M), `mario_ppo_2-3.zip` (3M), `mario_ppo_2-4.zip` (3M).
 
 Der Trampolin-Turm am Levelende war ein echtes **Hard-Exploration-Problem**: Die Policy kam
 zuverlässig hin (x 3026), fand den Superbounce aber in 12M Steps nie – Entropie-Boosts,
@@ -197,13 +198,20 @@ x 2563, volle Restzeit), aber die Reward-Kurve stieg noch → Resume +3M statt M
 → 20/20. Schwimm-Physik brauchte keinerlei Anpassung. Merkregel bestätigt: *Kurve steigt →
 weitertrainieren; Kurve friert bei festem x ein → goexplore.*
 
-**2-3 (Brücken) ✅:** Standard-Rezept, 3M Steps, erster Anlauf → 20/20 (x 3593).
+**2-3 (Brücken) ✅** und **2-4 (Schloss) ✅:** Standard-Rezept, je 3M Steps, jeweils
+erster Anlauf → 20/20 (x 3593 bzw. Axt hinter Bowser bei x 2267).
+
+Bilanz Welt 2: **1× Spezialwerkzeug (2-1), 1× Geduld (2-2), 2× Rezept (2-3/2-4).**
+Faustregel etabliert: *Kurve steigt → weitertrainieren; Kurve friert bei festem x ein →
+goexplore.*
 
 **Nächste Schritte:**
-1. **2-4 (Schloss):** Welt 2 fertig machen. Standard-Rezept zuerst, goexplore als Backup.
-2. Generalist nachschärfen (gewichtetes Sampling) / Curiosity-ICM bleibt als Option, falls
+1. **HF-Space-Deployment** (vorbereitet in `hf_space/`, macht Sebastian), Grad-CAM für PPO,
+   K8s-Sweep, Story-Write-up.
+2. **Welt 3** (3-1 Nacht-Level … 3-4 Schloss) mit demselben Playbook, wenn wieder
+   GPU-Zeit eingeplant ist.
+3. Generalist nachschärfen (gewichtetes Sampling) / Curiosity-ICM bleibt als Option, falls
    ein Level *flächig* (nicht punktuell) an Exploration scheitert.
-3. HF-Space-Deployment (vorbereitet in `hf_space/`), Grad-CAM für PPO, K8s-Sweep.
 
 ---
 

@@ -178,7 +178,7 @@ Jedes Level zeigte eine andere RL-„Krankheit" mit eigenem Gegenmittel: **Insta
 Reward-Normalisierung**, **vorzeitige Konvergenz → mehr Entropie**. Die Diagnosen sind in
 den Trainingskurven (`runs_ppo/`, TensorBoard) nachvollziehbar.
 
-## Welt 2: Hard Exploration am Trampolin-Turm
+## Welt 2 komplett: Hard Exploration am Trampolin-Turm
 
 ![PPO-Agent löst Level 2-1 – Superbounce über den Trampolin-Turm bis zur Flagge](ppo_2-1.gif)
 
@@ -190,6 +190,7 @@ Trampolin-„Superbounce" – die Stelle, an der reines RL 12 Millionen Steps la
 | 2-1 | **20/20** 🏁 | **Savestate-Suche (Go-Explore-Idee) + Behavior Cloning** – s. unten |
 | 2-2 (Wasser) | **20/20** 🏁 | Standard-Rezept + **Kurven-Diagnose**: nach 3M Steps 0/20, aber Reward stieg noch → Resume +3M statt Methodenwechsel |
 | 2-3 (Brücken) | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf – fliegende Cheep-Cheeps waren kein Problem |
+| 2-4 (Schloss) | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf – bis zur Axt hinter Bowser |
 
 Die Stelle ist ein klassisches **Hard-Exploration-Problem**: Die Policy erreicht den Turm
 zuverlässig, aber der Abprall-Sprung ist eine so unwahrscheinliche Aktionsfolge, dass
@@ -215,6 +216,13 @@ widerlegte das – die Hypothese war ein Artefakt des zu engen Suchraums.
 strandeten alle Greedy-Episoden an einem Gegner bei x&nbsp;2563 – aber die Trainingskurve stieg
 noch. Also kein Methodenwechsel, sondern Resume um weitere 3M Steps → 20/20. Die Schwimm-Physik
 (A-Taste = Schwimmstoß statt Sprung) lernte PPO ohne jede Anpassung aus den Pixeln.*
+
+![PPO-Agent löst das Schloss-Level 2-4 – vorbei an den Feuerstäben bis zur Axt hinter Bowser](ppo_2-4.gif)
+
+*Das Welt-Finale: 2-3 und 2-4 fielen mit dem Standard-Rezept jeweils im ersten Anlauf –
+Feuerstäbe, Lava und Bowser inklusive. Faustregel aus Welt 2: **steigt die Trainingskurve
+noch, weitertrainieren; friert sie bei einem festen x ein, ist es ein Explorationsproblem →
+`goexplore.py`.***
 
 ## Mensch vs. KI
 
@@ -303,6 +311,7 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] **Welt 1 komplett** – auch 1-3 und 1-4 mit PPO gelöst (je 20/20)
 - [x] Generalist-Experiment: ein Modell für alle Welt-1-Level (löst 2 von 4, Details oben)
 - [x] **Level 2-1 gelöst** – Hard-Exploration-Stelle per Savestate-Suche + Behavior Cloning geknackt
+- [x] **Welt 2 komplett** – 2-2 (Wasser), 2-3 (Brücken) und 2-4 (Schloss) je 20/20
 - [ ] Alle Welten durchspielen
 - [ ] Vortrainiertes Modell bereitstellen
 
