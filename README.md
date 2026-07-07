@@ -188,6 +188,7 @@ Trampolin-„Superbounce" – die Stelle, an der reines RL 12 Millionen Steps la
 | Level | Ergebnis | Der entscheidende Hebel |
 |---|---|---|
 | 2-1 | **20/20** 🏁 | **Savestate-Suche (Go-Explore-Idee) + Behavior Cloning** – s. unten |
+| 2-2 (Wasser) | **20/20** 🏁 | Standard-Rezept + **Kurven-Diagnose**: nach 3M Steps 0/20, aber Reward stieg noch → Resume +3M statt Methodenwechsel |
 
 Die Stelle ist ein klassisches **Hard-Exploration-Problem**: Die Policy erreicht den Turm
 zuverlässig, aber der Abprall-Sprung ist eine so unwahrscheinliche Aktionsfolge, dass
@@ -206,6 +207,13 @@ Env macht die Reproduktion exakt.
 Nebenbefund mit Lehrwert: Eine erste Probe mit 45 *handgeskripteten* Sprungvarianten legte
 nahe, der Sprung sei bei 4-Frame-Taktung physikalisch unmöglich. Die breite Zufallssuche
 widerlegte das – die Hypothese war ein Artefakt des zu engen Suchraums.
+
+![PPO-Agent löst das Wasser-Level 2-2 – Schwimmen bis zur Flagge](ppo_2-2.gif)
+
+***2-2** war der Gegenbeweis, dass nicht jede Hürde ein Spezialwerkzeug braucht: Nach 3M Steps
+strandeten alle Greedy-Episoden an einem Gegner bei x&nbsp;2563 – aber die Trainingskurve stieg
+noch. Also kein Methodenwechsel, sondern Resume um weitere 3M Steps → 20/20. Die Schwimm-Physik
+(A-Taste = Schwimmstoß statt Sprung) lernte PPO ohne jede Anpassung aus den Pixeln.*
 
 ## Mensch vs. KI
 

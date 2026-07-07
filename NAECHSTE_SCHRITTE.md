@@ -171,10 +171,10 @@ stärkerer Algorithmus.
 
 ---
 
-## Phase F — Welt 2 & Hard Exploration ✅ (2-1 gelöst, 07.07.2026)
+## Phase F — Welt 2 & Hard Exploration ✅ (2-1 + 2-2 gelöst, 07.07.2026)
 
-> **Stand: 2-1 = 20/20 greedy.** Modell `checkpoints_ppo/mario_ppo_2-1_tower.zip`,
-> Lösungssequenz `tower_seq_2-1.npz` (reproduzierbar, Seed 0).
+> **Stand: 2-1 und 2-2 je 20/20 greedy.** Modelle `checkpoints_ppo/mario_ppo_2-1_tower.zip`
+> und `mario_ppo_2-2.zip`; 2-1-Lösungssequenz `tower_seq_2-1.npz` (reproduzierbar, Seed 0).
 
 Der Trampolin-Turm am Levelende war ein echtes **Hard-Exploration-Problem**: Die Policy kam
 zuverlässig hin (x 3026), fand den Superbounce aber in 12M Steps nie – Entropie-Boosts,
@@ -192,9 +192,14 @@ Lehrstück nebenbei: Die 45-Varianten-Skriptprobe hatte „Skip-4 kann es physik
 nahegelegt — die breite Zufallssuche widerlegte das (zu enger Suchraum). `FRAME_SKIP` ist
 seitdem trotzdem konfigurierbar (nützlich für spätere Präzisionsstellen).
 
+**2-2 (Wasser-Level) ✅:** Standard-Rezept reichte – nach 3M Steps 0/20 (Gegner-Tod bei
+x 2563, volle Restzeit), aber die Reward-Kurve stieg noch → Resume +3M statt Methodenwechsel
+→ 20/20. Schwimm-Physik brauchte keinerlei Anpassung. Merkregel bestätigt: *Kurve steigt →
+weitertrainieren; Kurve friert bei festem x ein → goexplore.*
+
 **Nächste Schritte:**
-1. **2-2 (Wasser-Level):** neue Physik (Schwimmen), Standard-PPO-Rezept zuerst; bei
-   Hängestellen direkt die goexplore-Pipeline.
+1. **2-3 / 2-4:** Welt 2 fertig machen (2-3 = Brücken-Level mit fliegenden Cheep-Cheeps,
+   2-4 = Schloss). Standard-Rezept zuerst, goexplore als Backup.
 2. Generalist nachschärfen (gewichtetes Sampling) / Curiosity-ICM bleibt als Option, falls
    ein Level *flächig* (nicht punktuell) an Exploration scheitert.
 3. HF-Space-Deployment (vorbereitet in `hf_space/`), Grad-CAM für PPO, K8s-Sweep.
