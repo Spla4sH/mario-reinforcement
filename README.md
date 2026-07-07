@@ -189,6 +189,7 @@ Trampolin-„Superbounce" – die Stelle, an der reines RL 12 Millionen Steps la
 |---|---|---|
 | 2-1 | **20/20** 🏁 | **Savestate-Suche (Go-Explore-Idee) + Behavior Cloning** – s. unten |
 | 2-2 (Wasser) | **20/20** 🏁 | Standard-Rezept + **Kurven-Diagnose**: nach 3M Steps 0/20, aber Reward stieg noch → Resume +3M statt Methodenwechsel |
+| 2-3 (Brücken) | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf – fliegende Cheep-Cheeps waren kein Problem |
 
 Die Stelle ist ein klassisches **Hard-Exploration-Problem**: Die Policy erreicht den Turm
 zuverlässig, aber der Abprall-Sprung ist eine so unwahrscheinliche Aktionsfolge, dass

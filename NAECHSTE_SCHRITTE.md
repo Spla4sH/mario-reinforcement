@@ -197,9 +197,10 @@ x 2563, volle Restzeit), aber die Reward-Kurve stieg noch → Resume +3M statt M
 → 20/20. Schwimm-Physik brauchte keinerlei Anpassung. Merkregel bestätigt: *Kurve steigt →
 weitertrainieren; Kurve friert bei festem x ein → goexplore.*
 
+**2-3 (Brücken) ✅:** Standard-Rezept, 3M Steps, erster Anlauf → 20/20 (x 3593).
+
 **Nächste Schritte:**
-1. **2-3 / 2-4:** Welt 2 fertig machen (2-3 = Brücken-Level mit fliegenden Cheep-Cheeps,
-   2-4 = Schloss). Standard-Rezept zuerst, goexplore als Backup.
+1. **2-4 (Schloss):** Welt 2 fertig machen. Standard-Rezept zuerst, goexplore als Backup.
 2. Generalist nachschärfen (gewichtetes Sampling) / Curiosity-ICM bleibt als Option, falls
    ein Level *flächig* (nicht punktuell) an Exploration scheitert.
 3. HF-Space-Deployment (vorbereitet in `hf_space/`), Grad-CAM für PPO, K8s-Sweep.
