@@ -101,7 +101,7 @@ def create_env(world=1, stage=1, render=True):
     env = JoypadSpace(env, SIMPLE_MOVEMENT)
 
     # Wrapper anwenden
-    env = SkipFrame(env, skip=4)
+    env = SkipFrame(env, skip=config.FRAME_SKIP)
     # Reward-Shaping (Default scale=1.0/clip=None => unverändert; per config/Env tunebar)
     env = RewardWrapper(env, scale=config.REWARD_SCALE, clip=config.REWARD_CLIP)
     env = GrayScaleResize(env, size=config.FRAME_SIZE)

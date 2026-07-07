@@ -80,3 +80,7 @@ EVAL_EPISODES = _env_int("EVAL_EPISODES", 5)  # Greedy-Episoden pro Evaluation
 # Bildverarbeitung (für das neuronale Netz)
 FRAME_STACK = _env_int("FRAME_STACK", 4)  # Anzahl gestapelter Frames
 FRAME_SIZE = _env_int("FRAME_SIZE", 84)  # Bildgröße für das Netz (84x84)
+# Aktions-Taktung: 1 Agent-Entscheidung pro FRAME_SKIP NES-Frames. 4 = Standard;
+# 2 für Stellen, die feineres Timing brauchen (z. B. 2-1-Trampolinturm).
+# ACHTUNG: Modelle sind an ihren Skip gebunden – bei Eval/Play denselben Wert setzen!
+FRAME_SKIP = _env_int("FRAME_SKIP", 4)
