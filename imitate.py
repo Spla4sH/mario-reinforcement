@@ -50,22 +50,27 @@ def record(world: int, stage: int, out: str) -> None:
 
     env = _make_raw_env(world, stage)
     actions: list[int] = []
-    state = {"done": False}
+    state = {"attempt": 1, "best_x": 0}
 
     def on_step(obs, action, reward, done, next_obs):
-        if state["done"]:
-            return
         actions.append(int(action))
         if done:
-            state["done"] = True
-            np.savez_compressed(
-                out, actions=np.array(actions, dtype=np.int8), world=world, stage=stage
-            )
-            print(f"\nEpisode beendet – {len(actions)} Aktionen gespeichert -> {out}")
-            print("Fenster mit ESC schließen, dann 'bc' ausführen.")
+            # Bester Versuch gewinnt: einfach weiterspielen, bis einer sitzt.
+            x = int(getattr(env.unwrapped, "_x_position", 0))
+            if x > state["best_x"]:
+                state["best_x"] = x
+                np.savez_compressed(
+                    out, actions=np.array(actions, dtype=np.int8), world=world, stage=stage
+                )
+                print(f"\nVersuch {state['attempt']}: x={x} – NEUER BESTER, gespeichert -> {out}")
+            else:
+                print(f"\nVersuch {state['attempt']}: x={x} – verworfen (best: {state['best_x']})")
+            state["attempt"] += 1
+            actions.clear()
 
     print("Fenster öffnet sich. Pfeiltasten = laufen, O = springen, P = rennen.")
-    print("WICHTIG: mindestens über die Hängestelle kommen – gern bis zur Flagge!")
+    print("Es zählt automatisch der BESTE Versuch (weiteste x-Position) –")
+    print("einfach spielen, bis einer über die Hängestelle kommt, dann ESC.")
     try:
         play_human(env, callback=on_step)
     finally:
@@ -73,8 +78,10 @@ def record(world: int, stage: int, out: str) -> None:
             env.close()
         except Exception:
             pass
-    if not state["done"]:
-        print("Keine vollständige Episode aufgenommen – Fenster zu früh geschlossen?")
+    if state["best_x"] == 0:
+        print("Nichts gespeichert – Fenster vor dem ersten Episodenende geschlossen?")
+    else:
+        print(f"Bester Versuch: x={state['best_x']} -> {out}")
 
 
 def _demo_to_pairs(demo_path: str) -> tuple[np.ndarray, np.ndarray, dict]:
