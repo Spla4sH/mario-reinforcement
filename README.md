@@ -225,6 +225,12 @@ Feuerstäbe, Lava und Bowser inklusive. Faustregel aus Welt 2: **steigt die Trai
 noch, weitertrainieren; friert sie bei einem festen x ein, ist es ein Explorationsproblem →
 `goexplore.py`.***
 
+## Welt 3 (in Arbeit)
+
+| Level | Ergebnis | Der entscheidende Hebel |
+|---|---|---|
+| 3-1 (Nacht) | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
+
 ## Mensch vs. KI
 
 ![Mensch und KI spielen Level 1-1 Seite an Seite](mensch_vs_ki.gif)

@@ -205,13 +205,18 @@ Bilanz Welt 2: **1× Spezialwerkzeug (2-1), 1× Geduld (2-2), 2× Rezept (2-3/2-
 Faustregel etabliert: *Kurve steigt → weitertrainieren; Kurve friert bei festem x ein →
 goexplore.*
 
+## Phase G — Welt 3 & Deployment (laufend, 08.07.2026)
+
+**3-1 (Nacht) ✅:** Standard-Rezept, 3M Steps, erster Anlauf → 20/20 (x 3193).
+**Grad-CAM für PPO ✅:** `visualize_ppo.py` + DQN-vs-PPO-Vergleichs-GIF im README.
+**HF-Space:** Upload durch Sebastian erfolgt, Build grün (Stolperstein dokumentiert:
+`packages.txt` erlaubt keine Kommentare); Live-Test + README-Link stehen aus.
+
 **Nächste Schritte:**
-1. **HF-Space-Deployment** (vorbereitet in `hf_space/`, macht Sebastian), Grad-CAM für PPO,
-   K8s-Sweep, Story-Write-up.
-2. **Welt 3** (3-1 Nacht-Level … 3-4 Schloss) mit demselben Playbook, wenn wieder
-   GPU-Zeit eingeplant ist.
-3. Generalist nachschärfen (gewichtetes Sampling) / Curiosity-ICM bleibt als Option, falls
-   ein Level *flächig* (nicht punktuell) an Exploration scheitert.
+1. Welt 3 fertig spielen (3-2 läuft, dann 3-3/3-4). Standard-Rezept, goexplore als Backup.
+2. Space-URL im README verlinken, sobald der Live-Test durch ist.
+3. K8s-Sweep, Story-Write-up; Generalist nachschärfen / Curiosity-ICM bleibt Option für
+   *flächiges* Explorations-Scheitern.
 
 ---
 
