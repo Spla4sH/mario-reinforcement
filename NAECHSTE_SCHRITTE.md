@@ -205,16 +205,20 @@ Bilanz Welt 2: **1× Spezialwerkzeug (2-1), 1× Geduld (2-2), 2× Rezept (2-3/2-
 Faustregel etabliert: *Kurve steigt → weitertrainieren; Kurve friert bei festem x ein →
 goexplore.*
 
-## Phase G — Welt 3 & Deployment (laufend, 08.07.2026)
+## Phase G — Welt 3 & Deployment (08.07.2026)
 
-**3-1 (Nacht) ✅:** Standard-Rezept, 3M Steps, erster Anlauf → 20/20 (x 3193).
+**WELT 3 KOMPLETT ✅:** alle vier Level 20/20, **jeweils im ersten Anlauf** (Standard-Rezept,
+je 3M Steps) — die Pipeline ist eingespielt, ein neues Level kostet ~40 Min Training.
+Zwischenstand: **12/12 angegangene Level gelöst.**
 **Grad-CAM für PPO ✅:** `visualize_ppo.py` + DQN-vs-PPO-Vergleichs-GIF im README.
-**HF-Space:** Upload durch Sebastian erfolgt, Build grün (Stolperstein dokumentiert:
-`packages.txt` erlaubt keine Kommentare); Live-Test + README-Link stehen aus.
+**HF-Space:** Build grün, App lief an; Fehlerkette komplett durchgestochen und dokumentiert
+(packages.txt-Kommentare → demo-Global → sdk_version-Pin → HF-Scheduling → nes-py==8.2.1).
+Letzter Stand: Episode-Button-Test nach nes-py-Pin steht aus.
 
 **Nächste Schritte:**
-1. Welt 3 fertig spielen (3-2 läuft, dann 3-3/3-4). Standard-Rezept, goexplore als Backup.
-2. Space-URL im README verlinken, sobald der Live-Test durch ist.
+1. HF-Space: Button-Test abschließen, Space-URL im README verlinken.
+2. Welt 4 (mit 4-4-Labyrinth als erwartbarer Härtefall — Loop-Level, das falsche Wege
+   zurücksetzt; ggf. goexplore).
 3. K8s-Sweep, Story-Write-up; Generalist nachschärfen / Curiosity-ICM bleibt Option für
    *flächiges* Explorations-Scheitern.
 

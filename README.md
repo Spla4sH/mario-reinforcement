@@ -225,13 +225,19 @@ Feuerstäbe, Lava und Bowser inklusive. Faustregel aus Welt 2: **steigt die Trai
 noch, weitertrainieren; friert sie bei einem festen x ein, ist es ein Explorationsproblem →
 `goexplore.py`.***
 
-## Welt 3 (in Arbeit)
+## Welt 3 komplett: viermal Standard-Rezept
 
 | Level | Ergebnis | Der entscheidende Hebel |
 |---|---|---|
 | 3-1 (Nacht) | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
 | 3-2 | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
 | 3-3 (Baumwipfel) | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
+| 3-4 (Schloss) | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
+
+Welt 3 brauchte **keinerlei Sonderbehandlung** mehr – die in Welt 1/2 erarbeitete Pipeline
+(PPO + VecNormalize + LR-Decay, 16 Envs, 3M Steps, Greedy-Eval als Kriterium) löst ein neues
+Level inzwischen in ~40 Minuten Training. **Zwischenstand: 12 von 12 angegangenen Leveln
+gelöst** (Welt 1–3, je 20/20 greedy).
 
 ## Mensch vs. KI
 
@@ -335,6 +341,7 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] Generalist-Experiment: ein Modell für alle Welt-1-Level (löst 2 von 4, Details oben)
 - [x] **Level 2-1 gelöst** – Hard-Exploration-Stelle per Savestate-Suche + Behavior Cloning geknackt
 - [x] **Welt 2 komplett** – 2-2 (Wasser), 2-3 (Brücken) und 2-4 (Schloss) je 20/20
+- [x] **Welt 3 komplett** – alle vier Level 20/20, jeweils im ersten Anlauf
 - [ ] Alle Welten durchspielen
 - [ ] Vortrainiertes Modell bereitstellen
 
