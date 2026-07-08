@@ -231,6 +231,7 @@ noch, weitertrainieren; friert sie bei einem festen x ein, ist es ein Exploratio
 |---|---|---|
 | 3-1 (Nacht) | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
 | 3-2 | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
+| 3-3 (Baumwipfel) | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
 
 ## Mensch vs. KI
 
