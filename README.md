@@ -126,6 +126,7 @@ mario-reinforcement/
 ├── play.py           # Trainierten Agenten greedy zuschauen (Originalbild)
 ├── play_ppo.py       # PPO-Agenten live zuschauen (auch Zwischenstände)
 ├── visualize.py      # KI-Vision-Overlay (Grad-CAM) - was sieht die KI?
+├── visualize_ppo.py  # Dasselbe für PPO (SB3-CnnPolicy) - DQN-vs-PPO-Vergleich
 ├── app.py            # Gradio-Live-Demo (KI-Vision im Browser)
 ├── record.py         # Episode als GIF aufnehmen (Auto-Highlight + Demo)
 ├── agent.py          # Double DQN Agent + Replay Memory
@@ -267,6 +268,20 @@ das Original-Spielbild gelegt. So wird sichtbar, **welche Bildregionen** (Gegner
 Plattformen) die Entscheidung des Netzes gerade antreiben – ein direkter Blick „in den Kopf"
 des Agenten.
 
+#### DQN vs. PPO: zwei Algorithmen, zwei Blickweisen
+
+![Grad-CAM-Vergleich: DQN (links) und PPO (rechts) spielen Level 1-1](vision_dqn_vs_ppo.gif)
+
+*Beide Agenten lösen 1-1 – aber sie schauen unterschiedlich hin: Das **DQN** konzentriert
+seine Aufmerksamkeit punktuell auf den Boden direkt vor Mario, das **PPO**-Modell (der
+Welt-1-Generalist) verteilt sie auf Objekte – ?-Blöcke, Gegner, Geländekanten – mit einem
+diffuseren Grundpegel. Nebenbefund: PPO erreicht die Flagge ~25 % schneller. PPO-Variante:*
+
+```bash
+# PPO-Vision (im .venv-ppo; --no-window für headless GIF-Export)
+python visualize_ppo.py --model checkpoints_ppo/mario_ppo_gen_welt1.zip --episodes 1
+```
+
 ### Live-Demo im Browser (Gradio)
 
 ```bash
@@ -324,6 +339,7 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] Experiment-Tracking mit Weights & Biases (optional)
 - [x] Live-Demo (Gradio) + Auto-Highlight-GIF des besten Laufs
 - [x] Algorithmus-Upgrade: Double DQN → **PPO** (Stable-Baselines3 + shimmy) – löst 1-2, wo DQN scheiterte
+- [x] Grad-CAM für PPO (`visualize_ppo.py`) + DQN-vs-PPO-Vergleichs-GIF
 - [ ] Generalisierung: zweite Umgebung (Atari) über dieselbe Pixel-Pipeline
 - [ ] MLOps-Ausbau: Hyperparameter-Sweeps als parallele K8s-Jobs
 
