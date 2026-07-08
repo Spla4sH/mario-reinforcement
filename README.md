@@ -1,16 +1,19 @@
 # Super Mario Bros - Reinforcement Learning
 
 > **WIP** - Dieses Projekt befindet sich in aktiver Entwicklung.
-> **Meilenstein: Welt 1 komplett!** Alle vier Level werden in **20/20 greedy-Episoden** gelöst –
-> 1-1 mit Double DQN, 1-2 bis 1-4 mit PPO (Stable-Baselines3). Jedes Level brauchte dabei einen
-> anderen Fix (Reward-Normalisierung, Entropie-Tuning) – Details im PPO-Abschnitt.
-> Als Nächstes: ein Generalist-Modell für mehrere Level (siehe Roadmap).
+> **Meilenstein: Welt 1–3 komplett — 12 von 12 Leveln gelöst!** Jedes Level erfüllt das
+> Erfolgskriterium **20/20 greedy-Episoden bis zur Flagge**: 1-1 mit Double DQN, alle übrigen
+> mit PPO (Stable-Baselines3) – plus einer Go-Explore-Savestate-Suche für die
+> Hard-Exploration-Stelle in 2-1. Details in den Welt-Abschnitten.
 
 Eine KI lernt Super Mario Bros zu spielen - mit Live-Fenster zum Zuschauen!
+
+**🍄 [Live-Demo im Browser ausprobieren →](https://huggingface.co/spaces/Spl4sH/mario-reinforcement)** (Hugging Face Space, inkl. Grad-CAM-Overlay)
 
 ![CI](https://github.com/Spla4sH/mario-reinforcement/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/Python-3.10+-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red)
+![Demo](https://img.shields.io/badge/🤗%20Space-Live-green)
 ![Status](https://img.shields.io/badge/Status-Work%20in%20Progress-yellow)
 
 ![Mario KI-Vision – Grad-CAM-Overlay eines greedy-Durchlaufs von Level 1-1](vision.gif)
@@ -304,8 +307,14 @@ python app.py        # öffnet eine lokale Web-Demo
 ```
 
 Eine **Gradio-App** lässt den trainierten Agenten auf Knopfdruck spielen und zeigt den Lauf
-inkl. Grad-CAM-Overlay direkt im Browser – ohne Installation für den Betrachter. Deploybar als
-**Hugging Face Space** (CPU-Inferenz genügt), ideal als klickbarer Portfolio-Link.
+inkl. Grad-CAM-Overlay direkt im Browser – ohne Installation für den Betrachter.
+
+**➡️ Live ausprobieren: [huggingface.co/spaces/Spl4sH/mario-reinforcement](https://huggingface.co/spaces/Spl4sH/mario-reinforcement)** 🍄
+
+*Ehrliche Fußnote: Auf der Space-CPU strandet der DQN-Agent bei x ≈ 2914 statt an der Flagge
+(x 3161 lokal) – gleiche Gewichte, aber andere Hardware/BLAS → minimal andere Float-Werte →
+ein knapper argmax kippt, und die deterministische Trajektorie divergiert. „Deterministisch
+gelöst" gilt pro Maschine; Robustheit über Umgebungen hinweg ist ein eigenes Thema.*
 Schritt-für-Schritt-Anleitung: [DEPLOY.md](DEPLOY.md) (Dateien liegen in [deploy/](deploy/)).
 
 > **Auto-Highlight:** Während des Trainings wird bei jedem neuen Bestmodell automatisch die beste
