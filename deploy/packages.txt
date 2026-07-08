@@ -1,3 +1,1 @@
-# System-Pakete, die Hugging Face beim Build per apt installiert.
-# Beim Anlegen des Space als packages.txt im Space-Root hochladen.
 build-essential
