@@ -77,5 +77,9 @@ def build():
     return demo
 
 
+# Auf Modulebene: Hugging Face (Gradio-SDK) importiert app.py und erwartet ein
+# globales `demo` – der __main__-Block läuft dort nie.
+demo = build()
+
 if __name__ == "__main__":
-    build().launch()
+    demo.launch()
