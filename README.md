@@ -230,6 +230,7 @@ noch, weitertrainieren; friert sie bei einem festen x ein, ist es ein Exploratio
 | Level | Ergebnis | Der entscheidende Hebel |
 |---|---|---|
 | 3-1 (Nacht) | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
+| 3-2 | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
 
 ## Mensch vs. KI
 
