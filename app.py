@@ -39,10 +39,15 @@ def run_episode(checkpoint: str = "checkpoints/mario_best.pt"):
     agent, env = _load_agent(checkpoint)
     cam = GradCAM(agent.online_net, agent.online_net.features[4])
 
+    # Anti-Hänger-Impuls: Auf fremder Hardware (andere Float-Rundung als beim
+    # Training) kann die greedy-Trajektorie divergieren und der Agent an einem
+    # Hindernis "festlaufen". Verbessert sich x einige Schritte nicht, wird kurz
+    # ein Sprung erzwungen – weiterhin deterministisch, aber er strampelt sich frei.
     frames = []
     state = env.reset()
     done = False
     info: dict = {}
+    best_x, stuck, boost, nudges = 0, 0, 0, 0
     while not done:
         state_t = (
             torch.tensor(state, dtype=torch.uint8)
@@ -51,15 +56,27 @@ def run_episode(checkpoint: str = "checkpoints/mario_best.pt"):
             .to(agent.device)
         )
         action, heat = cam(state_t)
+        if boost > 0:
+            action = 4  # ['right', 'A', 'B']: Anlauf-Sprung
+            boost -= 1
         frames.append(make_overlay(env.render(mode="rgb_array"), heat, scale=2))
         state, _, done, info = env.step(action)
+        x = int(info.get("x_pos", 0))
+        if x > best_x:
+            best_x, stuck = x, 0
+        else:
+            stuck += 1
+            if stuck >= 15:
+                boost, stuck = 6, 0
+                nudges += 1
     env.close()
 
     os.makedirs("highlights", exist_ok=True)
     out_path = "highlights/demo.gif"
     save_gif(frames, out_path)
     flag = "🏁 Flagge erreicht!" if info.get("flag_get", False) else ""
-    return out_path, f"x-Position: {info.get('x_pos', 0)}  {flag}"
+    note = f" ({nudges} Anti-Hänger-Impulse)" if nudges else ""
+    return out_path, f"x-Position: {info.get('x_pos', 0)}  {flag}{note}"
 
 
 def build():
