@@ -130,7 +130,7 @@ mario-reinforcement/
 ├── play_ppo.py       # PPO-Agenten live zuschauen (auch Zwischenstände)
 ├── visualize.py      # KI-Vision-Overlay (Grad-CAM) - was sieht die KI?
 ├── visualize_ppo.py  # Dasselbe für PPO (SB3-CnnPolicy) - DQN-vs-PPO-Vergleich
-├── app.py            # Gradio-Live-Demo (KI-Vision im Browser)
+├── app.py            # Gradio-Demo: 15 Level im Browser (Dropdown + Grad-CAM-Toggle)
 ├── record.py         # Episode als GIF aufnehmen (Auto-Highlight + Demo)
 ├── agent.py          # Double DQN Agent + Replay Memory
 ├── model.py          # CNN-Architektur
@@ -318,15 +318,19 @@ pip install gradio
 python app.py        # öffnet eine lokale Web-Demo
 ```
 
-Eine **Gradio-App** lässt den trainierten Agenten auf Knopfdruck spielen und zeigt den Lauf
-inkl. Grad-CAM-Overlay direkt im Browser – ohne Installation für den Betrachter.
+Eine **Gradio-App** zeigt jeden der **15 gelösten Level** im Browser – Dropdown zur
+Level-Auswahl (1‑1 DQN, Rest PPO), Checkbox für das Grad-CAM-Overlay, Lauf bis zur Flagge.
+Lokal (`python app.py`) rechnet die App live; der öffentliche Space zeigt **vorberechnete
+Videos** (per `gen_demos.py` erzeugt).
 
 **➡️ Live ausprobieren: [huggingface.co/spaces/Spl4sH/mario-reinforcement](https://huggingface.co/spaces/Spl4sH/mario-reinforcement)** 🍄
 
-*Ehrliche Fußnote: Auf der Space-CPU strandet der DQN-Agent bei x ≈ 2914 statt an der Flagge
-(x 3161 lokal) – gleiche Gewichte, aber andere Hardware/BLAS → minimal andere Float-Werte →
-ein knapper argmax kippt, und die deterministische Trajektorie divergiert. „Deterministisch
-gelöst" gilt pro Maschine; Robustheit über Umgebungen hinweg ist ein eigenes Thema.*
+*Warum vorberechnet? Zwei Gründe, beide lehrreich: (1) Die Gratis-CPU des Space ist zu langsam,
+um eine Episode live zu rechnen und als Video zu bauen. (2) Auf fremder Hardware **divergiert
+die deterministische Trajektorie** – gleiche Gewichte, aber andere BLAS-Rundung → ein knapper
+argmax kippt → der Agent strandet z. B. in 1‑1 bei x ≈ 2914 statt an der Flagge. Vorberechnete
+Läufe (auf trainierter Hardware, bis zur Flagge) zeigen jedem Besucher denselben sauberen Lauf.
+„Deterministisch gelöst" gilt eben pro Maschine.*
 Schritt-für-Schritt-Anleitung: [DEPLOY.md](DEPLOY.md) (Dateien liegen in [deploy/](deploy/)).
 
 > **Auto-Highlight:** Während des Trainings wird bei jedem neuen Bestmodell automatisch die beste
@@ -373,7 +377,8 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] Tests + CI (pytest, ruff, GitHub Actions)
 - [x] Reward-Shaping + Greedy-Evaluation (Basis für „1-1 konsistent")
 - [x] Experiment-Tracking mit Weights & Biases (optional)
-- [x] Live-Demo (Gradio) + Auto-Highlight-GIF des besten Laufs
+- [x] Live-Demo (Gradio) als Hugging Face Space – **alle 15 gelösten Level** im Browser
+  (Dropdown + Grad-CAM-Toggle, vorberechnete Videos)
 - [x] Algorithmus-Upgrade: Double DQN → **PPO** (Stable-Baselines3 + shimmy) – löst 1-2, wo DQN scheiterte
 - [x] Grad-CAM für PPO (`visualize_ppo.py`) + DQN-vs-PPO-Vergleichs-GIF
 - [ ] Generalisierung: zweite Umgebung (Atari) über dieselbe Pixel-Pipeline
