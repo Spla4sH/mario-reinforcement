@@ -215,12 +215,37 @@ Zwischenstand: **12/12 angegangene Level gelöst.**
 (packages.txt-Kommentare → demo-Global → sdk_version-Pin → HF-Scheduling → nes-py==8.2.1).
 Letzter Stand: Episode-Button-Test nach nes-py-Pin steht aus.
 
+---
+
+## Phase H — Welt 4, Reward-Hacking & Multi-Level-Demo (09.07.2026)
+
+**Welt 4: 4-1/4-2/4-3 je 20/20 im ersten Anlauf** (Standard-Rezept). **4-4 = Reward-Hacking-
+Saga (läuft noch):** Der Standard-Δx-Reward lädt in dem Labyrinth zum **Farming** ein — der
+Agent lief im Kreis und kassierte 13.824 Reward bei 0/20 Flagge (das Env setzt große
+x-Rücksprünge auf 0, also kostet Im-Kreis-Laufen nichts). Fix: **`ProgressReward`-Wrapper**
+(`wrappers.py`, opt-in via `PROGRESS_REWARD`), belohnt nur ein *neues* x-Maximum. Zweiter,
+subtilerer Exploit: der Agent farmte einen **16-Bit-Overflow der x-Position** (`x_pos`=65535,
+Emulator-Glitch → 57k Reward). Fix: nur plausible Schritte (`0 < Δx ≤ 64` px/Frame) zählen.
+**Beide Fixes vorab am Exploit-Modell gemessen** (13.824→1.574 bzw. 64.735→221), bevor
+Rechenzeit investiert wurde. Aktuell: 5M-Lauf + `ent_coef 0.03`; bei 2M erst x1433 (keine
+Flagge) — 4-4 ist **zusätzlich** ein Explorationsproblem. Backup wie 2-1: `goexplore.py`.
+
+**Live-Demo → Multi-Level, statisch (MP4):** Der HF-Space zeigt jetzt **alle 15 Level**
+(Dropdown 1-1 DQN + 14 PPO, Grad-CAM-Checkbox). Weg dahin: erst als Live-Rechnung (torch/SB3
+im Space) — aber Gratis-CPU zu langsam (~90 s/Lauf), OOM bei Mehrfachklicks, und die
+Trajektorie **divergiert auf fremder Hardware** (Float-Rundung → argmax kippt). Lösung:
+**vorberechnete Videos** (`gen_demos.py` erzeugt 30 MP4s + `results.json`; Space braucht nur
+noch gradio). **GIF → MP4**, weil H.264 die bunten CAM-Overlays ~10× besser komprimiert
+(groß, scharf, flüssig; 49 MB statt 75 MB GIF).
+
+**INTERVIEW.md/PDF** um Einsteiger-Grundlagen + Reward-Hacking-Detailsektion erweitert.
+
 **Nächste Schritte:**
-1. HF-Space: Button-Test abschließen, Space-URL im README verlinken.
-2. Welt 4 (mit 4-4-Labyrinth als erwartbarer Härtefall — Loop-Level, das falsche Wege
-   zurücksetzt; ggf. goexplore).
-3. K8s-Sweep, Story-Write-up; Generalist nachschärfen / Curiosity-ICM bleibt Option für
-   *flächiges* Explorations-Scheitern.
+1. **4-4-Eval abwarten** (5M-Lauf): Reicht der saubere Reward, oder braucht 4-4 zusätzlich
+   `goexplore` (Route finden)? Danach Welt 4 abschließen + README/INTERVIEW-4-4-Story ergänzen.
+2. **K8s-Sweep real ausführen** (Docker/K8s-Lernthema, interview-stark) + Story-Write-up.
+3. Generalist nachschärfen / Curiosity-ICM bleibt Option für *flächiges* Explorations-Scheitern.
+4. Geparkt: decay500k-Lauf + 100k-vs-500k-Plot.
 
 ---
 
