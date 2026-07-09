@@ -242,6 +242,16 @@ Welt 3 brauchte **keinerlei Sonderbehandlung** mehr – die in Welt 1/2 erarbeit
 Level inzwischen in ~40 Minuten Training. **Zwischenstand: 12 von 12 angegangenen Leveln
 gelöst** (Welt 1–3, je 20/20 greedy).
 
+## Welt 4 (in Arbeit)
+
+| Level | Ergebnis | Der entscheidende Hebel |
+|---|---|---|
+| 4-1 | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
+
+Erwartbarer Härtefall der Welt: **4-4 ist ein Labyrinth-Level** – falsche Wege setzen Mario
+zurück, und der x-Fortschritts-Reward *lügt* dort (weiter rechts ≠ näher am Ziel). Dafür
+liegen `goexplore.py` und eine mögliche Reward-Anpassung bereit.
+
 ## Mensch vs. KI
 
 ![Mensch und KI spielen Level 1-1 Seite an Seite](mensch_vs_ki.gif)
