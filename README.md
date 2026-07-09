@@ -248,6 +248,7 @@ gelöst** (Welt 1–3, je 20/20 greedy).
 |---|---|---|
 | 4-1 | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
 | 4-2 | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
+| 4-3 | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
 
 Erwartbarer Härtefall der Welt: **4-4 ist ein Labyrinth-Level** – falsche Wege setzen Mario
 zurück, und der x-Fortschritts-Reward *lügt* dort (weiter rechts ≠ näher am Ziel). Dafür
