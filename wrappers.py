@@ -43,20 +43,25 @@ class RewardWrapper(gym.RewardWrapper):
 class ProgressReward(gym.Wrapper):
     """Ersetzt den Δx-Bewegungs-Reward durch einen echten Fortschritts-Reward.
 
-    Belohnt nur, wenn Mario ein *neues* x-Maximum erreicht (jeder Pixel weiter
-    rechts als je zuvor), plus eine kleine Zeitstrafe pro Frame und einen
-    Flaggen-Bonus. Damit bringt Im-Kreis-Laufen in Loop-/Labyrinth-Levels nichts
-    mehr: Beim Zurückfallen und erneuten Durchlaufen bereits gesehener Abschnitte
-    gibt es keinen Reward (kein neues Maximum), die Zeitstrafe wirkt sogar dagegen.
+    Belohnt nur einen *neuen*, plausiblen Vorwärtsschritt (x wächst über das
+    bisherige Maximum, aber um höchstens ``max_step`` Pixel/Frame). Damit bringt
+    Im-Kreis-Laufen in Loop-/Labyrinth-Levels nichts mehr (kein neues Maximum),
+    die Zeitstrafe wirkt sogar dagegen.
+
+    Der ``max_step``-Deckel fängt zwei unphysikalische Sprünge ab, die der Agent
+    sonst als Reward-Exploit missbraucht: den 16-Bit-Overflow der x-Position
+    (``x_pos`` springt in 4-4 kurz auf 65535) und Screen-/Loop-Teleports. Ohne
+    ihn farmte ein Agent den 65535-Glitch für ~65000 Reward auf einen Schlag.
 
     Innerster Wrapper (direkt auf dem NES-Env, vor SkipFrame): sieht jeden Frame
     und die rohe x-Position. Gegen das Reward-Farming in 4-4 (per PROGRESS_REWARD).
     """
 
-    def __init__(self, env, time_penalty=0.1, flag_bonus=50.0):
+    def __init__(self, env, time_penalty=0.1, flag_bonus=50.0, max_step=64):
         super().__init__(env)
         self._time_penalty = time_penalty
         self._flag_bonus = flag_bonus
+        self._max_step = max_step
         self._max_x = 0
 
     def reset(self, **kwargs):
@@ -66,8 +71,15 @@ class ProgressReward(gym.Wrapper):
     def step(self, action):
         obs, _, done, info = self.env.step(action)
         x = int(info.get("x_pos", 0))
-        reward = max(0, x - self._max_x) - self._time_penalty
-        self._max_x = max(self._max_x, x)
+        delta = x - self._max_x
+        # Nur plausible Vorwärtsschritte zählen; Glitches/Teleports (delta riesig)
+        # und Rückschritte (delta <= 0) geben keinen Fortschritts-Reward.
+        if 0 < delta <= self._max_step:
+            reward = float(delta)
+            self._max_x = x
+        else:
+            reward = 0.0
+        reward -= self._time_penalty
         if info.get("flag_get"):
             reward += self._flag_bonus
         return obs, float(reward), done, info
