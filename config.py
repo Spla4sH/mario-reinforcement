@@ -84,3 +84,10 @@ FRAME_SIZE = _env_int("FRAME_SIZE", 84)  # Bildgröße für das Netz (84x84)
 # 2 für Stellen, die feineres Timing brauchen (z. B. 2-1-Trampolinturm).
 # ACHTUNG: Modelle sind an ihren Skip gebunden – bei Eval/Play denselben Wert setzen!
 FRAME_SKIP = _env_int("FRAME_SKIP", 4)
+
+# Fortschritts-Reward: belohnt nur ECHTEN Vorwärtsfortschritt (jeden Pixel neues
+# x-Maximum) statt jeder Vorwärtsbewegung. Gegen Reward-Farming in Loop-/Labyrinth-
+# Levels (z. B. 4-4), wo der Standard-Δx-Reward das Im-Kreis-Laufen belohnt, weil
+# das Env große Rücksprünge auf 0 setzt statt zu bestrafen. Opt-in, damit die
+# übrigen Level ihren bewährten Reward behalten. Bei Eval/Play denselben Wert setzen.
+PROGRESS_REWARD = _env_bool("PROGRESS_REWARD", False)

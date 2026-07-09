@@ -40,6 +40,39 @@ class RewardWrapper(gym.RewardWrapper):
         return shape_reward(reward, self._scale, self._clip)
 
 
+class ProgressReward(gym.Wrapper):
+    """Ersetzt den Δx-Bewegungs-Reward durch einen echten Fortschritts-Reward.
+
+    Belohnt nur, wenn Mario ein *neues* x-Maximum erreicht (jeder Pixel weiter
+    rechts als je zuvor), plus eine kleine Zeitstrafe pro Frame und einen
+    Flaggen-Bonus. Damit bringt Im-Kreis-Laufen in Loop-/Labyrinth-Levels nichts
+    mehr: Beim Zurückfallen und erneuten Durchlaufen bereits gesehener Abschnitte
+    gibt es keinen Reward (kein neues Maximum), die Zeitstrafe wirkt sogar dagegen.
+
+    Innerster Wrapper (direkt auf dem NES-Env, vor SkipFrame): sieht jeden Frame
+    und die rohe x-Position. Gegen das Reward-Farming in 4-4 (per PROGRESS_REWARD).
+    """
+
+    def __init__(self, env, time_penalty=0.1, flag_bonus=50.0):
+        super().__init__(env)
+        self._time_penalty = time_penalty
+        self._flag_bonus = flag_bonus
+        self._max_x = 0
+
+    def reset(self, **kwargs):
+        self._max_x = 0
+        return self.env.reset(**kwargs)
+
+    def step(self, action):
+        obs, _, done, info = self.env.step(action)
+        x = int(info.get("x_pos", 0))
+        reward = max(0, x - self._max_x) - self._time_penalty
+        self._max_x = max(self._max_x, x)
+        if info.get("flag_get"):
+            reward += self._flag_bonus
+        return obs, float(reward), done, info
+
+
 class GrayScaleResize(gym.ObservationWrapper):
     """Konvertiert zu Graustufen und skaliert auf 84x84 für das Netz."""
 
@@ -99,6 +132,11 @@ def create_env(world=1, stage=1, render=True):
     # Vereinfachte Aktionen: SIMPLE_MOVEMENT hat 7 Aktionen
     # [['NOOP'], ['right'], ['right', 'A'], ['right', 'B'], ['right', 'A', 'B'], ['A'], ['left']]
     env = JoypadSpace(env, SIMPLE_MOVEMENT)
+
+    # Fortschritts-Reward (opt-in) direkt auf dem rohen NES-Env: sieht die echte
+    # x-Position pro Frame, ersetzt den Δx-Reward gegen Loop-Farming (z. B. 4-4).
+    if config.PROGRESS_REWARD:
+        env = ProgressReward(env)
 
     # Wrapper anwenden
     env = SkipFrame(env, skip=config.FRAME_SKIP)
