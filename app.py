@@ -1,43 +1,114 @@
-"""Gradio-Live-Demo: trainierten Mario-Agenten im Browser zuschauen – mit Grad-CAM.
+"""Gradio-Live-Demo: trainierte Mario-Agenten im Browser zuschauen – mit Grad-CAM.
 
-Lokal starten:
-    pip install gradio
+Ein Dropdown wählt das Level: den 1-1-Klassiker per Double DQN sowie alle mit PPO
+gelösten Level (Welt 1–4). Eine Checkbox blendet das Grad-CAM-Overlay ein oder aus
+(mit = "worauf achtet das Netz?", ohne = sauberes Original-Spielbild).
+
+Lokal starten (PPO-Level brauchen das .venv-ppo mit Stable-Baselines3):
     python app.py
 
-Deploy: als Hugging Face Space (SDK = gradio). Es wird ein Checkpoint
-(`checkpoints/mario_best.pt`) benötigt; CPU-Inferenz reicht zum Zuschauen.
+Deploy: als Hugging Face Space (SDK = gradio). CPU-Inferenz genügt.
 """
 
 from __future__ import annotations
 
 import os
 
-import config
-from agent import MarioAgent
+# Verfügbare Level: Anzeigename -> Modelltyp, Checkpoint, World/Stage.
+# 1-1 = selbst implementiertes Double DQN, alle übrigen = PPO (Stable-Baselines3).
+_PPO = [
+    ("1-2 · PPO", "mario_ppo_tuned.zip", 1, 2),
+    ("1-3 · PPO", "mario_ppo_1-3_ent03.zip", 1, 3),
+    ("1-4 · PPO (Schloss)", "mario_ppo_1-4.zip", 1, 4),
+    ("2-1 · PPO (Trampolin-Superbounce)", "mario_ppo_2-1_tower.zip", 2, 1),
+    ("2-2 · PPO (Wasser)", "mario_ppo_2-2.zip", 2, 2),
+    ("2-3 · PPO (Brücken)", "mario_ppo_2-3.zip", 2, 3),
+    ("2-4 · PPO (Bowser-Schloss)", "mario_ppo_2-4.zip", 2, 4),
+    ("3-1 · PPO (Nacht)", "mario_ppo_3-1.zip", 3, 1),
+    ("3-2 · PPO", "mario_ppo_3-2.zip", 3, 2),
+    ("3-3 · PPO", "mario_ppo_3-3.zip", 3, 3),
+    ("3-4 · PPO (Schloss)", "mario_ppo_3-4.zip", 3, 4),
+    ("4-1 · PPO", "mario_ppo_4-1.zip", 4, 1),
+    ("4-2 · PPO", "mario_ppo_4-2.zip", 4, 2),
+    ("4-3 · PPO", "mario_ppo_4-3.zip", 4, 3),
+]
+
+LEVELS: dict[str, dict] = {
+    "1-1 · Double DQN (der Klassiker)": {
+        "type": "dqn", "path": "checkpoints/mario_best.pt", "world": 1, "stage": 1,
+    },
+}
+for _label, _file, _w, _s in _PPO:
+    LEVELS[_label] = {
+        "type": "ppo", "path": f"checkpoints_ppo/{_file}", "world": _w, "stage": _s,
+    }
 
 
-def _load_agent(checkpoint: str):
-    from wrappers import create_env  # lazy: zieht cv2/gym nach sich
+class _DqnPredictor:
+    """Double-DQN-Agent + Grad-CAM auf dem letzten Conv-Layer."""
 
-    env = create_env(world=config.WORLD, stage=config.STAGE, render=False)
-    agent = MarioAgent(env.action_space.n)
-    agent.load(checkpoint)
-    agent.online_net.eval()
-    return agent, env
+    def __init__(self, path: str, world: int, stage: int):
+        import torch
+
+        from agent import MarioAgent
+        from visualize import GradCAM
+        from wrappers import create_env
+
+        self._torch = torch
+        self.env = create_env(world=world, stage=stage, render=False)
+        self.agent = MarioAgent(self.env.action_space.n)
+        self.agent.load(path)
+        self.agent.online_net.eval()
+        self.cam = GradCAM(self.agent.online_net, self.agent.online_net.features[4])
+
+    def act(self, state):
+        state_t = (
+            self._torch.tensor(state, dtype=self._torch.uint8)
+            .permute(2, 0, 1)
+            .unsqueeze(0)
+            .to(self.agent.device)
+        )
+        return self.cam(state_t)  # (action, heat)
 
 
-def run_episode(checkpoint: str = "checkpoints/mario_best.pt"):
-    """Spielt eine greedy Episode, gibt (GIF-Pfad, Ergebnis-Text) zurück."""
-    import torch
+class _PpoPredictor:
+    """SB3-PPO-Policy + Grad-CAM auf dem Actor-Logit (wie visualize_ppo)."""
 
+    def __init__(self, path: str, world: int, stage: int):
+        from stable_baselines3 import PPO
+
+        from visualize import GradCAM
+        from visualize_ppo import PolicyLogits
+        from wrappers import create_env
+
+        self.env = create_env(world=world, stage=stage, render=False)
+        self.model = PPO.load(path)
+        self.policy = self.model.policy
+        self.policy.set_training_mode(False)
+        self.cam = GradCAM(PolicyLogits(self.policy), self.policy.features_extractor.cnn[4])
+
+    def act(self, state):
+        obs_t, _ = self.policy.obs_to_tensor(state)
+        action, heat = self.cam(obs_t)
+        # PPO-Logit-Gradienten haben höheren Grundpegel als DQN-Q-Werte ->
+        # Min abziehen und quadrieren, sonst liegt ein Schleier über dem Bild.
+        heat = ((heat - heat.min()) / (heat.max() - heat.min() + 1e-8)) ** 2
+        return action, heat
+
+
+def run_episode(level_key: str, show_cam: bool = True):
+    """Spielt eine greedy Episode des gewählten Levels; gibt (GIF-Pfad, Text) zurück."""
+    from visualize import make_overlay
     from record import save_gif
-    from visualize import GradCAM, make_overlay
 
-    if not os.path.exists(checkpoint):
-        return None, f"Kein Checkpoint gefunden: {checkpoint} – zuerst trainieren."
+    level = LEVELS.get(level_key) or next(iter(LEVELS.values()))
+    if not os.path.exists(level["path"]):
+        return None, f"Modell nicht gefunden: {level['path']}"
 
-    agent, env = _load_agent(checkpoint)
-    cam = GradCAM(agent.online_net, agent.online_net.features[4])
+    predictor = (_DqnPredictor if level["type"] == "dqn" else _PpoPredictor)(
+        level["path"], level["world"], level["stage"]
+    )
+    env = predictor.env
 
     # Anti-Hänger-Impuls: Auf fremder Hardware (andere Float-Rundung als beim
     # Training) kann die greedy-Trajektorie divergieren und der Agent an einem
@@ -49,17 +120,13 @@ def run_episode(checkpoint: str = "checkpoints/mario_best.pt"):
     info: dict = {}
     best_x, stuck, boost, nudges = 0, 0, 0, 0
     while not done:
-        state_t = (
-            torch.tensor(state, dtype=torch.uint8)
-            .permute(2, 0, 1)
-            .unsqueeze(0)
-            .to(agent.device)
-        )
-        action, heat = cam(state_t)
+        action, heat = predictor.act(state)
         if boost > 0:
             action = 4  # ['right', 'A', 'B']: Anlauf-Sprung
             boost -= 1
-        frames.append(make_overlay(env.render(mode="rgb_array"), heat, scale=2))
+        # alpha=0 -> make_overlay gibt das Originalbild (nur hochskaliert) zurück.
+        rgb = env.render(mode="rgb_array")
+        frames.append(make_overlay(rgb, heat, scale=2, alpha=0.7 if show_cam else 0.0))
         state, _, done, info = env.step(action)
         x = int(info.get("x_pos", 0))
         if x > best_x:
@@ -85,12 +152,23 @@ def build():
     with gr.Blocks(title="Mario RL – KI-Vision") as demo:
         gr.Markdown(
             "# 🍄 Super Mario Bros – KI-Vision Demo\n"
-            "Ein Double-DQN-Agent spielt **nur aus den Pixeln**. Die Heatmap (Grad-CAM) "
-            "zeigt, **worauf das neuronale Netz** bei seiner Entscheidung achtet."
+            "Trainierte Agenten spielen **nur aus den Pixeln** – hier **15 gelöste Level** "
+            "(1-1 = selbst implementiertes **Double DQN**, Rest = **PPO**).\n\n"
+            "Das optionale **Grad-CAM-Overlay** (rot = wichtig) zeigt, worauf das neuronale "
+            "Netz bei jeder Entscheidung achtet. Die erste Episode dauert auf der CPU ~1–2 Min."
         )
-        out_img = gr.Image(label="Lauf mit Grad-CAM-Overlay", type="filepath")
+        with gr.Row():
+            level = gr.Dropdown(
+                choices=list(LEVELS.keys()),
+                value=next(iter(LEVELS.keys())),
+                label="Level / Agent",
+            )
+            show_cam = gr.Checkbox(value=True, label="Grad-CAM-Overlay anzeigen")
+        out_img = gr.Image(label="Lauf", type="filepath")
         out_txt = gr.Textbox(label="Ergebnis")
-        gr.Button("▶ Neue Episode spielen").click(run_episode, outputs=[out_img, out_txt])
+        gr.Button("▶ Episode spielen").click(
+            run_episode, inputs=[level, show_cam], outputs=[out_img, out_txt]
+        )
     return demo
 
 
