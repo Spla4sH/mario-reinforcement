@@ -17,7 +17,11 @@ import gc
 import os
 
 _ACTIONS = 7  # SIMPLE_MOVEMENT: NOOP, right, right+A, right+B, right+A+B, A, left
-_MAX_STEPS = 600  # Obergrenze pro Episode (gegen endlose Läufe bei Hardware-Divergenz)
+# Obergrenze pro Episode. Auf der langsamen Free-CPU divergiert die greedy-
+# Trajektorie oft (andere Float-Rundung als beim Training) und der Agent
+# erreicht die Flagge nicht – dann würde er bis zum Level-Timeout weiterlaufen.
+# 250 Schritte zeigen einen aussagekräftigen Ausschnitt und halten die Demo flott.
+_MAX_STEPS = 250
 
 # Verfügbare Level: Anzeigename -> Modelltyp, Checkpoint, World/Stage.
 # 1-1 = selbst implementiertes Double DQN, alle übrigen = PPO (Stable-Baselines3).
@@ -195,8 +199,8 @@ def build():
             "Trainierte Agenten spielen **nur aus den Pixeln** – hier **15 gelöste Level** "
             "(1-1 = selbst implementiertes **Double DQN**, Rest = **PPO**).\n\n"
             "Das optionale **Grad-CAM-Overlay** (rot = wichtig) zeigt, worauf das neuronale "
-            "Netz achtet – ohne Häkchen läuft die Episode **deutlich schneller** (~30 s statt "
-            "~2 min auf der CPU)."
+            "Netz achtet – **ohne Häkchen läuft es deutlich schneller** (nur ein Forward-Pass "
+            "statt eines Grad-CAM-Backward-Passes). Gezeigt wird ein Ausschnitt der Episode."
         )
         with gr.Row():
             level = gr.Dropdown(
