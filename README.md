@@ -1,10 +1,11 @@
 # Super Mario Bros - Reinforcement Learning
 
 > **WIP** - Dieses Projekt befindet sich in aktiver Entwicklung.
-> **Meilenstein: 15 Level gelöst — Welt 1–3 komplett, Welt 4 zu drei Vierteln!** Jedes Level
+> **Meilenstein: Welt 1–4 komplett — alle 16 angegangenen Level gelöst!** Jedes Level
 > erfüllt das Erfolgskriterium **20/20 greedy-Episoden bis zur Flagge**: 1-1 mit Double DQN,
-> alle übrigen mit PPO (Stable-Baselines3) – plus einer Go-Explore-Savestate-Suche für die
-> Hard-Exploration-Stelle in 2-1. Details in den Welt-Abschnitten.
+> alle übrigen mit PPO (Stable-Baselines3) – plus Go-Explore-Savestate-Suchen für die
+> Hard-Exploration-Stellen in 2-1 und im 4-4-Labyrinth (inkl. zweifachem Reward-Hacking,
+> s. Welt-4-Abschnitt). Details in den Welt-Abschnitten.
 
 Eine KI lernt Super Mario Bros zu spielen - mit Live-Fenster zum Zuschauen!
 
@@ -130,7 +131,7 @@ mario-reinforcement/
 ├── play_ppo.py       # PPO-Agenten live zuschauen (auch Zwischenstände)
 ├── visualize.py      # KI-Vision-Overlay (Grad-CAM) - was sieht die KI?
 ├── visualize_ppo.py  # Dasselbe für PPO (SB3-CnnPolicy) - DQN-vs-PPO-Vergleich
-├── app.py            # Gradio-Demo: 15 Level im Browser (Dropdown + Grad-CAM-Toggle)
+├── app.py            # Gradio-Demo: 16 Level im Browser (Dropdown + Grad-CAM-Toggle)
 ├── gen_demos.py      # Vorberechnete Demo-MP4s + results.json für den HF-Space erzeugen
 ├── eval_ppo.py       # Greedy-Eval eines PPO-Modells (Flaggen-Rate über N Episoden)
 ├── gif_ppo.py        # Deterministische PPO-Episode als GIF (README-Assets)
@@ -245,17 +246,47 @@ Welt 3 brauchte **keinerlei Sonderbehandlung** mehr – die in Welt 1/2 erarbeit
 Level inzwischen in ~40 Minuten Training. **Zwischenstand: 12 von 12 angegangenen Leveln
 gelöst** (Welt 1–3, je 20/20 greedy).
 
-## Welt 4 (in Arbeit)
+## Welt 4 komplett: Reward-Hacking im Labyrinth
+
+![PPO-Agent löst das Labyrinth-Level 4-4 – über die richtige Route bis zur Axt hinter Bowser](ppo_4-4.gif)
+
+*Level 4-4, gelöst: 20/20 greedy-Episoden bis zur Axt (x 2772). Das unscheinbare Labyrinth
+war das härteste Level des Projekts – es brauchte zwei Reward-Fixes und eine mehrstufige
+Savestate-Suche.*
 
 | Level | Ergebnis | Der entscheidende Hebel |
 |---|---|---|
 | 4-1 | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
 | 4-2 | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
 | 4-3 | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
+| 4-4 (Labyrinth) | **20/20** 🏁 | **Reward-Fix gegen zwei Exploits + mehrstufiges Go-Explore + Behavior Cloning** – s. unten |
 
-Erwartbarer Härtefall der Welt: **4-4 ist ein Labyrinth-Level** – falsche Wege setzen Mario
-zurück, und der x-Fortschritts-Reward *lügt* dort (weiter rechts ≠ näher am Ziel). Dafür
-liegen `goexplore.py` und eine mögliche Reward-Anpassung bereit.
+**4-4 wurde zur lehrreichsten Etappe des Projekts – der Agent hat den Reward zweimal
+ausgetrickst (Reward-Hacking):**
+
+1. **Loop-Farming:** 4-4 ist ein Labyrinth – falsche Wege werfen Mario zurück, und das Env
+   setzt den Reward großer x-Rücksprünge auf 0. Im-Kreis-Laufen kostet also nichts, bringt
+   aber jede Runde erneut Fortschritts-Reward. Der Agent lief endlos im Kreis: **13.824
+   Reward bei 0 % Flagge.** Fix: ein `ProgressReward`-Wrapper, der nur *neue* x-Maxima belohnt.
+2. **16-Bit-Overflow:** Danach farmte der Agent einen Emulator-Glitch, bei dem `x_pos` beim
+   Screen-Übergang kurz auf 65535 springt – **57k Reward** für einen Integer-Überlauf. Fix:
+   nur physikalisch plausible Schritte zählen (0 < Δx ≤ 64 px/Frame).
+
+Beide Fixes wurden **vorab am Exploit-Modell gemessen** (13.824 → 1.574 bzw. 64.735 → 221),
+bevor neue Rechenzeit investiert wurde. Derselbe Glitch täuschte später übrigens ein drittes
+Mal – als falscher „Durchbruch" in der Savestate-Suche, die daraufhin denselben
+Plausibilitäts-Deckel bekam.
+
+Mit sauberem Reward blieb 4-4 trotzdem ungelöst (eingefroren bei x 1433): Der richtige Weg
+durchs Labyrinth ist ein **Hard-Exploration-Problem** – der entscheidende Check sitzt am
+Screen-Übergang x ≈ 2048, wer auf dem falschen Pfad ankommt, wird zurückgeworfen. Gelöst hat
+es die **mehrstufige Go-Explore-Suche** (`goexplore.py --head-seq`): Stufe 1 fand ab einem
+Savestate bei x 902 den Weg an der Weiche vorbei (ab x 1106 war er *unerreichbar* – der
+Savestate der ersten Suche lag 200 px zu spät), Stufe 2 setzte auf der gefundenen Sequenz auf
+und fand die Axt hinter Bowser. Die Gesamtsequenz (495 Aktionen) wurde per `imitate.py bc-seq`
+in die Policy geklont – mit einer letzten Lektion: Nicht die Imitations-Trefferquote zählt,
+sondern der Greedy-Lauf selbst; die Flagge kam in Epoche 65 bei „nur" 97,2 % Trefferquote,
+seither wird jede Epoche greedy verifiziert und der beste Stand behalten.
 
 ## Mensch vs. KI
 
@@ -321,7 +352,7 @@ pip install gradio
 python app.py        # öffnet eine lokale Web-Demo
 ```
 
-Eine **Gradio-App** zeigt jeden der **15 gelösten Level** im Browser – Dropdown zur
+Eine **Gradio-App** zeigt jeden der **16 gelösten Level** im Browser – Dropdown zur
 Level-Auswahl (1‑1 DQN, Rest PPO), Checkbox für das Grad-CAM-Overlay, Lauf bis zur Flagge.
 Lokal (`python app.py`) rechnet die App live; der öffentliche Space zeigt **vorberechnete
 Videos** (per `gen_demos.py` erzeugt).
@@ -370,8 +401,8 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] **Level 2-1 gelöst** – Hard-Exploration-Stelle per Savestate-Suche + Behavior Cloning geknackt
 - [x] **Welt 2 komplett** – 2-2 (Wasser), 2-3 (Brücken) und 2-4 (Schloss) je 20/20
 - [x] **Welt 3 komplett** – alle vier Level 20/20, jeweils im ersten Anlauf
-- [ ] **Welt 4** – 4-1/4-2/4-3 je 20/20 ✅; 4-4 (Labyrinth) in Arbeit – Reward-Hacking-Fixes
-  (`ProgressReward`) sitzen, die Route ist ein Explorationsproblem
+- [x] **Welt 4 komplett** – 4-1/4-2/4-3 im ersten Anlauf; 4-4 (Labyrinth) nach zweifachem
+  Reward-Hacking-Fix per mehrstufigem Go-Explore + Behavior Cloning
 - [ ] Alle Welten durchspielen
 - [ ] Vortrainiertes Modell bereitstellen
 
@@ -382,7 +413,7 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] Tests + CI (pytest, ruff, GitHub Actions)
 - [x] Reward-Shaping + Greedy-Evaluation (Basis für „1-1 konsistent")
 - [x] Experiment-Tracking mit Weights & Biases (optional)
-- [x] Live-Demo (Gradio) als Hugging Face Space – **alle 15 gelösten Level** im Browser
+- [x] Live-Demo (Gradio) als Hugging Face Space – **alle 16 gelösten Level** im Browser
   (Dropdown + Grad-CAM-Toggle, vorberechnete Videos)
 - [x] Algorithmus-Upgrade: Double DQN → **PPO** (Stable-Baselines3 + shimmy) – löst 1-2, wo DQN scheiterte
 - [x] Grad-CAM für PPO (`visualize_ppo.py`) + DQN-vs-PPO-Vergleichs-GIF

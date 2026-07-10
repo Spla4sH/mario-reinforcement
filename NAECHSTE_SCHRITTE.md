@@ -217,7 +217,17 @@ Letzter Stand: Episode-Button-Test nach nes-py-Pin steht aus.
 
 ---
 
-## Phase H — Welt 4, Reward-Hacking & Multi-Level-Demo (09.07.2026)
+## Phase H — Welt 4, Reward-Hacking & Multi-Level-Demo ✅ (KOMPLETT, 10.07.2026)
+
+> **Stand: WELT 4 KOMPLETT — 4-4 gelöst (20/20 greedy, Axt bei x 2772).** Damit sind
+> **alle 16 angegangenen Level gelöst (Welt 1–4)**. Modell:
+> `checkpoints_ppo/mario_ppo_4-4_maze.zip`, Lösungssequenz `maze_seq_4-4.npz` (reproduzierbar).
+> Der Weg: Reward-Fix (2 Exploits) → Explorationsdiagnose → **mehrstufiges Go-Explore**
+> (`--head-seq`) → `bc-seq` mit Greedy-Verify je Epoche. Drei Lehren: (1) der 16-Bit-x-Glitch
+> täuschte auch das *Erfolgskriterium der Suche* (→ Plausibilitäts-Deckel überall, wo x als
+> Signal dient); (2) der erste Savestate lag 200 px hinter der Labyrinth-Weiche – „Suchraum
+> zu eng" kann auch *räumlich* sein; (3) bei langen Zufalls-Tails zählt nicht die
+> BC-Trefferquote, sondern der Greedy-Lauf (Flagge bei 97,2 % in Epoche 65).
 
 **Welt 4: 4-1/4-2/4-3 je 20/20 im ersten Anlauf** (Standard-Rezept). **4-4 = Reward-Hacking-
 Saga (läuft noch):** Der Standard-Δx-Reward lädt in dem Labyrinth zum **Farming** ein — der
@@ -245,11 +255,11 @@ noch gradio). **GIF → MP4**, weil H.264 die bunten CAM-Overlays ~10× besser k
 **INTERVIEW.md/PDF** um Einsteiger-Grundlagen + Reward-Hacking-Detailsektion erweitert.
 
 **Nächste Schritte:**
-1. **4-4 per `goexplore` knacken** (Eval ist da: sauberer Reward allein reicht nicht,
-   s. o.) → dann BC via `imitate.py bc-seq`, Welt 4 abschließen + README/INTERVIEW-4-4-Story.
+1. ~~4-4 per `goexplore` knacken~~ ✅ **erledigt (10.07.)** – Welt 4 komplett, README-Story drin.
 2. **K8s-Sweep real ausführen** (Docker/K8s-Lernthema, interview-stark) + Story-Write-up.
-3. Generalist nachschärfen / Curiosity-ICM bleibt Option für *flächiges* Explorations-Scheitern.
-4. Geparkt: decay500k-Lauf + 100k-vs-500k-Plot.
+3. HF-Space um 4-4 erweitern (2 MP4s + results.json nachladen) & Welt 5 optional.
+4. Generalist nachschärfen / Curiosity-ICM bleibt Option für *flächiges* Explorations-Scheitern.
+5. Geparkt: decay500k-Lauf + 100k-vs-500k-Plot.
 
 ---
 

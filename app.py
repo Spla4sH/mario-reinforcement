@@ -40,6 +40,7 @@ _PPO = [
     ("4-1 · PPO", "mario_ppo_4-1.zip", 4, 1),
     ("4-2 · PPO", "mario_ppo_4-2.zip", 4, 2),
     ("4-3 · PPO", "mario_ppo_4-3.zip", 4, 3),
+    ("4-4 · PPO (Labyrinth, Go-Explore)", "mario_ppo_4-4_maze.zip", 4, 4),
 ]
 
 LEVELS: dict[str, dict] = {
@@ -196,7 +197,7 @@ def build():
     with gr.Blocks(title="Mario RL – KI-Vision") as demo:
         gr.Markdown(
             "# 🍄 Super Mario Bros – KI-Vision Demo\n"
-            "Trainierte Agenten spielen **nur aus den Pixeln** – hier **15 gelöste Level** "
+            "Trainierte Agenten spielen **nur aus den Pixeln** – hier **16 gelöste Level** "
             "(1-1 = selbst implementiertes **Double DQN**, Rest = **PPO**).\n\n"
             "Das optionale **Grad-CAM-Overlay** (rot = wichtig) zeigt, worauf das neuronale "
             "Netz achtet – **ohne Häkchen läuft es deutlich schneller** (nur ein Forward-Pass "

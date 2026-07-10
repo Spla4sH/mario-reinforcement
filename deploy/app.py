@@ -1,4 +1,4 @@
-"""Gradio-Demo: trainierte Mario-Agenten spielen 15 Level – mit optionalem Grad-CAM.
+"""Gradio-Demo: trainierte Mario-Agenten spielen 16 Level – mit optionalem Grad-CAM.
 
 Rein statisch: Die Läufe wurden vorab lokal berechnet (volle Episoden bis zur
 Flagge, auf trainierter Hardware) und liegen als MP4 in ``demos/`` – der Space
@@ -36,7 +36,7 @@ def build():
     with gr.Blocks(title="Mario RL – KI-Vision") as demo:
         gr.Markdown(
             "# 🍄 Super Mario Bros – KI-Vision Demo\n"
-            "Trainierte Agenten spielen **nur aus den Pixeln** – hier **15 gelöste Level** "
+            "Trainierte Agenten spielen **nur aus den Pixeln** – hier **16 gelöste Level** "
             "(1-1 = selbst implementiertes **Double DQN**, Rest = **PPO**, Stable-Baselines3).\n\n"
             "Wähle ein Level und schau dem Lauf bis zur Flagge zu. Das optionale "
             "**Grad-CAM-Overlay** (rot = wichtig) zeigt, worauf das neuronale Netz bei "

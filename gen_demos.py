@@ -8,7 +8,9 @@ Hugging-Face-Space hochgeladen (siehe DEPLOY.md) – der Space braucht dann kein
 ML-Stack mehr.
 
 Ausführen im .venv-ppo (braucht torch für DQN *und* SB3 für PPO), aus dem Repo-Root:
-    .venv-ppo/Scripts/python gen_demos.py
+    .venv-ppo/Scripts/python gen_demos.py            # alle Level
+    .venv-ppo/Scripts/python gen_demos.py 4-4        # nur Level, deren Name "4-4" enthält
+                                                     # (results.json wird dabei ergänzt)
 """
 import json
 import os
@@ -68,8 +70,16 @@ def save_mp4(frames, path, fps=30):
 
 
 if __name__ == "__main__":
+    only = sys.argv[1] if len(sys.argv) > 1 else ""
     results = {}
+    results_path = os.path.join(OUT, "results.json")
+    if only and os.path.exists(results_path):
+        # Teil-Lauf: bestehende results.json ergänzen statt ersetzen.
+        with open(results_path, encoding="utf-8") as f:
+            results = json.load(f)
     for level_key, level in app.LEVELS.items():
+        if only and only not in level_key:
+            continue
         w, s = level["world"], level["stage"]
         predictor = (app._DqnPredictor if level["type"] == "dqn" else app._PpoPredictor)(level["path"])
         for cam in (False, True):
@@ -83,6 +93,6 @@ if __name__ == "__main__":
             }
             print(f"{name}: {n} Frames, {mb:.2f} MB | x={x} flag={flag}")
 
-    with open(os.path.join(OUT, "results.json"), "w", encoding="utf-8") as f:
+    with open(results_path, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=1)
     print(f"\nresults.json geschrieben ({len(results)} Level).")
