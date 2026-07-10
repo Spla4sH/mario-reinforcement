@@ -34,7 +34,10 @@ import numpy as np
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Zufallssuche ab Savestate (Go-Explore-Idee).")
-    parser.add_argument("--model", required=True, help="PPO-.zip für den Anlauf (greedy)")
+    parser.add_argument("--model", default="", help="PPO-.zip für den Anlauf (greedy)")
+    parser.add_argument("--head-seq", default="",
+                        help="Anlauf stattdessen aus .npz-Sequenz (head+tail) abspielen – "
+                             "für mehrstufige Suchen (z. B. Labyrinth 4-4)")
     parser.add_argument("--world", type=int, default=2)
     parser.add_argument("--stage", type=int, default=1)
     parser.add_argument("--backup-x", type=int, required=True, help="Savestate, sobald x erreicht")
@@ -45,33 +48,51 @@ def main() -> None:
     parser.add_argument("--save-best", default="", help=".npz für die Lösungssequenz")
     args = parser.parse_args()
 
-    from stable_baselines3 import PPO
+    if not args.model and not args.head_seq:
+        parser.error("--model oder --head-seq angeben")
 
     import config
     from wrappers import create_env
 
-    print(f"FRAME_SKIP={config.FRAME_SKIP} | Modell: {args.model}")
+    print(f"FRAME_SKIP={config.FRAME_SKIP} | Anlauf: {args.head_seq or args.model}")
 
-    model = PPO.load(args.model)
     env = create_env(world=args.world, stage=args.stage, render=False)
     nes = env.unwrapped
 
-    # 1) Anlauf: Policy greedy bis zum Backup-Punkt
+    # 1) Anlauf bis zum Backup-Punkt: Policy greedy – oder eine bereits gefundene
+    # Sequenz abspielen (mehrstufige Suche: das Ergebnis von Stufe N ist der Anlauf
+    # von Stufe N+1; die finale .npz enthält dann den kompletten Weg für bc-seq).
     obs = env.reset()
     head_actions: list[int] = []
     x = 0
-    for _ in range(5000):
-        action, _ = model.predict(obs, deterministic=True)
-        obs, _, done, info = env.step(int(action))
-        head_actions.append(int(action))
-        x = int(info["x_pos"])
-        if x >= args.backup_x or done:
-            break
+    if args.head_seq:
+        data = np.load(args.head_seq)
+        if int(data["frame_skip"]) != config.FRAME_SKIP:
+            print(f"FRAME_SKIP-Konflikt: Sequenz={int(data['frame_skip'])}, config={config.FRAME_SKIP}")
+            sys.exit(1)
+        for action in np.concatenate([data["head"], data["tail"]]).astype(int).tolist():
+            obs, _, done, info = env.step(action)
+            head_actions.append(action)
+            x = int(info["x_pos"])
+            if x >= args.backup_x or done:
+                break
+    else:
+        from stable_baselines3 import PPO
+
+        model = PPO.load(args.model)
+        for _ in range(5000):
+            action, _ = model.predict(obs, deterministic=True)
+            obs, _, done, info = env.step(int(action))
+            head_actions.append(int(action))
+            x = int(info["x_pos"])
+            if x >= args.backup_x or done:
+                break
     if x < args.backup_x:
-        print(f"Anlauf gescheitert (x={x}) – Policy erreicht --backup-x nicht.")
+        print(f"Anlauf gescheitert (x={x}) – Anlauf erreicht --backup-x nicht.")
         sys.exit(1)
     print(f"Anlauf: x={x} nach {len(head_actions)} Agent-Steps – Savestate gesichert.")
     nes._backup()
+    backup_x_val = x
 
     # 2) Zufallssuche ab Savestate: Segmente aus (Aktion, Haltedauer), damit
     # auch längere Sprünge/Anläufe entstehen statt reinem Aktions-Rauschen.
@@ -87,6 +108,7 @@ def main() -> None:
         nes.done = False  # Python-seitiges done-Flag zurücksetzen
         seq: list[int] = []
         cand_max = 0
+        prev_x = backup_x_val
         done = False
         while len(seq) < args.horizon and not done:
             a = int(rng.choice(actions, p=weights))
@@ -96,7 +118,17 @@ def main() -> None:
                     break
                 _, _, done, info = env.step(a)
                 seq.append(a)
-                cand_max = max(cand_max, int(info["x_pos"]))
+                # Nur physikalisch plausible Schritte zählen (wie ProgressReward):
+                # der 16-Bit-x-Glitch (x_pos springt auf ~65535) wäre sonst ein
+                # falscher "Durchbruch". Echte Rücksprünge (Loop-Reset im
+                # Labyrinth) werden übernommen, damit prev_x stimmig bleibt.
+                x_now = int(info["x_pos"])
+                delta = x_now - prev_x
+                if 0 < delta <= 64:
+                    cand_max = max(cand_max, x_now)
+                    prev_x = x_now
+                elif delta <= 0 and x_now < 60000:
+                    prev_x = x_now
                 if done:
                     break
         if cand_max > best_x:

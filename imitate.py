@@ -185,8 +185,10 @@ def bc(demo: str, model_path: str, out: str, epochs: int, lr: float, batch_size:
 def bc_seq(seq_path: str, model_path: str, out: str, epochs: int, lr: float, batch_size: int) -> None:
     """Kloniert eine goexplore-Lösungssequenz in die Policy (bis zur Reproduktion).
 
-    Fehler-Steps werden übergewichtet und ab 97 % Trefferquote wird jede Epoche
-    greedy verifiziert – Stopp, sobald der Rollout die Flagge erreicht.
+    Fehler-Steps werden übergewichtet und jede Epoche wird greedy verifiziert –
+    Stopp, sobald der Rollout die Flagge erreicht. Entscheidend ist nicht die
+    Trefferquote, sondern der Greedy-Lauf selbst (lange Zufalls-Tails wie bei 4-4
+    sind nie zu 100 % klonbar); gespeichert wird der beste Stand nach Greedy-x.
     """
     import shutil
 
@@ -242,6 +244,7 @@ def bc_seq(seq_path: str, model_path: str, out: str, epochs: int, lr: float, bat
     n = len(obs_arr)
     wrong = np.arange(n)  # Fehler-Steps der letzten Epoche (Start: alle)
     flag = False
+    best_x, best_state = -1, None
     for epoch in range(1, epochs + 1):
         idx = np.concatenate([np.arange(n)] + [wrong] * 4)  # Fehler 4x übergewichten
         np.random.shuffle(idx)
@@ -264,14 +267,18 @@ def bc_seq(seq_path: str, model_path: str, out: str, epochs: int, lr: float, bat
                 preds.append(policy.get_distribution(obs_t).distribution.probs.argmax(dim=1).cpu().numpy())
         wrong = np.where(np.concatenate(preds) != act_arr)[0]
         acc = (n - len(wrong)) / n * 100
-        line = f"Epoche {epoch:2d} | Loss {np.mean(losses):.4f} | Treffer {acc:.1f}%"
-        if acc >= 97.0:
-            x, flag = verify()
-            line += f" | greedy: x={x}{' FLAGGE!' if flag else ''}"
-        print(line)
+        x, flag = verify()
+        if x > best_x:
+            best_x = x
+            best_state = {k: v.detach().clone() for k, v in policy.state_dict().items()}
+        print(f"Epoche {epoch:2d} | Loss {np.mean(losses):.4f} | Treffer {acc:.1f}%"
+              f" | greedy: x={x}{' FLAGGE!' if flag else ''}")
         if flag:
             break
 
+    # Besten Stand behalten (der letzte ist nicht automatisch der beste).
+    if not flag and best_state is not None:
+        policy.load_state_dict(best_state)
     policy.set_training_mode(False)
     x, flag = verify()
     env.close()
