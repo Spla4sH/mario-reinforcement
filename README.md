@@ -1,9 +1,9 @@
 # Super Mario Bros - Reinforcement Learning
 
 > **WIP** - Dieses Projekt befindet sich in aktiver Entwicklung.
-> **Meilenstein: Welt 1–3 komplett — 12 von 12 Leveln gelöst!** Jedes Level erfüllt das
-> Erfolgskriterium **20/20 greedy-Episoden bis zur Flagge**: 1-1 mit Double DQN, alle übrigen
-> mit PPO (Stable-Baselines3) – plus einer Go-Explore-Savestate-Suche für die
+> **Meilenstein: 15 Level gelöst — Welt 1–3 komplett, Welt 4 zu drei Vierteln!** Jedes Level
+> erfüllt das Erfolgskriterium **20/20 greedy-Episoden bis zur Flagge**: 1-1 mit Double DQN,
+> alle übrigen mit PPO (Stable-Baselines3) – plus einer Go-Explore-Savestate-Suche für die
 > Hard-Exploration-Stelle in 2-1. Details in den Welt-Abschnitten.
 
 Eine KI lernt Super Mario Bros zu spielen - mit Live-Fenster zum Zuschauen!
@@ -131,6 +131,9 @@ mario-reinforcement/
 ├── visualize.py      # KI-Vision-Overlay (Grad-CAM) - was sieht die KI?
 ├── visualize_ppo.py  # Dasselbe für PPO (SB3-CnnPolicy) - DQN-vs-PPO-Vergleich
 ├── app.py            # Gradio-Demo: 15 Level im Browser (Dropdown + Grad-CAM-Toggle)
+├── gen_demos.py      # Vorberechnete Demo-MP4s + results.json für den HF-Space erzeugen
+├── eval_ppo.py       # Greedy-Eval eines PPO-Modells (Flaggen-Rate über N Episoden)
+├── gif_ppo.py        # Deterministische PPO-Episode als GIF (README-Assets)
 ├── record.py         # Episode als GIF aufnehmen (Auto-Highlight + Demo)
 ├── agent.py          # Double DQN Agent + Replay Memory
 ├── model.py          # CNN-Architektur
@@ -144,7 +147,7 @@ mario-reinforcement/
 ├── tests/            # pytest-Suite
 ├── Dockerfile        # Headless-Training als Container
 ├── k8s/              # Kubernetes Job + PersistentVolume
-├── deploy/           # Hugging Face Space (requirements/packages) – siehe DEPLOY.md
+├── deploy/           # Hugging Face Space (statische Demo-App) – siehe DEPLOY.md
 ├── .github/          # GitHub-Actions-CI (Lint + Tests)
 └── requirements.txt
 ```
@@ -367,6 +370,8 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] **Level 2-1 gelöst** – Hard-Exploration-Stelle per Savestate-Suche + Behavior Cloning geknackt
 - [x] **Welt 2 komplett** – 2-2 (Wasser), 2-3 (Brücken) und 2-4 (Schloss) je 20/20
 - [x] **Welt 3 komplett** – alle vier Level 20/20, jeweils im ersten Anlauf
+- [ ] **Welt 4** – 4-1/4-2/4-3 je 20/20 ✅; 4-4 (Labyrinth) in Arbeit – Reward-Hacking-Fixes
+  (`ProgressReward`) sitzen, die Route ist ein Explorationsproblem
 - [ ] Alle Welten durchspielen
 - [ ] Vortrainiertes Modell bereitstellen
 

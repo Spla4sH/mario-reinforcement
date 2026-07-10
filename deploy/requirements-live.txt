@@ -1,5 +1,6 @@
-# Abhängigkeiten für den Hugging Face Space (CPU-Inferenz, headless).
-# Beim Anlegen des Space als requirements.txt im Space-Root hochladen.
+# NUR REFERENZ: Abhängigkeiten der alten LIVE-Variante des Space (Episoden wurden
+# im Space gerechnet). Der aktuelle Space ist statisch (vorberechnete MP4s) und
+# braucht KEINE requirements.txt – siehe DEPLOY.md.
 torch
 gym==0.25.2                 # alte gym-API (passt zum Code, s. DEPLOY.md)
 gym-super-mario-bros==7.4.0

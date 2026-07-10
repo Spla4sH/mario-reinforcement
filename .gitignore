@@ -16,8 +16,11 @@ highlights*/
 runs_ppo/
 .env
 
-# Staging-Ordner fuer den Hugging-Face-Space (aus deploy/ + Checkpoint zusammengestellt)
+# Staging-Ordner fuer den Hugging-Face-Space (deploy/app.py + gen_demos.py-Ausgabe)
 hf_space/
+
+# Nur lokal (im README waere es redundant zu ppo_2-1/2-2/2-4)
+ppo_2-3.gif
 
 # Persönliche Interview-Vorbereitung (nicht veröffentlichen)
 INTERVIEW.md

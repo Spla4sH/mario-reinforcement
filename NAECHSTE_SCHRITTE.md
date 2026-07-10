@@ -227,8 +227,12 @@ x-Rücksprünge auf 0, also kostet Im-Kreis-Laufen nichts). Fix: **`ProgressRewa
 subtilerer Exploit: der Agent farmte einen **16-Bit-Overflow der x-Position** (`x_pos`=65535,
 Emulator-Glitch → 57k Reward). Fix: nur plausible Schritte (`0 < Δx ≤ 64` px/Frame) zählen.
 **Beide Fixes vorab am Exploit-Modell gemessen** (13.824→1.574 bzw. 64.735→221), bevor
-Rechenzeit investiert wurde. Aktuell: 5M-Lauf + `ent_coef 0.03`; bei 2M erst x1433 (keine
-Flagge) — 4-4 ist **zusätzlich** ein Explorationsproblem. Backup wie 2-1: `goexplore.py`.
+Rechenzeit investiert wurde. **Eval-Ergebnis (10.07.):** Der 5M-Lauf (+ `ent_coef 0.03`)
+lernte mit sauberem Reward ehrlich, fror aber ein — Greedy-Eval des 4.9M-Checkpoints
+(`ppo_4-4_4900000_steps.zip`): **0/5, konstant x 1433**. Diagnose nach Faustregel eindeutig:
+4-4 ist (nach dem Reward-Fix) ein **reines Explorationsproblem** → nächster Schritt
+`goexplore.py` ab Savestate x ≈ 1400, wie bei 2-1 (Achtung Labyrinth: `--success-x` allein
+reicht evtl. nicht, ggf. mehrstufig suchen).
 
 **Live-Demo → Multi-Level, statisch (MP4):** Der HF-Space zeigt jetzt **alle 15 Level**
 (Dropdown 1-1 DQN + 14 PPO, Grad-CAM-Checkbox). Weg dahin: erst als Live-Rechnung (torch/SB3
@@ -241,8 +245,8 @@ noch gradio). **GIF → MP4**, weil H.264 die bunten CAM-Overlays ~10× besser k
 **INTERVIEW.md/PDF** um Einsteiger-Grundlagen + Reward-Hacking-Detailsektion erweitert.
 
 **Nächste Schritte:**
-1. **4-4-Eval abwarten** (5M-Lauf): Reicht der saubere Reward, oder braucht 4-4 zusätzlich
-   `goexplore` (Route finden)? Danach Welt 4 abschließen + README/INTERVIEW-4-4-Story ergänzen.
+1. **4-4 per `goexplore` knacken** (Eval ist da: sauberer Reward allein reicht nicht,
+   s. o.) → dann BC via `imitate.py bc-seq`, Welt 4 abschließen + README/INTERVIEW-4-4-Story.
 2. **K8s-Sweep real ausführen** (Docker/K8s-Lernthema, interview-stark) + Story-Write-up.
 3. Generalist nachschärfen / Curiosity-ICM bleibt Option für *flächiges* Explorations-Scheitern.
 4. Geparkt: decay500k-Lauf + 100k-vs-500k-Plot.
