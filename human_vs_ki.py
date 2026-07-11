@@ -3,8 +3,9 @@
 Zwei Schritte (Schritt 1 braucht ein Fenster; die Aufnahme startet erst mit der
 ersten echten Eingabe – Fenster-Zurechtrücken landet nicht im GIF):
 
-1. Eigenen Lauf aufnehmen (Steuerung: WASD = laufen, Leertaste oder O = springen,
-   Shift oder P = rennen/Feuer; ESC beendet). Aufgenommen wird bis zum ersten
+1. Eigenen Lauf aufnehmen – mit voller Original-Steuerung (alle NES-Kombos, auch
+   Ducken und Links-Sprung): WASD = Richtungen, Leertaste oder O = springen,
+   Shift oder P = rennen/Feuer; ESC beendet. Aufgenommen wird bis zum ersten
    Tod/Flaggen-Erfolg:
 
        python human_vs_ki.py record --out mensch_1-1.npz
@@ -30,41 +31,49 @@ import numpy as np
 import config
 
 
-def _make_raw_env(world: int, stage: int):
-    """Rohes NES-Env + SIMPLE_MOVEMENT – dieselben 7 Aktionen wie der Agent (fair)."""
+def _make_human_env(world: int, stage: int):
+    """Rohes NES-Env OHNE JoypadSpace – volle Original-Steuerung für den Menschen.
+
+    Der Agent spielt mit den 7 SIMPLE_MOVEMENT-Kombos; der Mensch bekommt das
+    komplette NES-Pad (jede Knopf-Kombination: Ducken, Links-Sprung, Rennen in
+    beide Richtungen …). Das ist fair machbar, weil die Aufnahme nur **Frames**
+    speichert – die Aktionsräume der beiden Seiten müssen nicht übereinstimmen.
+
+    Tasten: WASD = Richtungen, Leertaste oder O = A (springen),
+    Shift oder P = B (rennen/Feuer). Jede Kombination wird direkt auf die
+    NES-Controller-Bitmaske gelegt; play_human fragt das Mapping über
+    ``env.get_keys_to_action()`` ab (Start/Select bleiben unbelegt, damit man
+    das Spiel nicht versehentlich pausiert).
+    """
+    from itertools import combinations
+
     import gym_super_mario_bros
-    from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
-    from nes_py.wrappers import JoypadSpace
 
     env = gym_super_mario_bros.make(f"SuperMarioBros-{world}-{stage}-v0")
-    return JoypadSpace(env, SIMPLE_MOVEMENT)
 
-
-def _extend_keymap(env) -> None:
-    """Ergänzt bequemere Tasten: Leertaste = springen (A), Shift = rennen/Feuer (B).
-
-    nes-py belegt fest WASD + O (A-Knopf) und P (B-Knopf). play_human fragt die
-    Tastenbelegung über ``env.get_keys_to_action()`` ab – wir reichern das
-    Mapping um Varianten mit Leertaste/Shift an (O/P funktionieren weiterhin).
-    """
-    space, lshift, rshift = 32, 65505, 65506  # pyglet-Key-Codes
-    alternatives = {ord("o"): [ord("o"), space], ord("p"): [ord("p"), lshift, rshift]}
-    extended = {}
-    for keys, action in env.get_keys_to_action().items():
-        variants = [[]]
-        for k in keys:
-            variants = [v + [o] for v in variants for o in alternatives.get(k, [k])]
-        for v in variants:
-            extended[tuple(sorted(v))] = action
-    env.get_keys_to_action = lambda: extended  # Instanz-Attribut überdeckt die Methode
+    # NES-Controller-Bitmaske (nes-py): A=1, B=2, up=16, down=32, left=64, right=128.
+    bits = {
+        ord("d"): 128, ord("a"): 64, ord("s"): 32, ord("w"): 16,
+        ord("o"): 1, 32: 1,  # O oder Leertaste = A (pyglet-Key-Codes)
+        65505: 2, 65506: 2, ord("p"): 2,  # Shift links/rechts oder P = B
+    }
+    mapping = {}
+    keys = list(bits)
+    for n in range(len(keys) + 1):
+        for combo in combinations(keys, n):
+            value = 0
+            for k in combo:
+                value |= bits[k]
+            mapping[tuple(sorted(combo))] = value
+    env.get_keys_to_action = lambda: mapping  # Instanz-Attribut überdeckt die Methode
+    return env
 
 
 def record_human(world: int, stage: int, out: str) -> None:
     """Öffnet das Spiel-Fenster und zeichnet die erste Episode (bis done) auf."""
     from nes_py.app.play_human import play_human
 
-    env = _make_raw_env(world, stage)
-    _extend_keymap(env)
+    env = _make_human_env(world, stage)
     frames: list[np.ndarray] = []
     state = {"done": False}
 
@@ -85,7 +94,8 @@ def record_human(world: int, stage: int, out: str) -> None:
             print(f"\nEpisode beendet – {len(frames)} Frames gespeichert -> {out}")
             print("Fenster jetzt mit ESC schließen, dann 'compose' ausführen.")
 
-    print("Fenster öffnet sich. WASD = laufen, Leertaste/O = springen, Shift/P = rennen/Feuer.")
+    print("Fenster öffnet sich. Volle NES-Steuerung: WASD = laufen/ducken,")
+    print("Leertaste/O = springen, Shift/P = rennen/Feuer (alle Kombos möglich).")
     print("Aufgenommen wird ab der ersten Eingabe bis zum ersten Tod / zur Flagge. Dann ESC.")
     try:
         play_human(env, callback=on_step)

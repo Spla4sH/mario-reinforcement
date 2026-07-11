@@ -297,14 +297,16 @@ seither wird jede Epoche greedy verifiziert und der beste Stand behalten.
 
 ![Mensch und KI spielen Level 1-1 Seite an Seite](mensch_vs_ki.gif)
 
-*Gleiches Level, gleiche 7 Aktionen – links Mensch, rechts der trainierte DQN-Agent.
-Beide erreichen die Flagge, die KI ist rund 25 Spielsekunden schneller (Restzeit 329 vs. 304).*
+*Gleiches Level – links Mensch, rechts der trainierte DQN-Agent. Beide erreichen die
+Flagge, die KI ist rund 25 Spielsekunden schneller (Restzeit 329 vs. 304).*
 
-Eigenen Lauf aufnehmen und antreten – **gegen jedes der 16 gelösten Level**:
+Eigenen Lauf aufnehmen und antreten – **gegen jedes der 16 gelösten Level**. Der Mensch
+spielt dabei mit **voller Original-Steuerung** (alle NES-Kombos inkl. Ducken und
+Links-Sprung), der Agent hat weiterhin nur seine 7 Aktions-Kombos:
 
 ```bash
-# 1. Selbst spielen (WASD = laufen, Leertaste/O = springen, Shift/P = rennen; ESC beendet).
-#    Aufgenommen wird ab der ersten Eingabe bis Tod oder Flagge.
+# 1. Selbst spielen (WASD = laufen/ducken, Leertaste/O = springen, Shift/P = rennen;
+#    ESC beendet). Aufgenommen wird ab der ersten Eingabe bis Tod oder Flagge.
 python human_vs_ki.py record --world 2 --stage 1 --out mensch_2-1.npz
 
 # 2. Side-by-Side-GIF bauen – Level 1-1 gegen das DQN (Standard) …
