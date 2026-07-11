@@ -257,9 +257,12 @@ noch gradio). **GIF → MP4**, weil H.264 die bunten CAM-Overlays ~10× besser k
 **Nächste Schritte:**
 1. ~~4-4 per `goexplore` knacken~~ ✅ **erledigt (10.07.)** – Welt 4 komplett, README-Story drin.
 2. **K8s-Sweep real ausführen** (Docker/K8s-Lernthema, interview-stark) + Story-Write-up.
-3. HF-Space um 4-4 erweitern (2 MP4s + results.json nachladen) & Welt 5 optional.
-4. Generalist nachschärfen / Curiosity-ICM bleibt Option für *flächiges* Explorations-Scheitern.
-5. Geparkt: decay500k-Lauf + 100k-vs-500k-Plot.
+3. **Mensch-vs-KI-Levelwahl:** beim Start ein interaktives Menü (Levelliste 1-1…4-4 im
+   Terminal, Nummer wählen) statt `--world/--stage/--ppo`-Handarbeit – `record` und
+   `compose` suchen sich das passende Modell dann selbst (Mapping wie in `app.py LEVELS`).
+4. ~~HF-Space um 4-4 erweitern~~ ✅ (Sebastian hat MP4s+results.json hochgeladen) & Welt 5 optional.
+5. Generalist nachschärfen / Curiosity-ICM bleibt Option für *flächiges* Explorations-Scheitern.
+6. Geparkt: decay500k-Lauf + 100k-vs-500k-Plot.
 
 ---
 
