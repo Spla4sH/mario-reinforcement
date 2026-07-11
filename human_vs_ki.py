@@ -114,7 +114,10 @@ def compose(
         img = Image.fromarray(np.hstack([h, divider, k]))
         draw = ImageDraw.Draw(img)
         for x, label in ((6, "MENSCH"), (human[0].shape[1] + 10, "KI (DQN)")):
-            draw.rectangle([x - 3, 4, x + 6.5 * len(label), 16], fill=(0, 0, 0))
+            # Textgröße messen statt schätzen – die Default-Schrift ist je nach
+            # Pillow-Version unterschiedlich groß (sonst endet die Box im Text).
+            box = draw.textbbox((x, 5), label)
+            draw.rectangle([box[0] - 3, box[1] - 2, box[2] + 3, box[3] + 2], fill=(0, 0, 0))
             draw.text((x, 5), label, fill=(255, 255, 255))
         combined.append(np.array(img))
 
