@@ -1,15 +1,24 @@
 """Mensch vs. KI: eigenen Mario-Lauf aufnehmen und Seite an Seite mit dem Agenten zeigen.
 
-Zwei Schritte (beide im DQN-venv, Schritt 1 braucht ein Fenster):
+Zwei Schritte (Schritt 1 braucht ein Fenster; die Aufnahme startet erst mit der
+ersten echten Eingabe – Fenster-Zurechtrücken landet nicht im GIF):
 
-1. Eigenen Lauf aufnehmen (Steuerung: Pfeiltasten = laufen, O = springen,
-   P = Feuer/Rennen; ESC beendet). Aufgenommen wird bis zum ersten Tod/Flaggen-Erfolg:
+1. Eigenen Lauf aufnehmen (Steuerung: WASD = laufen, Leertaste oder O = springen,
+   Shift oder P = rennen/Feuer; ESC beendet). Aufgenommen wird bis zum ersten
+   Tod/Flaggen-Erfolg:
 
        python human_vs_ki.py record --out mensch_1-1.npz
 
-2. Side-by-Side-GIF bauen (links du, rechts der Agent aus mario_best.pt):
+2. Side-by-Side-GIF bauen (links du, rechts der Agent). Standard: DQN-Checkpoint
+   (Level 1-1, im DQN-venv). Für jedes andere Level ein PPO-Modell angeben –
+   dann im .venv-ppo ausführen:
 
        python human_vs_ki.py compose --human mensch_1-1.npz --out mensch_vs_ki.gif
+
+       python human_vs_ki.py record --world 2 --stage 1 --out mensch_2-1.npz
+       .venv-ppo/Scripts/python human_vs_ki.py compose --human mensch_2-1.npz \\
+           --world 2 --stage 1 --ppo checkpoints_ppo/mario_ppo_2-1_tower.zip \\
+           --out mensch_vs_ki_2-1.gif
 """
 
 from __future__ import annotations
@@ -31,11 +40,31 @@ def _make_raw_env(world: int, stage: int):
     return JoypadSpace(env, SIMPLE_MOVEMENT)
 
 
+def _extend_keymap(env) -> None:
+    """Ergänzt bequemere Tasten: Leertaste = springen (A), Shift = rennen/Feuer (B).
+
+    nes-py belegt fest WASD + O (A-Knopf) und P (B-Knopf). play_human fragt die
+    Tastenbelegung über ``env.get_keys_to_action()`` ab – wir reichern das
+    Mapping um Varianten mit Leertaste/Shift an (O/P funktionieren weiterhin).
+    """
+    space, lshift, rshift = 32, 65505, 65506  # pyglet-Key-Codes
+    alternatives = {ord("o"): [ord("o"), space], ord("p"): [ord("p"), lshift, rshift]}
+    extended = {}
+    for keys, action in env.get_keys_to_action().items():
+        variants = [[]]
+        for k in keys:
+            variants = [v + [o] for v in variants for o in alternatives.get(k, [k])]
+        for v in variants:
+            extended[tuple(sorted(v))] = action
+    env.get_keys_to_action = lambda: extended  # Instanz-Attribut überdeckt die Methode
+
+
 def record_human(world: int, stage: int, out: str) -> None:
     """Öffnet das Spiel-Fenster und zeichnet die erste Episode (bis done) auf."""
     from nes_py.app.play_human import play_human
 
     env = _make_raw_env(world, stage)
+    _extend_keymap(env)
     frames: list[np.ndarray] = []
     state = {"done": False}
 
@@ -56,8 +85,8 @@ def record_human(world: int, stage: int, out: str) -> None:
             print(f"\nEpisode beendet – {len(frames)} Frames gespeichert -> {out}")
             print("Fenster jetzt mit ESC schließen, dann 'compose' ausführen.")
 
-    print("Fenster öffnet sich. Pfeiltasten = laufen, O = springen, P = rennen/Feuer.")
-    print("Aufgenommen wird bis zum ersten Tod / zur Flagge. Danach mit ESC schließen.")
+    print("Fenster öffnet sich. WASD = laufen, Leertaste/O = springen, Shift/P = rennen/Feuer.")
+    print("Aufgenommen wird ab der ersten Eingabe bis zum ersten Tod / zur Flagge. Dann ESC.")
     try:
         play_human(env, callback=on_step)
     finally:
@@ -74,12 +103,11 @@ def record_human(world: int, stage: int, out: str) -> None:
 
 def compose(
     human_path: str, out: str, checkpoint: str, world: int, stage: int,
-    trim_start: int = 0,
+    trim_start: int = 0, ppo: str = "",
 ) -> None:
     """Baut das Side-by-Side-GIF: links Mensch, rechts Agent (greedy)."""
     from PIL import Image, ImageDraw
 
-    from agent import MarioAgent
     from record import record_frames, save_gif
     from wrappers import create_env
 
@@ -97,8 +125,27 @@ def compose(
         print(f"Mensch: {len(human)} Frames geladen")
 
     env = create_env(world=world, stage=stage, render=False)
-    agent = MarioAgent(env.action_space.n)
-    agent.load(checkpoint)
+    if ppo:
+        from stable_baselines3 import PPO
+
+        class _PpoGreedy:
+            """Adapter auf die record_frames-Schnittstelle (act(state) -> action)."""
+
+            def __init__(self, path: str):
+                self.model = PPO.load(path)
+
+            def act(self, state):
+                action, _ = self.model.predict(state, deterministic=True)
+                return int(action)
+
+        agent = _PpoGreedy(ppo)
+        ki_label = "KI (PPO)"
+    else:
+        from agent import MarioAgent
+
+        agent = MarioAgent(env.action_space.n)
+        agent.load(checkpoint)
+        ki_label = "KI (DQN)"
     ki, info = record_frames(agent, env)  # SkipFrame(4) -> gleiche Frame-Rate wie human[::4]
     env.close()
     print(f"KI: {len(ki)} Frames | x_pos {info.get('x_pos')} | Flagge: {bool(info.get('flag_get'))}")
@@ -113,7 +160,7 @@ def compose(
     for h, k in zip(human, ki):
         img = Image.fromarray(np.hstack([h, divider, k]))
         draw = ImageDraw.Draw(img)
-        for x, label in ((6, "MENSCH"), (human[0].shape[1] + 10, "KI (DQN)")):
+        for x, label in ((6, "MENSCH"), (human[0].shape[1] + 10, ki_label)):
             # Textgröße messen statt schätzen – die Default-Schrift ist je nach
             # Pillow-Version unterschiedlich groß (sonst endet die Box im Text).
             box = draw.textbbox((x, 5), label)
@@ -151,12 +198,18 @@ def main() -> None:
         "--trim-start", type=int, default=0,
         help="So viele Frames vom Anfang der Mensch-Aufnahme abschneiden (15 ≈ 1 Sek.)",
     )
+    p_cmp.add_argument(
+        "--ppo", default="",
+        help="PPO-Modell (.zip) statt DQN-Checkpoint – für alle Level jenseits von 1-1 "
+             "(dann im .venv-ppo ausführen)",
+    )
 
     args = parser.parse_args()
     if args.cmd == "record":
         record_human(args.world, args.stage, args.out)
     else:
-        compose(args.human, args.out, args.checkpoint, args.world, args.stage, args.trim_start)
+        compose(args.human, args.out, args.checkpoint, args.world, args.stage,
+                args.trim_start, args.ppo)
 
 
 if __name__ == "__main__":

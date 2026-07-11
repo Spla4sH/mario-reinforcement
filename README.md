@@ -77,6 +77,11 @@ python train.py --episodes 300 --no-render
 - Python 3.10+
 - NVIDIA GPU mit CUDA empfohlen (CPU funktioniert, aber deutlich langsamer)
 
+> **Ohne eigenes Training loslegen:** Alle 16 trainierten Modelle gibt es als
+> [Release v1.0](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.0) –
+> `mario_best.pt` nach `checkpoints/`, die `.zip`-Modelle nach `checkpoints_ppo/` legen,
+> dann direkt `python play.py` bzw. `python play_ppo.py --model … --world … --stage …`.
+
 > Erster Probelauf? Folge der Checkliste in [TESTLAUF.md](TESTLAUF.md).
 
 ### Mit Docker (headless Training)
@@ -293,8 +298,22 @@ seither wird jede Epoche greedy verifiziert und der beste Stand behalten.
 ![Mensch und KI spielen Level 1-1 Seite an Seite](mensch_vs_ki.gif)
 
 *Gleiches Level, gleiche 7 Aktionen – links Mensch, rechts der trainierte DQN-Agent.
-Beide erreichen die Flagge, die KI ist rund 25 Spielsekunden schneller (Restzeit 329 vs. 304).
-Eigenen Lauf aufnehmen: `python human_vs_ki.py record`, dann `compose`.*
+Beide erreichen die Flagge, die KI ist rund 25 Spielsekunden schneller (Restzeit 329 vs. 304).*
+
+Eigenen Lauf aufnehmen und antreten – **gegen jedes der 16 gelösten Level**:
+
+```bash
+# 1. Selbst spielen (WASD = laufen, Leertaste/O = springen, Shift/P = rennen; ESC beendet).
+#    Aufgenommen wird ab der ersten Eingabe bis Tod oder Flagge.
+python human_vs_ki.py record --world 2 --stage 1 --out mensch_2-1.npz
+
+# 2. Side-by-Side-GIF bauen – Level 1-1 gegen das DQN (Standard) …
+python human_vs_ki.py compose --human mensch_1-1.npz
+
+# … oder jedes andere Level gegen sein PPO-Modell (im .venv-ppo):
+python human_vs_ki.py compose --human mensch_2-1.npz --world 2 --stage 1 \
+    --ppo checkpoints_ppo/mario_ppo_2-1_tower.zip --out mensch_vs_ki_2-1.gif
+```
 
 ## Analyse: Wo stirbt Mario?
 
@@ -404,7 +423,8 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] **Welt 4 komplett** – 4-1/4-2/4-3 im ersten Anlauf; 4-4 (Labyrinth) nach zweifachem
   Reward-Hacking-Fix per mehrstufigem Go-Explore + Behavior Cloning
 - [ ] Alle Welten durchspielen
-- [ ] Vortrainiertes Modell bereitstellen
+- [x] **Vortrainierte Modelle bereitgestellt** – alle 16 Level + Welt-1-Generalist als
+  [Release v1.0](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.0)
 
 ### Vision / Weiterentwicklung
 
