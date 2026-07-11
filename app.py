@@ -218,9 +218,8 @@ def build():
     return demo
 
 
-# Auf Modulebene: Hugging Face (Gradio-SDK) importiert app.py und erwartet ein
-# globales `demo` – der __main__-Block läuft dort nie.
-demo = build()
-
+# Kein Modulebenen-Build mehr: Der HF-Space nutzt seine eigene statische Kopie
+# (deploy/app.py); hier würde ein Import sonst gradio erzwingen – andere Skripte
+# (gen_demos.py, human_vs_ki.py) importieren nur LEVELS/Predictoren.
 if __name__ == "__main__":
-    demo.launch()
+    build().launch()

@@ -305,17 +305,18 @@ spielt dabei mit **voller Original-Steuerung** (alle NES-Kombos inkl. Ducken und
 Links-Sprung), der Agent hat weiterhin nur seine 7 Aktions-Kombos:
 
 ```bash
-# 1. Selbst spielen (WASD = laufen/ducken, Leertaste/O = springen, Shift/P = rennen;
-#    ESC beendet). Aufgenommen wird ab der ersten Eingabe bis Tod oder Flagge.
-python human_vs_ki.py record --world 2 --stage 1 --out mensch_2-1.npz
+# 1. Selbst spielen – ein Terminal-Menü fragt das Level ab (1-1 … 4-4).
+#    Steuerung: WASD = laufen/ducken, Leertaste/O = springen, Shift/P = rennen;
+#    ESC beendet. Aufgenommen wird ab der ersten Eingabe bis Tod oder Flagge.
+python human_vs_ki.py record
 
-# 2. Side-by-Side-GIF bauen – Level 1-1 gegen das DQN (Standard) …
-python human_vs_ki.py compose --human mensch_1-1.npz
-
-# … oder jedes andere Level gegen sein PPO-Modell (im .venv-ppo):
-python human_vs_ki.py compose --human mensch_2-1.npz --world 2 --stage 1 \
-    --ppo checkpoints_ppo/mario_ppo_2-1_tower.zip --out mensch_vs_ki_2-1.gif
+# 2. Side-by-Side-GIF bauen – dasselbe Menü wählt auch das passende Modell
+#    (1-1 = DQN; alle PPO-Level im .venv-ppo ausführen):
+python human_vs_ki.py compose
 ```
+
+Level und Modell lassen sich auch explizit setzen (`--world/--stage/--ppo`), dann
+entfällt das Menü – Details im Skript-Docstring.
 
 ## Analyse: Wo stirbt Mario?
 

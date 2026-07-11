@@ -15,23 +15,8 @@ Ausführen im .venv-ppo (braucht torch für DQN *und* SB3 für PPO), aus dem Rep
 import json
 import os
 import sys
-import types
 
 sys.stdout.reconfigure(encoding="utf-8")
-
-# gradio wird nur von app.py beim Import verlangt, nicht fürs Rechnen – stubben,
-# damit die Demo-Erzeugung ohne installiertes gradio läuft.
-g = types.ModuleType("gradio")
-class _C:
-    def __enter__(self): return self
-    def __exit__(self, *a): return False
-class _B:
-    def click(self, *a, **k): return None
-g.Blocks = lambda *a, **k: _C()
-g.Row = lambda *a, **k: _C()
-g.Markdown = g.Dropdown = g.Image = g.Video = g.Textbox = g.Checkbox = lambda *a, **k: None
-g.Button = lambda *a, **k: _B()
-sys.modules["gradio"] = g
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 

@@ -1,20 +1,23 @@
 """Mensch vs. KI: eigenen Mario-Lauf aufnehmen und Seite an Seite mit dem Agenten zeigen.
 
+Einfachster Weg – ohne Level-Argumente starten, dann fragt ein Terminal-Menü das
+Level ab (1-1…4-4) und wählt das passende Modell automatisch:
+
+    python human_vs_ki.py record                # Menü -> spielen -> mensch_<w>-<s>.npz
+    python human_vs_ki.py compose               # Menü -> GIF mensch_vs_ki_<w>-<s>.gif
+    # PPO-Level (alles außer 1-1) für compose im .venv-ppo ausführen:
+    .venv-ppo/Scripts/python human_vs_ki.py compose
+
 Zwei Schritte (Schritt 1 braucht ein Fenster; die Aufnahme startet erst mit der
 ersten echten Eingabe – Fenster-Zurechtrücken landet nicht im GIF):
 
 1. Eigenen Lauf aufnehmen – mit voller Original-Steuerung (alle NES-Kombos, auch
    Ducken und Links-Sprung): WASD = Richtungen, Leertaste oder O = springen,
    Shift oder P = rennen/Feuer; ESC beendet. Aufgenommen wird bis zum ersten
-   Tod/Flaggen-Erfolg:
+   Tod/Flaggen-Erfolg.
 
-       python human_vs_ki.py record --out mensch_1-1.npz
-
-2. Side-by-Side-GIF bauen (links du, rechts der Agent). Standard: DQN-Checkpoint
-   (Level 1-1, im DQN-venv). Für jedes andere Level ein PPO-Modell angeben –
-   dann im .venv-ppo ausführen:
-
-       python human_vs_ki.py compose --human mensch_1-1.npz --out mensch_vs_ki.gif
+2. Side-by-Side-GIF bauen (links du, rechts der Agent). Alles auch explizit
+   per Argument steuerbar (überspringt das Menü):
 
        python human_vs_ki.py record --world 2 --stage 1 --out mensch_2-1.npz
        .venv-ppo/Scripts/python human_vs_ki.py compose --human mensch_2-1.npz \\
@@ -25,10 +28,37 @@ ersten echten Eingabe – Fenster-Zurechtrücken landet nicht im GIF):
 from __future__ import annotations
 
 import argparse
+import sys
 
 import numpy as np
 
-import config
+for _s in (sys.stdout, sys.stderr):
+    try:
+        _s.reconfigure(encoding="utf-8")  # Level-Labels enthalten „·" & Umlaute
+    except (AttributeError, ValueError):
+        pass
+
+
+def _level_menu() -> dict:
+    """Interaktive Levelwahl: listet alle gelösten Level, gibt den Eintrag zurück.
+
+    Quelle ist die ``LEVELS``-Tabelle der Gradio-Demo (``app.py``) – eine Stelle,
+    an der Level und Modelle gepflegt werden. Rückgabe: dict mit
+    ``type`` (dqn/ppo), ``path`` (Modell), ``world``, ``stage``.
+    """
+    from app import LEVELS
+
+    entries = list(LEVELS.items())
+    print("\nGegen welches Level willst du antreten?")
+    for i, (label, _) in enumerate(entries, 1):
+        print(f"  {i:2d}) {label}")
+    while True:
+        raw = input(f"Auswahl [1-{len(entries)}]: ").strip()
+        if raw.isdigit() and 1 <= int(raw) <= len(entries):
+            label, level = entries[int(raw) - 1]
+            print(f"-> {label}")
+            return level
+        print("Bitte eine Zahl aus der Liste eingeben.")
 
 
 def _make_human_env(world: int, stage: int):
@@ -136,7 +166,13 @@ def compose(
 
     env = create_env(world=world, stage=stage, render=False)
     if ppo:
-        from stable_baselines3 import PPO
+        try:
+            from stable_baselines3 import PPO
+        except ImportError:
+            env.close()
+            print("PPO-Level brauchen das SB3-venv – bitte so starten:")
+            print("  .venv-ppo/Scripts/python human_vs_ki.py compose ...")
+            return
 
         class _PpoGreedy:
             """Adapter auf die record_frames-Schnittstelle (act(state) -> action)."""
@@ -194,16 +230,16 @@ def main() -> None:
     sub = parser.add_subparsers(dest="cmd", required=True)
 
     p_rec = sub.add_parser("record", help="eigenen Lauf aufnehmen (öffnet Fenster)")
-    p_rec.add_argument("--world", type=int, default=config.WORLD)
-    p_rec.add_argument("--stage", type=int, default=config.STAGE)
-    p_rec.add_argument("--out", default="mensch_1-1.npz")
+    p_rec.add_argument("--world", type=int, default=None, help="ohne Angabe: Level-Menü")
+    p_rec.add_argument("--stage", type=int, default=None)
+    p_rec.add_argument("--out", default=None, help="Standard: mensch_<world>-<stage>.npz")
 
     p_cmp = sub.add_parser("compose", help="Side-by-Side-GIF bauen")
-    p_cmp.add_argument("--human", default="mensch_1-1.npz")
+    p_cmp.add_argument("--human", default=None, help="Standard: mensch_<world>-<stage>.npz")
     p_cmp.add_argument("--checkpoint", default="checkpoints/mario_best.pt")
-    p_cmp.add_argument("--world", type=int, default=config.WORLD)
-    p_cmp.add_argument("--stage", type=int, default=config.STAGE)
-    p_cmp.add_argument("--out", default="mensch_vs_ki.gif")
+    p_cmp.add_argument("--world", type=int, default=None, help="ohne Angabe: Level-Menü (wählt auch das Modell)")
+    p_cmp.add_argument("--stage", type=int, default=None)
+    p_cmp.add_argument("--out", default=None, help="Standard: mensch_vs_ki_<world>-<stage>.gif")
     p_cmp.add_argument(
         "--trim-start", type=int, default=0,
         help="So viele Frames vom Anfang der Mensch-Aufnahme abschneiden (15 ≈ 1 Sek.)",
@@ -215,11 +251,21 @@ def main() -> None:
     )
 
     args = parser.parse_args()
+    world, stage, ppo = args.world, args.stage, getattr(args, "ppo", "")
+    if world is None or stage is None:
+        level = _level_menu()
+        world, stage = level["world"], level["stage"]
+        # Im Menü gewähltes PPO-Level: Modell automatisch übernehmen (1-1 bleibt DQN).
+        if args.cmd == "compose" and not ppo and level["type"] == "ppo":
+            ppo = level["path"]
+
     if args.cmd == "record":
-        record_human(args.world, args.stage, args.out)
+        out = args.out or f"mensch_{world}-{stage}.npz"
+        record_human(world, stage, out)
     else:
-        compose(args.human, args.out, args.checkpoint, args.world, args.stage,
-                args.trim_start, args.ppo)
+        human = args.human or f"mensch_{world}-{stage}.npz"
+        out = args.out or f"mensch_vs_ki_{world}-{stage}.gif"
+        compose(human, out, args.checkpoint, world, stage, args.trim_start, ppo)
 
 
 if __name__ == "__main__":
