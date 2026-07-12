@@ -141,6 +141,7 @@ mario-reinforcement/
 ├── eval_ppo.py       # Greedy-Eval eines PPO-Modells (Flaggen-Rate über N Episoden)
 ├── gif_ppo.py        # Deterministische PPO-Episode als GIF (README-Assets)
 ├── record.py         # Episode als GIF aufnehmen (Auto-Highlight + Demo)
+├── death_map.py      # „Wo stirbt Mario?"-Grafik: Todes-Dichten über Level-Panorama
 ├── agent.py          # Double DQN Agent + Replay Memory
 ├── model.py          # CNN-Architektur
 ├── wrappers.py       # Bildvorverarbeitung & Environment-Wrapper
@@ -320,13 +321,16 @@ entfällt das Menü – Details im Skript-Docstring.
 
 ## Analyse: Wo stirbt Mario?
 
-![Death-Heatmap: Todespositionen in Level 1-1 über das DQN-Training](death_heatmap.png)
+![Todesorte in Level 1-1 über das DQN-Training – Dichtekurven über dem Level-Panorama](death_heatmap.png)
 
-*Todespositionen aus 5.409 DQN-Trainingsepisoden (Level 1-1), aufgeteilt in sechs
-Trainingsphasen. Früh dominiert das Rohr-Cluster (x&nbsp;600–900), in der Mitte wird die
-Grube bei x&nbsp;≈&nbsp;1450 zum Hotspot, später wandern die Tode immer weiter nach rechts –
-während die Flaggen-Quote (rechte Spalte) von 0&nbsp;% auf 6&nbsp;% steigt. Man sieht dem
-Agenten beim Lernen zu: Das Level wird von links nach rechts „erobert".*
+*Todespositionen aus 5.409 DQN-Trainingsepisoden (Level 1-1) als Dichtekurven je
+Trainingsphase – gezeichnet **über einem Panorama des Levels**, das aus einem
+Greedy-Lauf des fertigen Agenten zusammengesetzt ist (Kameraposition pro Frame aus dem
+NES-RAM). So sieht man direkt, *woran* Mario stirbt: Früh liegt der große Berg auf der
+Rohrgruppe, in der Mitte werden die Gruben zum Hotspot, später wandern die Tode zu den
+Gegner-Clustern und der Endtreppe – während die Flaggen-Quote (rechts) von 0&nbsp;% auf
+6&nbsp;% steigt. Man sieht dem Agenten beim Lernen zu: Das Level wird von links nach
+rechts „erobert". Erzeugt mit `death_map.py`.*
 
 ## Zuschauen & Auswerten
 
