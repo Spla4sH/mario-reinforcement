@@ -149,11 +149,12 @@ mario-reinforcement/
 ├── evaluate.py       # Greedy-Evaluation (flag_get-Rate, x-Position)
 ├── metrics.py        # CSV-Logging der Trainingsmetriken
 ├── plot.py           # Graphen aus den Metriken erzeugen
+├── sweep_plot.py     # Sweep-Varianten vergleichen (Epsilon/Loss/x-Position)
 ├── tracking.py       # Optionales W&B-Experiment-Tracking (ausfallsicher)
 ├── config.py         # Hyperparameter (per Env-Variablen überschreibbar)
 ├── tests/            # pytest-Suite
 ├── Dockerfile        # Headless-Training als Container
-├── k8s/              # Kubernetes Job + PersistentVolume
+├── k8s/              # Kubernetes: Trainings-Job, Hyperparameter-Sweep, Reader-Pod
 ├── deploy/           # Hugging Face Space (statische Demo-App) – siehe DEPLOY.md
 ├── .github/          # GitHub-Actions-CI (Lint + Tests)
 └── requirements.txt
@@ -332,6 +333,38 @@ Gegner-Clustern und der Endtreppe – während die Flaggen-Quote (rechts) von 0&
 6&nbsp;% steigt. Man sieht dem Agenten beim Lernen zu: Das Level wird von links nach
 rechts „erobert". Erzeugt mit `death_map.py`.*
 
+## MLOps: Hyperparameter-Sweep als parallele Kubernetes-Jobs
+
+![Sweep-Vergleich: Epsilon, Loss und x-Position der vier Varianten](sweep.png)
+
+*Vier Trainingsläufe mit unterschiedlichen Hyperparametern — als **vier parallele
+Kubernetes-Jobs** in einem lokalen [kind](https://kind.sigs.k8s.io/)-Cluster ausgeführt,
+gleiche Seed, Varianten per Env-Variablen (`LEARNING_RATE`, `EPSILON_DECAY`). Ergebnis links
+nach rechts: Der **Epsilon-Verlauf** zeigt den Mechanismus der `decay500k`-Variante (5×
+langsamerer Explorations-Abbau), der **Loss** entlarvt die zu hohe Lernrate `lr1e-3` (~3×
+höher, zappelig), die **x-Position** ist nach 150 CPU-Episoden ehrlich gesagt noch
+verrauschte Frühphase — der Punkt des Sweeps ist der Vergleich, nicht das Lösen.*
+
+```bash
+docker build -t mario-rl .                      # Image (Dockerfile im Repo)
+kind create cluster --name mario                # lokaler K8s-Cluster (1 Container)
+kind load docker-image mario-rl:latest --name mario
+kubectl apply -f k8s/sweep-jobs.yaml            # 4 Jobs + PVC
+kubectl get pods -l sweep=mario -w              # zuschauen
+# danach: Ergebnisse einsammeln + Vergleichsplot
+kubectl apply -f k8s/reader-pod.yaml && kubectl wait --for=condition=Ready pod/mario-sweep-reader
+kubectl cp mario-sweep-reader:/data/logs ./sweep_results
+python sweep_plot.py --dir sweep_results --out sweep.png
+```
+
+Der Weg dahin war lehrreicher als das Ergebnis (Details in den Manifest-Kommentaren):
+ein **24-GB-Build-Kontext** (`.dockerignore` muss mitwachsen), ein fehlender C++-Compiler
+(*runtime*- vs. *devel*-Basis-Image), und ein **OOMKilled** — der DQN-Replay-Buffer wächst
+auf ~6 GB, vier Jobs überbuchten die Docker-VM, und das Memory-Limit hat genau das getan,
+wofür es da ist: den einen Ausreißer töten statt den ganzen Node. Auf einem echten
+GPU-Cluster: `nvidia.com/gpu`-Limit ergänzen (siehe `k8s/train-job.yaml`) und Episoden
+hochdrehen.
+
 ## Zuschauen & Auswerten
 
 ```bash
@@ -444,8 +477,9 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
   (Dropdown + Grad-CAM-Toggle, vorberechnete Videos)
 - [x] Algorithmus-Upgrade: Double DQN → **PPO** (Stable-Baselines3 + shimmy) – löst 1-2, wo DQN scheiterte
 - [x] Grad-CAM für PPO (`visualize_ppo.py`) + DQN-vs-PPO-Vergleichs-GIF
+- [x] **MLOps-Ausbau: Hyperparameter-Sweep als parallele K8s-Jobs** – real ausgeführt
+  (kind-Cluster, 4 Varianten, Vergleichsplot; inkl. gelebter OOMKilled-Lektion)
 - [ ] Generalisierung: zweite Umgebung (Atari) über dieselbe Pixel-Pipeline
-- [ ] MLOps-Ausbau: Hyperparameter-Sweeps als parallele K8s-Jobs
 
 Detaillierter Fahrplan: [NAECHSTE_SCHRITTE.md](NAECHSTE_SCHRITTE.md).
 

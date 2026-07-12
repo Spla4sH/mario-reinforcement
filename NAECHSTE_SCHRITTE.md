@@ -256,13 +256,29 @@ noch gradio). **GIF → MP4**, weil H.264 die bunten CAM-Overlays ~10× besser k
 
 **Nächste Schritte:**
 1. ~~4-4 per `goexplore` knacken~~ ✅ **erledigt (10.07.)** – Welt 4 komplett, README-Story drin.
-2. **K8s-Sweep real ausführen** (Docker/K8s-Lernthema, interview-stark) + Story-Write-up.
+2. ~~K8s-Sweep real ausführen~~ ✅ **erledigt (12.07., s. Phase I unten)**.
 3. ~~Mensch-vs-KI-Levelwahl~~ ✅ **erledigt (11.07.)** – `record`/`compose` ohne Argumente
    zeigen ein Terminal-Menü (1-1…4-4) und wählen Modell + Dateinamen automatisch
    (Quelle: `app.py LEVELS`; `app.py` baut die Gradio-UI dafür nicht mehr auf Modulebene).
 4. ~~HF-Space um 4-4 erweitern~~ ✅ (Sebastian hat MP4s+results.json hochgeladen) & Welt 5 optional.
 5. Generalist nachschärfen / Curiosity-ICM bleibt Option für *flächiges* Explorations-Scheitern.
 6. Geparkt: decay500k-Lauf + 100k-vs-500k-Plot.
+
+---
+
+## Phase I — K8s-Sweep real ausgeführt ✅ (12.07.2026)
+
+> **Stand: Hyperparameter-Sweep als vier parallele Kubernetes-Jobs gelaufen** (lokaler
+> kind-Cluster, Image aus dem Repo-Dockerfile, Varianten per Env-Variablen, Ergebnisse
+> auf PVC, Vergleichsplot `sweep.png` im README). Befund: Epsilon-Panel zeigt den
+> decay500k-Mechanismus, Loss-Panel entlarvt lr=1e-3 als instabil; x-Position nach
+> 150 CPU-Episoden ehrlich verrauscht — der Sweep beweist die Infrastruktur.
+> **Sechs erlebte Lektionen** (README-Kurzfassung, INTERVIEW ausführlich):
+> 24-GB-Build-Kontext → `.dockerignore`; runtime-Image ohne g++ → `build-essential`;
+> Build läuft im Daemon weiter; **OOMKilled** (Replay-Buffer ~6 GB, Requests planen /
+> Limits schützen); PVC-Auto-Resume als Feature *und* Falle (Epsilon startete bei 0,89);
+> CPU-Contention (29 min allein vs. 73 min zu viert). Manifeste entsprechend gehärtet
+> (requests 4Gi, decay500k-Limit 10Gi, PYTHONUNBUFFERED).
 
 ---
 

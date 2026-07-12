@@ -1,0 +1,168 @@
+# Hyperparameter-Sweep: vier parallele Trainings-Jobs, je eine Variante.
+#
+# Jede Variante setzt ihre Hyperparameter per Env-Variablen (config.py liest sie),
+# gleiche SEED -> vergleichbare Kurven. Die CSV-Logs landen auf einer gemeinsamen
+# PVC in getrennten Unterordnern (subPath je Variante) und werden nach dem Lauf
+# mit einem Reader-Pod eingesammelt (k8s/reader-pod.yaml) und geplottet.
+#
+# Lokal (kind, ohne GPU-Device-Plugin) laufen die Jobs auf CPU - deshalb bewusst
+# kurze Laeufe (--episodes). Auf einem GPU-Cluster: nvidia.com/gpu-Limit wie in
+# train-job.yaml ergaenzen und Episodenzahl hochdrehen.
+#
+# RAM-Lektion (selbst erlebt): Der DQN-Replay-Buffer waechst bei MEMORY_SIZE=100000
+# auf ~5-6 GB pro Job. Beim ersten Lauf standen requests auf 2Gi -> vier Jobs
+# ueberbuchten die 16-GB-Docker-VM (Host wurde unbenutzbar), und die am laengsten
+# laufende Variante wurde vom 5Gi-Limit OOMKilled - das Limit hat den Node
+# geschuetzt, genau dafuer ist es da. Mit requests=4Gi plant der Scheduler ehrlich:
+# auf kleinen Maschinen laufen dann weniger Jobs parallel, der Rest wartet Pending.
+#
+# Anwenden:  kubectl apply -f k8s/sweep-jobs.yaml
+# Status:    kubectl get jobs -l sweep=mario
+# Logs:      kubectl logs -f job/mario-sweep-baseline
+# Aufraeumen: kubectl delete -f k8s/sweep-jobs.yaml
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mario-sweep-data
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mario-sweep-baseline
+  labels: {sweep: mario, variant: baseline}
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels: {sweep: mario}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: trainer
+          image: mario-rl:latest
+          imagePullPolicy: Never   # Image wurde per `kind load docker-image` geladen
+          args: ["python", "train.py", "--no-render", "--episodes", "150"]
+          env:
+            - {name: LEARNING_RATE, value: "0.00025"}
+            - {name: EPSILON_DECAY, value: "100000"}
+            - {name: OMP_NUM_THREADS, value: "4"}
+            - {name: PYTHONUNBUFFERED, value: "1"}
+          resources:
+            requests: {cpu: "3", memory: 4Gi}
+            limits: {memory: 8Gi}
+          volumeMounts:
+            - {name: data, mountPath: /app/logs, subPath: logs/baseline}
+            - {name: data, mountPath: /app/checkpoints, subPath: checkpoints/baseline}
+            - {name: data, mountPath: /app/plots, subPath: plots/baseline}
+            - {name: data, mountPath: /app/highlights, subPath: highlights/baseline}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: mario-sweep-data}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mario-sweep-decay500k
+  labels: {sweep: mario, variant: decay500k}
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels: {sweep: mario}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: trainer
+          image: mario-rl:latest
+          imagePullPolicy: Never
+          args: ["python", "train.py", "--no-render", "--episodes", "150"]
+          env:
+            - {name: LEARNING_RATE, value: "0.00025"}
+            - {name: EPSILON_DECAY, value: "500000"}
+            - {name: OMP_NUM_THREADS, value: "4"}
+            - {name: PYTHONUNBUFFERED, value: "1"}
+          resources:
+            requests: {cpu: "3", memory: 4Gi}
+            limits: {memory: 10Gi}   # exploriert laenger -> Replay-Buffer voller (OOM-Lektion)
+          volumeMounts:
+            - {name: data, mountPath: /app/logs, subPath: logs/decay500k}
+            - {name: data, mountPath: /app/checkpoints, subPath: checkpoints/decay500k}
+            - {name: data, mountPath: /app/plots, subPath: plots/decay500k}
+            - {name: data, mountPath: /app/highlights, subPath: highlights/decay500k}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: mario-sweep-data}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mario-sweep-lr1e-3
+  labels: {sweep: mario, variant: lr1e-3}
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels: {sweep: mario}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: trainer
+          image: mario-rl:latest
+          imagePullPolicy: Never
+          args: ["python", "train.py", "--no-render", "--episodes", "150"]
+          env:
+            - {name: LEARNING_RATE, value: "0.001"}
+            - {name: EPSILON_DECAY, value: "100000"}
+            - {name: OMP_NUM_THREADS, value: "4"}
+            - {name: PYTHONUNBUFFERED, value: "1"}
+          resources:
+            requests: {cpu: "3", memory: 4Gi}
+            limits: {memory: 8Gi}
+          volumeMounts:
+            - {name: data, mountPath: /app/logs, subPath: logs/lr1e-3}
+            - {name: data, mountPath: /app/checkpoints, subPath: checkpoints/lr1e-3}
+            - {name: data, mountPath: /app/plots, subPath: plots/lr1e-3}
+            - {name: data, mountPath: /app/highlights, subPath: highlights/lr1e-3}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: mario-sweep-data}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mario-sweep-lr1e-4
+  labels: {sweep: mario, variant: lr1e-4}
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels: {sweep: mario}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: trainer
+          image: mario-rl:latest
+          imagePullPolicy: Never
+          args: ["python", "train.py", "--no-render", "--episodes", "150"]
+          env:
+            - {name: LEARNING_RATE, value: "0.0001"}
+            - {name: EPSILON_DECAY, value: "100000"}
+            - {name: OMP_NUM_THREADS, value: "4"}
+            - {name: PYTHONUNBUFFERED, value: "1"}
+          resources:
+            requests: {cpu: "3", memory: 4Gi}
+            limits: {memory: 8Gi}
+          volumeMounts:
+            - {name: data, mountPath: /app/logs, subPath: logs/lr1e-4}
+            - {name: data, mountPath: /app/checkpoints, subPath: checkpoints/lr1e-4}
+            - {name: data, mountPath: /app/plots, subPath: plots/lr1e-4}
+            - {name: data, mountPath: /app/highlights, subPath: highlights/lr1e-4}
+      volumes:
+        - name: data
+          persistentVolumeClaim: {claimName: mario-sweep-data}

@@ -1,10 +1,26 @@
-# Nicht ins Image kopieren (kleiner Build-Kontext, keine lokalen Artefakte im Image)
+# Nicht ins Image kopieren (kleiner Build-Kontext, keine lokalen Artefakte im Image).
+# WICHTIG: Die venvs und Modell-Ordner sind zusammen >20 GB - ohne diese Eintraege
+# schleppt `COPY . .` sie in den Build-Kontext (einmal passiert: 24-GB-Transfer).
 .git/
 __pycache__/
 *.pyc
+.venv/
+.venv-ppo/
+venv/
 checkpoints/
+checkpoints*/
 logs/
 plots/
+highlights/
+highlights*/
+runs_ppo/
+hf_space/
+sweep_results/
 *.pt
+*.zip
+*.npz
 *.gif
+*.mp4
+*.png
+*.pdf
 .env

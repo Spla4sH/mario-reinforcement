@@ -2,8 +2,10 @@
 # Basis-Image bringt PyTorch + CUDA passend zur lokalen Version (torch 2.6 / cu124) mit.
 FROM pytorch/pytorch:2.6.0-cuda12.4-cudnn9-runtime
 
-# System-Abhängigkeiten für OpenCV (libGL etc.)
+# System-Abhängigkeiten: build-essential für den nes-py-C++-Build (das
+# *Runtime*-Basis-Image bringt keinen Compiler mit), libGL etc. für OpenCV.
 RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
         libgl1 \
         libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
