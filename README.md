@@ -1,13 +1,13 @@
 # Super Mario Bros - Reinforcement Learning
 
-> **WIP** - Dieses Projekt befindet sich in aktiver Entwicklung.
-> **Meilenstein: Welt 1–4 komplett — alle 16 angegangenen Level gelöst!** Jedes Level
-> erfüllt das Erfolgskriterium **20/20 greedy-Episoden bis zur Flagge**: 1-1 mit Double DQN,
-> alle übrigen mit PPO (Stable-Baselines3) – plus Go-Explore-Savestate-Suchen für die
-> Hard-Exploration-Stellen in 2-1 und im 4-4-Labyrinth (inkl. zweifachem Reward-Hacking,
-> s. Welt-4-Abschnitt). Details in den Welt-Abschnitten.
+> 🏁 **Welt 1–4 komplett — alle 16 angegangenen Level gelöst.** Jedes Level erfüllt das
+> vorab definierte Erfolgskriterium **20/20 greedy-Episoden bis zur Flagge**: 1-1 mit
+> selbst implementiertem Double DQN, alle übrigen mit PPO – und für die zwei Stellen, an
+> denen reines RL scheiterte (der Trampolin-Turm in 2-1, das Labyrinth in 4-4), eine
+> Go-Explore-Savestate-Suche samt einer echten Reward-Hacking-Geschichte. Die Details
+> erzählen die Welt-Abschnitte weiter unten.
 
-Eine KI lernt Super Mario Bros zu spielen - mit Live-Fenster zum Zuschauen!
+Eine KI lernt Super Mario Bros zu spielen – mit Live-Fenster zum Zuschauen!
 
 **🍄 [Live-Demo im Browser ausprobieren →](https://huggingface.co/spaces/Spl4sH/mario-reinforcement)** (Hugging Face Space, inkl. Grad-CAM-Overlay)
 
@@ -15,7 +15,7 @@ Eine KI lernt Super Mario Bros zu spielen - mit Live-Fenster zum Zuschauen!
 ![Python](https://img.shields.io/badge/Python-3.10+-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red)
 ![Demo](https://img.shields.io/badge/🤗%20Space-Live-green)
-![Status](https://img.shields.io/badge/Status-Work%20in%20Progress-yellow)
+![Level](https://img.shields.io/badge/Level-16%2F16%20gel%C3%B6st-brightgreen)
 
 ![Mario KI-Vision – Grad-CAM-Overlay eines greedy-Durchlaufs von Level 1-1](vision.gif)
 
@@ -23,10 +23,12 @@ Eine KI lernt Super Mario Bros zu spielen - mit Live-Fenster zum Zuschauen!
 
 ## Was passiert hier?
 
-Ein neuronales Netz lernt **Super Mario Bros nur aus den Pixeln** – und hat damit die komplette
-**Welt 1 gelöst**: Level 1-1 per **Double DQN** (selbst implementiert), die härteren Level 1-2
-bis 1-4 per **PPO** (Stable-Baselines3). Die KI sieht denselben Bildschirm wie ein Mensch und
-lernt selbstständig zu laufen, zu springen und Gegnern auszuweichen.
+Ein neuronales Netz lernt **Super Mario Bros nur aus den Pixeln** – und hat damit
+**alle 16 Level der Welten 1–4 gelöst**: Level 1-1 per **Double DQN** (selbst
+implementiert), alle übrigen per **PPO** (Stable-Baselines3). Die KI sieht denselben
+Bildschirm wie ein Mensch und lernt selbstständig zu laufen, zu springen und Gegnern
+auszuweichen – niemand sagt ihr, *wie* man spielt, nur dass rechts gut ist und
+Sterben schlecht.
 
 **Du kannst live zuschauen**, wie Mario anfangs planlos herumläuft und nach und nach besser wird.
 
@@ -34,10 +36,10 @@ lernt selbstständig zu laufen, zu springen und Gegnern auszuweichen.
 
 | Komponente | Beschreibung |
 |---|---|
-| **Algorithmen** | Double DQN mit Experience Replay (1-1) · PPO via Stable-Baselines3 (1-2…1-4) |
+| **Algorithmen** | Double DQN mit Experience Replay (1-1) · PPO via Stable-Baselines3 (alle übrigen Level) |
 | **Input** | 4 gestapelte Graustufen-Frames (84x84) |
 | **Output** | 7 Aktionen (laufen, springen, Kombos) |
-| **Belohnung** | Fortschritt nach rechts, Münzen, Überleben |
+| **Belohnung** | Fortschritt nach rechts − Zeitstrafe − Todesstrafe |
 
 ```
 Spielbild (240x256 RGB)
@@ -95,8 +97,9 @@ docker run --gpus all mario-rl python train.py --no-render --episodes 2000
 ```
 
 Für den Cluster liegt unter [k8s/](k8s/) ein Kubernetes-`Job` inkl. `PersistentVolumeClaim`
-(GPU-Request, Checkpoints/Logs persistent). Details & Sweep-Ideen in
-[NAECHSTE_SCHRITTE.md](NAECHSTE_SCHRITTE.md) (Phase D).
+(GPU-Request, Checkpoints/Logs persistent) – und der
+[Hyperparameter-Sweep](#mlops-hyperparameter-sweep-als-parallele-kubernetes-jobs) weiter
+unten wurde damit real ausgeführt.
 
 ### Tests & Linting
 
@@ -454,7 +457,7 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] Trainingsmetriken & Graphen
 - [x] Wiedergabe-Modus für trainierte Agenten (`play.py`)
 - [x] **Level 1-1 konsistent abschließen** – 20/20 greedy-Episoden erreichen die Flagge (Kriterium ≥ 80 %)
-- [x] **Level 1-2 mit PPO gelöst** – 20/20 greedy-Episoden Flagge (DQN scheiterte hier; Details unten)
+- [x] **Level 1-2 mit PPO gelöst** – 20/20 greedy-Episoden Flagge (DQN scheiterte hier; Details oben)
 - [x] **Welt 1 komplett** – auch 1-3 und 1-4 mit PPO gelöst (je 20/20)
 - [x] Generalist-Experiment: ein Modell für alle Welt-1-Level (löst 2 von 4, Details oben)
 - [x] **Level 2-1 gelöst** – Hard-Exploration-Stelle per Savestate-Suche + Behavior Cloning geknackt
