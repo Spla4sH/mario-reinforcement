@@ -298,6 +298,38 @@ in die Policy geklont – mit einer letzten Lektion: Nicht die Imitations-Treffe
 sondern der Greedy-Lauf selbst; die Flagge kam in Epoche 65 bei „nur" 97,2 % Trefferquote,
 seither wird jede Epoche greedy verifiziert und der beste Stand behalten.
 
+## Welt 5 (in Arbeit): dieselben Krankheiten, neue Diagnosen
+
+| Level | Ergebnis | Der entscheidende Hebel |
+|---|---|---|
+| 5-1 | **20/20** 🏁 | Standard-Rezept + **Resume auf 6M Steps** (nach 3M erst 0/20, aber Kurve stieg noch) |
+| 5-2 | **20/20** 🏁 | dasselbe: 3M → 0/20 bei x 2380, Resume +3M → Flagge |
+| 5-3 (Baumwipfel) | in Arbeit | Lücken-Sprung bei x 783 – Go-Explore-Suche läuft (Story unten) |
+
+Bilanz nach zwei Leveln: Welt 5 braucht **kein neues Werkzeug, aber das doppelte
+Trainingsbudget** (6M statt 3M Steps). Die Faustregel aus Welt 2 hat sich zum dritten Mal
+bewährt: *Kurve steigt noch → weitertrainieren, nicht die Methode wechseln.*
+
+**5-3 ist ein Wiedersehen mit alten Bekannten.** Der Agent friert bei **exakt x 783** ein –
+derselben Stelle, an der schon Level **1-3** scheiterte. Nintendo hat die Baumwipfel-Level
+aus demselben Layout-Baustein gebaut; man kann die Wiederverwendung von Level-Design also
+an den Trainingskurven ablesen. Was daraus wurde, ist eine kleine Lehrstunde in Diagnose:
+
+1. **Das bewährte Gegenmittel versagte.** Bei 1-3 löste ein Entropie-Bonus
+   (`ent_coef` 0.01→0.03) das lokale Optimum auf – hier lief derselbe Ansatz 2,3M Steps
+   absolut flach bei Reward 710. Ein Rezept ist eine Hypothese, kein Gesetz.
+2. **Mehr Suche half nicht, Hinschauen schon.** Eine Go-Explore-Suche mit Savestate bei
+   x 650 lieferte **12.000 Kandidaten, alle bei x 783**. Erst ein Screenshot plus der
+   y-Verlauf zeigte: Mario springt schon bei **x ≈ 645** ab und fällt in eine Lücke
+   zwischen zwei Plattformen – der Savestate lag also *hinter* dem Point of no Return,
+   jeder Kandidat war beim Start bereits im freien Fall. (Dieselbe Lektion wie in 4-4.)
+3. **Der dritte Metrik-Exploit – diesmal im eigenen Suchcode.** Mit früherem Savestate
+   meldete die Suche „Durchbruch: x 914" – der Kandidat war jedoch **tot**. Beim Sturz
+   läuft `x_pos` weiter hoch, weil Mario im Fall nach vorn fliegt; damit gewinnt ein
+   *tieferer Sturz* gegen jeden sicheren Stand. Nach Loop-Farming und 16-Bit-Overflow war
+   es diesmal kein Agent, sondern **die eigene Suchfunktion**, die die Lücke zwischen
+   Metrik und Absicht fand. Fix: Kandidaten, die ohne Flagge sterben, zählen nicht.
+
 ## Mensch vs. KI
 
 ![Mensch und KI spielen Level 1-1 Seite an Seite](mensch_vs_ki.gif)
@@ -465,6 +497,7 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] **Welt 3 komplett** – alle vier Level 20/20, jeweils im ersten Anlauf
 - [x] **Welt 4 komplett** – 4-1/4-2/4-3 im ersten Anlauf; 4-4 (Labyrinth) nach zweifachem
   Reward-Hacking-Fix per mehrstufigem Go-Explore + Behavior Cloning
+- [ ] **Welt 5** – 5-1 und 5-2 gelöst (je 20/20, 6M Steps); 5-3 in Arbeit
 - [ ] Alle Welten durchspielen
 - [x] **Vortrainierte Modelle bereitgestellt** – alle 16 Level + Welt-1-Generalist als
   [Release v1.0](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.0)

@@ -131,6 +131,12 @@ def main() -> None:
                     prev_x = x_now
                 if done:
                     break
+        # Tote Kandidaten verwerfen: Beim Sturz in eine Grube laeuft x_pos noch
+        # weiter hoch (Mario fliegt im Fall nach vorn) – ohne diese Pruefung
+        # gewinnt ein weiter Sturz gegen einen sicheren Stand, und die Suche
+        # optimiert das Sterben (bei 5-3 genau so passiert).
+        if done and not info.get("flag_get"):
+            cand_max = 0
         if cand_max > best_x:
             best_x, best_seq = cand_max, list(seq)
             print(f"Kandidat {cand}: neues Best-x {best_x}" + (" | FLAGGE!" if info.get("flag_get") else ""))
