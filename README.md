@@ -80,8 +80,9 @@ python train.py --episodes 300 --no-render
 - Python 3.10+
 - NVIDIA GPU mit CUDA empfohlen (CPU funktioniert, aber deutlich langsamer)
 
-> **Ohne eigenes Training loslegen:** Alle 16 trainierten Modelle gibt es als
-> [Release v1.0](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.0) –
+> **Ohne eigenes Training loslegen:** Alle 20 trainierten Modelle gibt es als Release
+> ([v1.0](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.0) = Welt 1–4,
+> [v1.1](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.1) = Welt 5) –
 > `mario_best.pt` nach `checkpoints/`, die `.zip`-Modelle nach `checkpoints_ppo/` legen,
 > dann direkt `python play.py` bzw. `python play_ppo.py --model … --world … --stage …`.
 
@@ -522,8 +523,9 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] **Welt 5 komplett** – alle vier Level 20/20; 5-3 per **Transfer Learning** vom
   baugleichen Level 1-3 gelöst, nachdem vier andere Ansätze scheiterten
 - [ ] Alle Welten durchspielen
-- [x] **Vortrainierte Modelle bereitgestellt** – alle 16 Level + Welt-1-Generalist als
-  [Release v1.0](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.0)
+- [x] **Vortrainierte Modelle bereitgestellt** – alle 20 Level + Welt-1-Generalist als
+  Release [v1.0](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.0) (Welt 1–4)
+  und [v1.1](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.1) (Welt 5)
 
 ### Vision / Weiterentwicklung
 
