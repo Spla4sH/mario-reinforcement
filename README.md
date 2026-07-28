@@ -301,6 +301,11 @@ seither wird jede Epoche greedy verifiziert und der beste Stand behalten.
 
 ## Welt 5 komplett: als ein Modell aus Welt 1 die Lösung brachte
 
+![PPO-Agent löst Level 5-3 – der Sprung über die Lücke, den erst der Transfer von 1-3 brachte](ppo_5-3.gif)
+
+*Level 5-3, gelöst: Genau dieser Sprung über die Lücke war die Wand, an der vier Ansätze
+scheiterten – bis ein Modell aus Welt 1 ihn auf Anhieb konnte.*
+
 | Level | Ergebnis | Der entscheidende Hebel |
 |---|---|---|
 | 5-1 | **20/20** 🏁 | Standard-Rezept + **Resume auf 6M Steps** (nach 3M erst 0/20, aber Kurve stieg noch) |
