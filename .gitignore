@@ -29,3 +29,7 @@ INTERVIEW.pdf
 
 # Private, projektspezifische Claude-Notizen (nicht veröffentlichen)
 CLAUDE.local.md
+
+# PDF-Konverter fuer die private Interview-Vorbereitung
+interview_pdf.py
+interview_tmp.html

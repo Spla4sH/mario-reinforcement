@@ -1,7 +1,7 @@
 """Gradio-Live-Demo: trainierte Mario-Agenten im Browser zuschauen – mit Grad-CAM.
 
 Ein Dropdown wählt das Level: den 1-1-Klassiker per Double DQN sowie alle mit PPO
-gelösten Level (Welt 1–4). Eine Checkbox blendet das Grad-CAM-Overlay ein oder aus
+gelösten Level (Welt 1–5). Eine Checkbox blendet das Grad-CAM-Overlay ein oder aus
 (mit = "worauf achtet das Netz?", ohne = sauberes Original – und deutlich schneller,
 weil dann nur ein Forward-Pass statt eines Grad-CAM-Backward-Passes nötig ist).
 
@@ -41,6 +41,10 @@ _PPO = [
     ("4-2 · PPO", "mario_ppo_4-2.zip", 4, 2),
     ("4-3 · PPO", "mario_ppo_4-3.zip", 4, 3),
     ("4-4 · PPO (Labyrinth, Go-Explore)", "mario_ppo_4-4_maze.zip", 4, 4),
+    ("5-1 · PPO", "mario_ppo_5-1.zip", 5, 1),
+    ("5-2 · PPO", "mario_ppo_5-2.zip", 5, 2),
+    ("5-3 · PPO (Baumwipfel, Transfer von 1-3)", "mario_ppo_5-3.zip", 5, 3),
+    ("5-4 · PPO (Schloss)", "mario_ppo_5-4.zip", 5, 4),
 ]
 
 LEVELS: dict[str, dict] = {
@@ -197,7 +201,7 @@ def build():
     with gr.Blocks(title="Mario RL – KI-Vision") as demo:
         gr.Markdown(
             "# 🍄 Super Mario Bros – KI-Vision Demo\n"
-            "Trainierte Agenten spielen **nur aus den Pixeln** – hier **16 gelöste Level** "
+            "Trainierte Agenten spielen **nur aus den Pixeln** – hier **20 gelöste Level** "
             "(1-1 = selbst implementiertes **Double DQN**, Rest = **PPO**).\n\n"
             "Das optionale **Grad-CAM-Overlay** (rot = wichtig) zeigt, worauf das neuronale "
             "Netz achtet – **ohne Häkchen läuft es deutlich schneller** (nur ein Forward-Pass "

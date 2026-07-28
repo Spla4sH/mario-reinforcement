@@ -282,6 +282,27 @@ noch gradio). **GIF → MP4**, weil H.264 die bunten CAM-Overlays ~10× besser k
 
 ---
 
+## Phase J — Welt 5 komplett ✅ (28.07.2026): Transfer Learning als neues Werkzeug
+
+> **Stand: alle vier Level 20/20 → 20 von 20 Leveln gelöst.** 5-1 und 5-2 brauchten je
+> **6M Steps** (nach 3M erst 0/20, aber Kurve stieg → Resume), 5-4 fiel im ersten Anlauf
+> mit 3M. Der Fall war **5-3**: Der Agent fror bei **x 783** ein – exakt der Stelle, an der
+> schon 1-3 scheiterte (gleicher Level-Baustein!). Gescheitert sind dort: 6M Steps
+> Training, der Entropie-Boost (der 1-3 geheilt hatte), 32.000 Go-Explore-Kandidaten und
+> 168 geskriptete Sprungvarianten. Gelöst hat es **Transfer Learning**: das 1-3-Modell kam
+> in 5-3 auf Anhieb auf x 1606 statt 783 → Feintuning + Resume → 20/20.
+>
+> **Neue Faustregel (dritter Zweig):** *Kurve steigt → weitertrainieren; Kurve friert ein
+> → goexplore; **kenne ich ein gelöstes Level mit ähnlicher Struktur → erst dessen Policy
+> testen**.* Außerdem gelernt: (a) ein bewährtes Rezept ist eine Hypothese, kein Gesetz;
+> (b) der Savestate muss **vor** den Point of no Return (Screenshot + y-Verlauf statt mehr
+> Suche); (c) `goexplore` verwarf tote Kandidaten nicht – beim Sturz läuft `x_pos` weiter
+> hoch, die Suche optimierte damit das Sterben (dritter Metrik-Exploit im Projekt, diesmal
+> im eigenen Code); (d) ein Plateau kann auch „fast fertig" heißen – bei 5-3 stand die
+> Flagge sieben Pixel hinter dem vermeintlichen Hindernis.
+
+---
+
 ## Frage: später ein anderes / komplexeres Spiel?
 
 **Kurzantwort:** Für dein Portfolio bringt ein *stärkerer Algorithmus* mehr als ein neues Spiel.
