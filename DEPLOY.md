@@ -1,7 +1,7 @@
 # Deploy: Gradio-Demo als Hugging Face Space
 
 Ziel: ein **öffentlicher, klickbarer Link**, auf dem die trainierten Agenten im Browser
-spielen (alle 16 gelösten Level, optional mit Grad-CAM-Overlay) – ohne Installation für
+spielen (alle 20 gelösten Level, optional mit Grad-CAM-Overlay) – ohne Installation für
 den Betrachter. Läuft live: <https://huggingface.co/spaces/Spl4sH/mario-reinforcement>
 
 **Der Space ist rein statisch:** Die Läufe werden vorab lokal berechnet (volle Episoden
@@ -20,7 +20,7 @@ braucht **nur Gradio** – kein torch, kein Stable-Baselines3, kein Emulator.
    .venv-ppo/Scripts/python gen_demos.py
    ```
    Erzeugt pro Level zwei MP4s (mit/ohne Grad-CAM, H.264, 512×480) plus `results.json`
-   nach `hf_space/demos/` – zusammen ~55 MB für 16 Level.
+   nach `hf_space/demos/` – zusammen ~66 MB für 20 Level.
 
 2. **Space anlegen** auf <https://huggingface.co>
    → *New Space* → **SDK: Gradio**, Hardware: *CPU basic* (gratis).
