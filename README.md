@@ -82,7 +82,8 @@ python train.py --episodes 300 --no-render
 
 > **Ohne eigenes Training loslegen:** Alle 24 trainierten Modelle gibt es als Release
 > ([v1.0](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.0) = Welt 1–4,
-> [v1.1](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.1) = Welt 5) –
+> [v1.1](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.1) = Welt 5,
+> [v1.2](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.2) = Welt 6) –
 > `mario_best.pt` nach `checkpoints/`, die `.zip`-Modelle nach `checkpoints_ppo/` legen,
 > dann direkt `python play.py` bzw. `python play_ppo.py --model … --world … --stage …`.
 
@@ -553,8 +554,9 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
   baugleichen Level 1-3 gelöst, nachdem vier andere Ansätze scheiterten
 - [ ] Alle Welten durchspielen
 - [x] **Vortrainierte Modelle bereitgestellt** – alle 24 Level + Welt-1-Generalist als
-  Release [v1.0](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.0) (Welt 1–4)
-  und [v1.1](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.1) (Welt 5)
+  Release [v1.0](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.0) (Welt 1–4),
+  [v1.1](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.1) (Welt 5)
+  und [v1.2](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.2) (Welt 6)
 
 ### Vision / Weiterentwicklung
 
