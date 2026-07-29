@@ -1,6 +1,6 @@
 # Super Mario Bros - Reinforcement Learning
 
-> 🏁 **Welt 1–5 komplett — alle 20 angegangenen Level gelöst.** Jedes Level erfüllt das
+> 🏁 **Welt 1–6 komplett — alle 24 angegangenen Level gelöst.** Jedes Level erfüllt das
 > vorab definierte Erfolgskriterium **20/20 greedy-Episoden bis zur Flagge**: 1-1 mit
 > selbst implementiertem Double DQN, alle übrigen mit PPO – und für die Stellen, an denen
 > reines RL scheiterte, jeweils ein eigenes Werkzeug: eine Go-Explore-Savestate-Suche
@@ -16,7 +16,7 @@ Eine KI lernt Super Mario Bros zu spielen – mit Live-Fenster zum Zuschauen!
 ![Python](https://img.shields.io/badge/Python-3.10+-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red)
 ![Demo](https://img.shields.io/badge/🤗%20Space-Live-green)
-![Level](https://img.shields.io/badge/Level-20%2F20%20gel%C3%B6st-brightgreen)
+![Level](https://img.shields.io/badge/Level-24%2F24%20gel%C3%B6st-brightgreen)
 
 ![Mario KI-Vision – Grad-CAM-Overlay eines greedy-Durchlaufs von Level 1-1](vision.gif)
 
@@ -25,7 +25,7 @@ Eine KI lernt Super Mario Bros zu spielen – mit Live-Fenster zum Zuschauen!
 ## Was passiert hier?
 
 Ein neuronales Netz lernt **Super Mario Bros nur aus den Pixeln** – und hat damit
-**alle 20 Level der Welten 1–5 gelöst**: Level 1-1 per **Double DQN** (selbst
+**alle 24 Level der Welten 1–6 gelöst**: Level 1-1 per **Double DQN** (selbst
 implementiert), alle übrigen per **PPO** (Stable-Baselines3). Die KI sieht denselben
 Bildschirm wie ein Mensch und lernt selbstständig zu laufen, zu springen und Gegnern
 auszuweichen – niemand sagt ihr, *wie* man spielt, nur dass rechts gut ist und
@@ -80,7 +80,7 @@ python train.py --episodes 300 --no-render
 - Python 3.10+
 - NVIDIA GPU mit CUDA empfohlen (CPU funktioniert, aber deutlich langsamer)
 
-> **Ohne eigenes Training loslegen:** Alle 20 trainierten Modelle gibt es als Release
+> **Ohne eigenes Training loslegen:** Alle 24 trainierten Modelle gibt es als Release
 > ([v1.0](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.0) = Welt 1–4,
 > [v1.1](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.1) = Welt 5) –
 > `mario_best.pt` nach `checkpoints/`, die `.zip`-Modelle nach `checkpoints_ppo/` legen,
@@ -141,7 +141,7 @@ mario-reinforcement/
 ├── play_ppo.py       # PPO-Agenten live zuschauen (auch Zwischenstände)
 ├── visualize.py      # KI-Vision-Overlay (Grad-CAM) - was sieht die KI?
 ├── visualize_ppo.py  # Dasselbe für PPO (SB3-CnnPolicy) - DQN-vs-PPO-Vergleich
-├── app.py            # Gradio-Demo: 16 Level im Browser (Dropdown + Grad-CAM-Toggle)
+├── app.py            # Gradio-Demo: 24 Level im Browser (Dropdown + Grad-CAM-Toggle)
 ├── gen_demos.py      # Vorberechnete Demo-MP4s + results.json für den HF-Space erzeugen
 ├── eval_ppo.py       # Greedy-Eval eines PPO-Modells (Flaggen-Rate über N Episoden)
 ├── gif_ppo.py        # Deterministische PPO-Episode als GIF (README-Assets)
@@ -353,6 +353,33 @@ Seitdem hat die Diagnose-Faustregel einen dritten Zweig: *Kurve steigt → weite
 Kurve friert ein → goexplore; **kenne ich ein gelöstes Level mit ähnlicher Struktur? →
 erst dessen Policy probieren.***
 
+## Welt 6 komplett: Routine – und ein lehrreicher Fehlschlag
+
+| Level | Ergebnis | Der entscheidende Hebel |
+|---|---|---|
+| 6-1 | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
+| 6-2 | **20/20** 🏁 | 3M → 0/20 bei x 2665, Kurve stieg noch → Resume +3M |
+| 6-3 (Baumwipfel) | **20/20** 🏁 | 6M Steps am Stück – **Transfer wurde getestet und verworfen** |
+| 6-4 (Schloss) | **20/20** 🏁 | Standard-Rezept, 3M Steps, erster Anlauf |
+
+Welt 6 brauchte **kein einziges Spezialwerkzeug** – die Pipeline aus fünf Welten Erfahrung
+löst ein Level inzwischen im Schnitt in unter einer Stunde. Interessant ist trotzdem 6-3,
+weil dort ein **Zwei-Minuten-Test eine falsche Hypothese widerlegte**: Nach dem
+Transfer-Erfolg in 5-3 lag nahe, dass alle „X-3"-Level denselben Baumwipfel-Baustein
+teilen. Also erst getestet, bevor Rechenzeit floss – die vorhandenen Modelle auf 6-3
+losgelassen:
+
+| Modell | Weite in 6-3 |
+|---|---|
+| `mario_ppo_5-3.zip` | x 406 |
+| `mario_ppo_1-3_ent03.zip` | x 395 |
+| `mario_ppo_4-3.zip` | x 282 |
+
+Alle scheiterten früh – **6-3 ist kein Zwilling**, nur derselbe *Leveltyp*. Damit ist die
+Faustregel präzisiert: *Transfer wirkt bei baugleichen Leveln, nicht bei bloß ähnlichem
+Leveltyp.* Der Test kostete zwei Minuten und ersparte einen aussichtslosen Transferlauf –
+frisches Training mit 6M Steps am Stück löste 6-3 dann problemlos.
+
 ## Mensch vs. KI
 
 ![Mensch und KI spielen Level 1-1 Seite an Seite](mensch_vs_ki.gif)
@@ -360,7 +387,7 @@ erst dessen Policy probieren.***
 *Gleiches Level – links Mensch, rechts der trainierte DQN-Agent. Beide erreichen die
 Flagge, die KI ist rund 25 Spielsekunden schneller (Restzeit 329 vs. 304).*
 
-Eigenen Lauf aufnehmen und antreten – **gegen jedes der 16 gelösten Level**. Der Mensch
+Eigenen Lauf aufnehmen und antreten – **gegen jedes der 24 gelösten Level**. Der Mensch
 spielt dabei mit **voller Original-Steuerung** (alle NES-Kombos inkl. Ducken und
 Links-Sprung), der Agent hat weiterhin nur seine 7 Aktions-Kombos:
 
@@ -469,7 +496,7 @@ pip install gradio
 python app.py        # öffnet eine lokale Web-Demo
 ```
 
-Eine **Gradio-App** zeigt jeden der **16 gelösten Level** im Browser – Dropdown zur
+Eine **Gradio-App** zeigt jeden der **24 gelösten Level** im Browser – Dropdown zur
 Level-Auswahl (1‑1 DQN, Rest PPO), Checkbox für das Grad-CAM-Overlay, Lauf bis zur Flagge.
 Lokal (`python app.py`) rechnet die App live; der öffentliche Space zeigt **vorberechnete
 Videos** (per `gen_demos.py` erzeugt).
@@ -520,10 +547,12 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] **Welt 3 komplett** – alle vier Level 20/20, jeweils im ersten Anlauf
 - [x] **Welt 4 komplett** – 4-1/4-2/4-3 im ersten Anlauf; 4-4 (Labyrinth) nach zweifachem
   Reward-Hacking-Fix per mehrstufigem Go-Explore + Behavior Cloning
+- [x] **Welt 6 komplett** – alle vier Level 20/20, ohne Spezialwerkzeug;
+  bei 6-3 wurde ein Transfer getestet und begründet verworfen
 - [x] **Welt 5 komplett** – alle vier Level 20/20; 5-3 per **Transfer Learning** vom
   baugleichen Level 1-3 gelöst, nachdem vier andere Ansätze scheiterten
 - [ ] Alle Welten durchspielen
-- [x] **Vortrainierte Modelle bereitgestellt** – alle 20 Level + Welt-1-Generalist als
+- [x] **Vortrainierte Modelle bereitgestellt** – alle 24 Level + Welt-1-Generalist als
   Release [v1.0](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.0) (Welt 1–4)
   und [v1.1](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.1) (Welt 5)
 
@@ -534,7 +563,7 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] Tests + CI (pytest, ruff, GitHub Actions)
 - [x] Reward-Shaping + Greedy-Evaluation (Basis für „1-1 konsistent")
 - [x] Experiment-Tracking mit Weights & Biases (optional)
-- [x] Live-Demo (Gradio) als Hugging Face Space – **alle 16 gelösten Level** im Browser
+- [x] Live-Demo (Gradio) als Hugging Face Space – **alle 24 gelösten Level** im Browser
   (Dropdown + Grad-CAM-Toggle, vorberechnete Videos)
 - [x] Algorithmus-Upgrade: Double DQN → **PPO** (Stable-Baselines3 + shimmy) – löst 1-2, wo DQN scheiterte
 - [x] Grad-CAM für PPO (`visualize_ppo.py`) + DQN-vs-PPO-Vergleichs-GIF

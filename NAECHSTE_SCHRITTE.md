@@ -303,6 +303,24 @@ noch gradio). **GIF → MP4**, weil H.264 die bunten CAM-Overlays ~10× besser k
 
 ---
 
+## Phase K — Welt 6 komplett ✅ (29.07.2026): die Pipeline als Routine
+
+> **Stand: alle vier Level 20/20 → 24 von 24 Leveln gelöst.** Kein Spezialwerkzeug nötig:
+> 6-1 (x 2969) und 6-4 (x 2268) im ersten Anlauf mit 3M Steps, 6-2 (x 3449) nach dem
+> bekannten Resume-Muster, 6-3 (x 2665) mit 6M Steps am Stück.
+>
+> **Lehrreich war der Transfer-Test bei 6-3:** Die Hypothese „alle X-3-Level teilen den
+> Baumwipfel-Baustein" wurde in zwei Minuten überprüft (5-3 → x 406, 1-3 → x 395,
+> 4-3 → x 282) und **verworfen** – 6-3 ist kein Zwilling, nur derselbe Leveltyp. Regel
+> geschärft: *Transfer wirkt bei baugleichen Leveln, nicht bei bloß ähnlichem Leveltyp.*
+> Billiger Test vor teurer Rechenzeit; das negative Ergebnis war so nützlich wie ein
+> positives.
+>
+> **Noch offen:** HF-Space-Upload für Welt 5 **und 6** (Demos für Welt 5 liegen bereit,
+> für Welt 6 müssen sie noch erzeugt werden), Release v1.2 mit den Welt-6-Modellen.
+
+---
+
 ## Frage: später ein anderes / komplexeres Spiel?
 
 **Kurzantwort:** Für dein Portfolio bringt ein *stärkerer Algorithmus* mehr als ein neues Spiel.
