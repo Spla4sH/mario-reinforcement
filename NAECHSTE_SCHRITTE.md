@@ -321,6 +321,27 @@ noch gradio). **GIF → MP4**, weil H.264 die bunten CAM-Overlays ~10× besser k
 
 ---
 
+## Geplant: Struktur-Aufräumen (nach Welt 8, in einem Rutsch)
+
+Das Root-Verzeichnis enthält inzwischen ~25 Python-Dateien und ~11 Medien-Dateien –
+für Besucher die erste Ansicht des Projekts. Vorgesehen, sortiert nach Nutzen/Risiko:
+
+1. **`assets/` für Medien** (risikolos): alle `*.gif`/`*.png` dorthin, README-Pfade
+   anpassen. Nimmt sofort ein Drittel der Root-Ansicht weg.
+2. **Code gliedern** (der eigentliche Umbau): `mario/` für Kernmodule (agent, model,
+   wrappers, reward, config, metrics, evaluate, tracking), `scripts/` für Ausführbares
+   (train, train_ppo, eval_ppo, play*, visualize*, goexplore, imitate, gen_demos,
+   death_map, plot, sweep_plot). **Mitziehen:** Imports, `Dockerfile`, CI-Workflow,
+   `k8s/*.yaml`, `tests/`, `gen_demos.py` (importiert `app`), Space-Kopie in `deploy/`.
+3. Danach einmal komplett verifizieren: ruff, pytest, Kurz-Training, ein Eval,
+   `gen_demos.py <level>`, `python app.py`.
+
+**Wichtig:** als *ein* Commit, der nur verschiebt und Pfade anpasst (keine inhaltlichen
+Änderungen), und **nicht** zwischen zwei langen Trainingsläufen – ein Fehler soll keinen
+laufenden Lauf zerschießen.
+
+---
+
 ## Frage: später ein anderes / komplexeres Spiel?
 
 **Kurzantwort:** Für dein Portfolio bringt ein *stärkerer Algorithmus* mehr als ein neues Spiel.
