@@ -383,6 +383,11 @@ frisches Training mit 6M Steps am Stück löste 6-3 dann problemlos.
 
 ## Welt 7 komplett: das härteste Level des Projekts
 
+![PPO-Agent löst das Labyrinth-Schloss 7-4 – durch fünf Gates bis zur Axt](ppo_7-4.gif)
+
+*Level 7-4, gelöst: fünf Entscheidungspunkte, Sprungpassagen und Feuerstellen – vier
+Go-Explore-Stufen und ein 762 Schritte langer geklonter Weg bis zur Axt (x 3283).*
+
 | Level | Ergebnis | Der entscheidende Hebel |
 |---|---|---|
 | 7-1 | **20/20** 🏁 | Standard-Rezept + Resume (Worker-Absturz unterwegs, aus Checkpoint fortgesetzt) |
