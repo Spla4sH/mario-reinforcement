@@ -137,6 +137,12 @@ def main() -> None:
         # optimiert das Sterben (bei 5-3 genau so passiert).
         if done and not info.get("flag_get"):
             cand_max = 0
+        # In Loop-Leveln (Labyrinth-Schloesser) zaehlt die ENDposition, nicht das
+        # Maximum: Ein Kandidat, der kurz weit kommt und dann zurueckgeworfen wird,
+        # ist als Anlauf fuer die naechste Stufe wertlos. Bei 7-4 meldete die Suche
+        # so einen "Durchbruch" auf x 2344, dessen Sequenz bei x 1477 endete.
+        elif not info.get("flag_get"):
+            cand_max = min(cand_max, int(info.get("x_pos", 0)))
         if cand_max > best_x:
             best_x, best_seq = cand_max, list(seq)
             print(f"Kandidat {cand}: neues Best-x {best_x}" + (" | FLAGGE!" if info.get("flag_get") else ""))
@@ -150,7 +156,10 @@ def main() -> None:
     env.close()
     print("=" * 50)
     print(f"ERGEBNIS: Best-x {best_x} | Durchbruch: {solved} | Skip {config.FRAME_SKIP}")
-    if solved and args.save_best:
+    # Auch ohne Durchbruch speichern: Bei mehrstufigen Suchen (Labyrinthe mit
+    # mehreren Weichen) ist der beste Zwischenstand die Grundlage der nächsten
+    # Stufe – ihn zu verwerfen würde die ganze Suche wiederholen.
+    if args.save_best and best_seq:
         np.savez_compressed(
             args.save_best,
             head=np.array(head_actions, dtype=np.int8),
@@ -160,7 +169,11 @@ def main() -> None:
             stage=args.stage,
         )
         print(f"Sequenz gespeichert: {args.save_best} (head={len(head_actions)}, tail={len(best_seq)})")
-        print("Nächster Schritt:  python imitate.py bc-seq --seq " + args.save_best)
+        if solved:
+            print("Nächster Schritt:  python imitate.py bc-seq --seq " + args.save_best)
+        else:
+            print(f"Kein Durchbruch – bester Stand x={best_x} als Anlauf für die nächste Stufe:")
+            print(f"  python goexplore.py --head-seq {args.save_best} --backup-x <kurz vor {best_x}> ...")
 
 
 if __name__ == "__main__":

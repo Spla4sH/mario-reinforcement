@@ -10,6 +10,7 @@ checkpoints*/
 # Ausnahme: die Lösungssequenzen (2-1, 4-4) sind winzig und machen das Ergebnis reproduzierbar
 !tower_seq_2-1.npz
 !maze_seq_4-4.npz
+!maze_seq_7-4.npz
 logs/
 plots/
 highlights/

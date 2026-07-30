@@ -1,7 +1,7 @@
 """Gradio-Live-Demo: trainierte Mario-Agenten im Browser zuschauen – mit Grad-CAM.
 
 Ein Dropdown wählt das Level: den 1-1-Klassiker per Double DQN sowie alle mit PPO
-gelösten Level (Welt 1–6). Eine Checkbox blendet das Grad-CAM-Overlay ein oder aus
+gelösten Level (Welt 1–7). Eine Checkbox blendet das Grad-CAM-Overlay ein oder aus
 (mit = "worauf achtet das Netz?", ohne = sauberes Original – und deutlich schneller,
 weil dann nur ein Forward-Pass statt eines Grad-CAM-Backward-Passes nötig ist).
 
@@ -49,6 +49,10 @@ _PPO = [
     ("6-2 · PPO", "mario_ppo_6-2.zip", 6, 2),
     ("6-3 · PPO (Baumwipfel)", "mario_ppo_6-3.zip", 6, 3),
     ("6-4 · PPO (Schloss)", "mario_ppo_6-4.zip", 6, 4),
+    ("7-1 · PPO", "mario_ppo_7-1.zip", 7, 1),
+    ("7-2 · PPO", "mario_ppo_7-2.zip", 7, 2),
+    ("7-3 · PPO", "mario_ppo_7-3.zip", 7, 3),
+    ("7-4 · PPO (Labyrinth, 5 Gates)", "mario_ppo_7-4_maze.zip", 7, 4),
 ]
 
 LEVELS: dict[str, dict] = {
