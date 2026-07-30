@@ -205,7 +205,9 @@ def build():
     with gr.Blocks(title="Mario RL – KI-Vision") as demo:
         gr.Markdown(
             "# 🍄 Super Mario Bros – KI-Vision Demo\n"
-            "Trainierte Agenten spielen **nur aus den Pixeln** – hier **24 gelöste Level** "
+            # Levelzahl aus der LEVELS-Tabelle ableiten (waechst mit neuen Welten mit).
+            f"Trainierte Agenten spielen **nur aus den Pixeln** – hier **{len(LEVELS)} "
+            "gelöste Level** "
             "(1-1 = selbst implementiertes **Double DQN**, Rest = **PPO**).\n\n"
             "Das optionale **Grad-CAM-Overlay** (rot = wichtig) zeigt, worauf das neuronale "
             "Netz achtet – **ohne Häkchen läuft es deutlich schneller** (nur ein Forward-Pass "
