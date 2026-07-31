@@ -321,6 +321,49 @@ noch gradio). **GIF → MP4**, weil H.264 die bunten CAM-Overlays ~10× besser k
 
 ---
 
+## Phase L — Welt 7 komplett ✅ (30.07.2026): das härteste Level des Projekts
+
+> **Stand: 28 von 28 Leveln.** 7-1 bis 7-3 nach bekanntem Muster (7-1 mit einem
+> Worker-Absturz unterwegs, aus dem Checkpoint fortgesetzt). **7-4 war das aufwändigste
+> Level überhaupt:** ein Labyrinth-Schloss mit *fünf* Entscheidungspunkten, dazwischen
+> Sprungpassagen und Feuerstellen – vier Go-Explore-Stufen (x 1000 → 1677 → 2346 → 2674
+> → Flagge bei 3283) und eine 762 Schritte lange geklonte Sequenz.
+>
+> **Zwei Lehren:** (1) Der **Screenshot** löste die Blockade – bei x 2674 klebte die Suche
+> 20.000 Kandidaten fest, das Bild zeigte den Savestate direkt an einer Grubenkante; mit
+> 100 px mehr Anlauf reichten **14** Kandidaten. (2) Zwei Fehler im eigenen Suchcode
+> (Maximum statt Endposition; bester Zwischenstand wurde verworfen) – der vierte Fall im
+> Projekt, in dem eine Metrik etwas anderes maß als gemeint.
+
+---
+
+## Phase M — Welt 8: die letzte Welt (31.07.2026)
+
+> **Stand: 8-1, 8-2, 8-3 je 20/20 → 31 von 32 Leveln.** Alle drei scheiterten *nicht* an
+> zu wenig Training, sondern an je einer Timing-Stelle kurz vor dem Ziel – das
+> Einsatzgebiet von Go-Explore. 8-1 ist mit x 6009 das längste Level des Spiels (9M Steps).
+>
+> **8-2 zeigte zwei Metriken in entgegengesetzte Richtungen:** Ein Resume steigerte den
+> Trainings-Reward und senkte die Greedy-Leistung (x 3042 → 2672). Kein Bug – der
+> Trainings-Reward mittelt über 16 stochastische Envs, das Erfolgskriterium ist ein
+> deterministischer Lauf. *Optimiere und entscheide nach derselben Metrik.*
+> **8-3** erreichte die Flagge per Behavior Cloning schon bei **83,7 %** Trefferquote.
+>
+> **8-4 (Finale, in Arbeit)** brachte zwei Befunde:
+> 1. **Ohne achte Aktion prinzipiell unlösbar** – `SIMPLE_MOVEMENT` kennt kein ↓, ohne das
+>    man keine Röhre betritt. Neuer opt-in-Schalter `ACTION_SET=down`.
+> 2. **Der fünfte Metrik-Fehler:** In der Loop-Passage zählt `x_pos` beim Im-Kreis-Laufen
+>    einfach weiter (SMB setzt die Page-Nummer beim Rückwurf nicht zurück). Damit logen
+>    Reward, `ProgressReward` *und* das Go-Explore-Kriterium gleichzeitig. Die einzige
+>    ehrliche Größe steht im RAM: der **AreaPointer `$0760`** ändert sich nur bei einem
+>    echten Röhrenwechsel → `goexplore.py --success-area`.
+>
+> Der unsichtbare Block vor der schwebenden Röhre wurde nicht erraten, sondern **gemessen**:
+> an jeder x-Position senkrecht springen und auf Kachel-/Score-/Münzänderung prüfen –
+> Treffer bei x 2387 (+200 Punkte, +1 Münze).
+
+---
+
 ## Geplant: Struktur-Aufräumen (nach Welt 8, in einem Rutsch)
 
 Das Root-Verzeichnis enthält inzwischen ~25 Python-Dateien und ~11 Medien-Dateien –
