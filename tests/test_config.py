@@ -63,3 +63,19 @@ def test_action_set_default_und_down(monkeypatch):
 
     monkeypatch.delenv("ACTION_SET", raising=False)
     importlib.reload(config)
+
+
+def test_create_env_signatur_kennt_action_set():
+    """create_env muss den Aktionsraum pro Aufruf setzen koennen.
+
+    In der Demo-App laufen Modelle mit 7 und mit 8 Aktionen im selben Prozess –
+    eine Umgebungsvariable kann das nicht unterscheiden. (Geprueft wird nur die
+    Signatur: create_env braucht den Emulator und laeuft nicht in der CI.)
+    """
+    import inspect
+
+    import wrappers
+
+    parameter = inspect.signature(wrappers.create_env).parameters
+    assert "action_set" in parameter
+    assert parameter["action_set"].default is None
