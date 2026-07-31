@@ -422,6 +422,46 @@ Durchbruch verworfen, was mehrstufige Suchen unmöglich machte. Zusammen mit den
 Reward-Exploits aus 4-4 und 5-3 ist das der **vierte Fall im Projekt, in dem eine Metrik
 etwas anderes maß als gemeint war** – diesmal in meinem eigenen Suchcode.
 
+## Welt 8: die letzte Welt
+
+| Level | Ergebnis | Der entscheidende Hebel |
+|---|---|---|
+| 8-1 | **20/20** 🏁 | 9M Steps – das **längste Level des Spiels** (x 6009) |
+| 8-2 | **20/20** 🏁 | Go-Explore (4.603 Kandidaten) + Behavior Cloning in 13 Epochen |
+| 8-3 | **20/20** 🏁 | Go-Explore (1.431 Kandidaten) + Behavior Cloning in **6** Epochen |
+
+**Welt 8 scheiterte dreimal an einer einzelnen Timing-Stelle kurz vor dem Ziel** – nicht an
+zu wenig Training. Genau dafür ist Go-Explore da: Die Policy bringt Mario zuverlässig bis
+zur Hängestelle, ab dort sucht ein Savestate-Verfahren die paar Frames, die reines
+Ausprobieren aus dem Levelstart heraus nie findet.
+
+**8-2 lieferte den lehrreichsten Widerspruch des Projekts.** Ein Resume-Lauf verbesserte den
+Trainings-Reward – und verschlechterte die Greedy-Leistung von x 3042 auf x 2672. Beide
+Zahlen stimmten: Der Trainings-Reward mittelt über 16 *stochastische* Envs, der Greedy-Lauf
+ist ein einzelner *deterministischer* Durchgang. Eine Policy kann im Mittel besser und in
+ihrer wahrscheinlichsten Aktionsfolge schlechter werden. Konsequenz: das ältere Modell
+behalten und die Entscheidung an der Metrik ausrichten, die dem Erfolgskriterium entspricht.
+
+**8-3 ist der beste Beleg für die BC-Lektion aus 4-4:** Behavior Cloning erreichte die Flagge
+nach 6 Epochen bei **83,7 % Trefferquote** – ein Wert, bei dem eine reine Genauigkeitsschwelle
+längst abgebrochen hätte. *Nicht die Trefferquote zählt, sondern der Greedy-Lauf.*
+
+## Wenn der Agent scheitert
+
+Die gelösten Läufe sehen mühelos aus. Interessanter sind die Zwischenstände davor – sie
+zeigen, *wie* ein Optimierer scheitert, und jeder dieser drei Fälle führte zu einem
+konkreten Fix im Code.
+
+| | |
+|---|---|
+| ![4-4: der Agent läuft im Kreis statt zum Ziel](problem_4-4.gif) | **4-4 · Reward-Hacking.** Der Agent hat den Ausgang nie gesucht – er läuft die Loop-Passage im Kreis und kassiert jedes Mal dieselbe Δx-Belohnung. 13.824 Reward-Punkte, 0 % Flagge. Fix: `ProgressReward` belohnt nur noch **neues** x-Maximum. |
+| ![7-4: der Agent wird immer wieder zurückgeworfen und bleibt stehen](problem_7-4.gif) | **7-4 · Resignation.** Achtmal am Gate zurückgeworfen, dann bleibt der Agent bei x 408 einfach stehen. Weiterlaufen kostet Leben, Stehenbleiben nichts – ein lokales Optimum, aus dem kein Gradient herausführt. Fix: Go-Explore ab Savestate. |
+| ![8-2: der Agent hüpft vor den Bullet-Bill-Kanonen auf der Stelle](problem_8-2.gif) | **8-2 · Sicherheit vor Fortschritt.** Vor den Bullet-Bill-Kanonen hüpft der Agent auf der Stelle, bis die Zeit abläuft. Ausweichen ist riskant, Warten sicher. Fix: Go-Explore + Behavior Cloning der gefundenen Passage. |
+
+Gemeinsamer Nenner: **Der Agent optimiert exakt das, was gemessen wird** – nie das, was
+gemeint war. Dieselbe Lücke, die hier nur ein Level kostet, heißt in echten Systemen
+Alignment-Problem.
+
 ## Mensch vs. KI
 
 ![Mensch und KI spielen Level 1-1 Seite an Seite](mensch_vs_ki.gif)
