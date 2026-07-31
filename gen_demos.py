@@ -30,9 +30,9 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "hf_space", "demo
 os.makedirs(OUT, exist_ok=True)
 
 
-def play(predictor, world, stage, show_cam):
+def play(predictor, world, stage, show_cam, action_set=None):
     """Volle native Episode in voller Auflösung (scale=2, kein Anti-Hänger)."""
-    env = create_env(world=world, stage=stage, render=False)
+    env = create_env(world=world, stage=stage, render=False, action_set=action_set)
     frames, state, done, info = [], env.reset(), False, {}
     while not done:
         if show_cam:
@@ -68,7 +68,7 @@ if __name__ == "__main__":
         w, s = level["world"], level["stage"]
         predictor = (app._DqnPredictor if level["type"] == "dqn" else app._PpoPredictor)(level["path"])
         for cam in (False, True):
-            frames, x, flag = play(predictor, w, s, cam)
+            frames, x, flag = play(predictor, w, s, cam, level.get("action_set"))
             name = f"{w}-{s}_{'cam' if cam else 'plain'}.mp4"
             n, mb = save_mp4(frames, os.path.join(OUT, name))
             flag_s = "🏁 Flagge erreicht!" if flag else ""

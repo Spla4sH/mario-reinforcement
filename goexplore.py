@@ -41,7 +41,12 @@ def main() -> None:
     parser.add_argument("--world", type=int, default=2)
     parser.add_argument("--stage", type=int, default=1)
     parser.add_argument("--backup-x", type=int, required=True, help="Savestate, sobald x erreicht")
-    parser.add_argument("--success-x", type=int, required=True, help="Erfolg, sobald x erreicht (oder Flagge)")
+    parser.add_argument("--success-x", type=int, default=10**9,
+                        help="Erfolg, sobald x erreicht (oder Flagge)")
+    parser.add_argument("--success-area", action="store_true",
+                        help="Erfolg = Bereichswechsel (SMB-RAM $0760) statt x-Schwelle. "
+                             "Pflicht fuer Loop-Level wie 8-4: dort zaehlt x_pos beim "
+                             "Im-Kreis-Laufen einfach weiter, jede x-Metrik luegt.")
     parser.add_argument("--candidates", type=int, default=5000)
     parser.add_argument("--horizon", type=int, default=70, help="Agent-Steps je Kandidat")
     parser.add_argument("--seed", type=int, default=0)
@@ -93,12 +98,25 @@ def main() -> None:
     print(f"Anlauf: x={x} nach {len(head_actions)} Agent-Steps – Savestate gesichert.")
     nes._backup()
     backup_x_val = x
+    # SMB haelt in $0760 den "AreaPointer" – welche Karte gerade geladen ist.
+    # In Roehren-Labyrinthen (8-4) ist das die EINZIGE ehrliche Fortschrittsmessung:
+    # x_pos zaehlt beim Loop stur weiter (Page-Nummer wird nicht zurueckgesetzt),
+    # ein Bereichswechsel dagegen passiert nur durch eine echte Roehre.
+    start_area = int(nes.ram[0x0760])
+    if args.success_area:
+        print(f"Erfolgskriterium: Bereichswechsel (Start-Area {start_area})")
 
     # 2) Zufallssuche ab Savestate: Segmente aus (Aktion, Haltedauer), damit
     # auch längere Sprünge/Anläufe entstehen statt reinem Aktions-Rauschen.
     rng = np.random.default_rng(args.seed)
     actions = [0, 1, 2, 3, 4, 5, 6]  # NOOP, R, R+A, R+B, R+A+B, A, L (SIMPLE_MOVEMENT)
     weights = [0.06, 0.08, 0.12, 0.28, 0.28, 0.10, 0.08]
+    # Mit ACTION_SET=down (8-4: Roehren) kommt ['down'] als 8. Aktion dazu – ohne
+    # sie in der Auswahl wuerde die Suche nie eine Roehre betreten. Anteil bewusst
+    # klein: 'down' ist nur an wenigen Stellen sinnvoll, verlangsamt sonst nur.
+    if env.action_space.n == 8:
+        actions = actions + [7]
+        weights = [w * 0.92 for w in weights] + [0.08]
 
     best_x, best_seq = 0, []
     solved = False
@@ -110,6 +128,7 @@ def main() -> None:
         cand_max = 0
         prev_x = backup_x_val
         done = False
+        area_hit = False
         while len(seq) < args.horizon and not done:
             a = int(rng.choice(actions, p=weights))
             hold = int(rng.integers(1, 9))
@@ -129,13 +148,23 @@ def main() -> None:
                     prev_x = x_now
                 elif delta <= 0 and x_now < 60000:
                     prev_x = x_now
+                if args.success_area and not done and int(nes.ram[0x0760]) != start_area:
+                    area_hit = True
+                    break
                 if done:
                     break
+            if area_hit:
+                break
+        # Bereichswechsel schlaegt jede x-Bewertung: nach der Roehre ist x_pos klein
+        # (neue Karte) – ohne diesen Zweig wuerden die x-Regeln unten den einzigen
+        # echten Treffer der ganzen Suche wegwerfen.
+        if area_hit:
+            cand_max = 10**6
         # Tote Kandidaten verwerfen: Beim Sturz in eine Grube laeuft x_pos noch
         # weiter hoch (Mario fliegt im Fall nach vorn) – ohne diese Pruefung
         # gewinnt ein weiter Sturz gegen einen sicheren Stand, und die Suche
         # optimiert das Sterben (bei 5-3 genau so passiert).
-        if done and not info.get("flag_get"):
+        elif done and not info.get("flag_get"):
             cand_max = 0
         # In Loop-Leveln (Labyrinth-Schloesser) zaehlt die ENDposition, nicht das
         # Maximum: Ein Kandidat, der kurz weit kommt und dann zurueckgeworfen wird,
@@ -145,7 +174,14 @@ def main() -> None:
             cand_max = min(cand_max, int(info.get("x_pos", 0)))
         if cand_max > best_x:
             best_x, best_seq = cand_max, list(seq)
-            print(f"Kandidat {cand}: neues Best-x {best_x}" + (" | FLAGGE!" if info.get("flag_get") else ""))
+            if not area_hit:
+                print(f"Kandidat {cand}: neues Best-x {best_x}"
+                      + (" | FLAGGE!" if info.get("flag_get") else ""))
+        if area_hit:
+            solved = True
+            print(f"BEREICHSWECHSEL bei Kandidat {cand}: Area {start_area} -> "
+                  f"{int(nes.ram[0x0760])} nach {len(seq)} Steps (x={int(info.get('x_pos', 0))})")
+            break
         if info.get("flag_get") or cand_max >= args.success_x:
             solved = True
             print(f"DURCHBRUCH bei Kandidat {cand}: x={cand_max}, Flagge={bool(info.get('flag_get'))}")
@@ -155,7 +191,8 @@ def main() -> None:
 
     env.close()
     print("=" * 50)
-    print(f"ERGEBNIS: Best-x {best_x} | Durchbruch: {solved} | Skip {config.FRAME_SKIP}")
+    ergebnis = "Bereichswechsel" if best_x == 10**6 else f"Best-x {best_x}"
+    print(f"ERGEBNIS: {ergebnis} | Durchbruch: {solved} | Skip {config.FRAME_SKIP}")
     # Auch ohne Durchbruch speichern: Bei mehrstufigen Suchen (Labyrinthe mit
     # mehreren Weichen) ist der beste Zwischenstand die Grundlage der nächsten
     # Stufe – ihn zu verwerfen würde die ganze Suche wiederholen.

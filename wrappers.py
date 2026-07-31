@@ -127,11 +127,16 @@ class FrameStack(gym.Wrapper):
         return np.concatenate(list(self._frames), axis=-1)
 
 
-def create_env(world=1, stage=1, render=True):
+def create_env(world=1, stage=1, render=True, action_set=None):
     """Erstellt die Super Mario Umgebung mit allen Wrappern.
 
     Das Original-Spielbild wird im Fenster angezeigt (render=True),
     während das Netz intern verkleinerte Graustufen-Frames bekommt.
+
+    ``action_set`` überschreibt ``config.ACTION_SET`` für diesen einen Aufruf.
+    Nötig, sobald mehrere Modelle in einem Prozess laufen (Demo-App, gen_demos):
+    das 8-4-Modell braucht 8 Aktionen, alle anderen 7 – eine Umgebungsvariable
+    kann das nicht pro Level unterscheiden.
     """
     import gym_super_mario_bros
     from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
@@ -148,7 +153,8 @@ def create_env(world=1, stage=1, render=True):
     # (v. a. 8-4) fuehrt der richtige Weg durch Roehren, und ohne "down" kann Mario
     # nicht einsteigen – das Level waere prinzipiell unloesbar. Default bleibt bei
     # 7 Aktionen, damit alle bisherigen Modelle unveraendert weiterlaufen.
-    actions = SIMPLE_MOVEMENT + [["down"]] if config.ACTION_SET == "down" else SIMPLE_MOVEMENT
+    gewaehlt = (action_set or config.ACTION_SET).strip().lower()
+    actions = SIMPLE_MOVEMENT + [["down"]] if gewaehlt == "down" else SIMPLE_MOVEMENT
     env = JoypadSpace(env, actions)
 
     # Fortschritts-Reward (opt-in) direkt auf dem rohen NES-Env: sieht die echte

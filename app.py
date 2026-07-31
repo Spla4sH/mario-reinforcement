@@ -53,6 +53,9 @@ _PPO = [
     ("7-2 · PPO", "mario_ppo_7-2.zip", 7, 2),
     ("7-3 · PPO", "mario_ppo_7-3.zip", 7, 3),
     ("7-4 · PPO (Labyrinth, 5 Gates)", "mario_ppo_7-4_maze.zip", 7, 4),
+    ("8-1 · PPO (längstes Level)", "mario_ppo_8-1_r2.zip", 8, 1),
+    ("8-2 · PPO (Bullet Bills, Go-Explore)", "mario_ppo_8-2_bc.zip", 8, 2),
+    ("8-3 · PPO (Hammer-Brüder, Go-Explore)", "mario_ppo_8-3_bc.zip", 8, 3),
 ]
 
 LEVELS: dict[str, dict] = {
@@ -60,9 +63,13 @@ LEVELS: dict[str, dict] = {
         "type": "dqn", "path": "checkpoints/mario_best.pt", "world": 1, "stage": 1,
     },
 }
-for _label, _file, _w, _s in _PPO:
+for _eintrag in _PPO:
+    _label, _file, _w, _s = _eintrag[:4]
     LEVELS[_label] = {
         "type": "ppo", "path": f"checkpoints_ppo/{_file}", "world": _w, "stage": _s,
+        # Optionales 5. Feld: Aktionsraum des Modells. Die Roehren-Level brauchen
+        # "down" (8 Aktionen) – ein Modell mit 8 Ausgaengen passt sonst nicht zum Env.
+        "action_set": _eintrag[4] if len(_eintrag) > 4 else "simple",
     }
 
 # Geladene Modelle zwischenspeichern: ein Klick auf dasselbe Level lädt dann
@@ -159,7 +166,8 @@ def run_episode(level_key: str, show_cam: bool = True):
         return None, f"Modell nicht gefunden: {level['path']}"
 
     predictor = _get_predictor(level_key, level)
-    env = create_env(world=level["world"], stage=level["stage"], render=False)
+    env = create_env(world=level["world"], stage=level["stage"], render=False,
+                     action_set=level.get("action_set"))
 
     # Anti-Hänger-Impuls: Auf fremder Hardware (andere Float-Rundung als beim
     # Training) kann die greedy-Trajektorie divergieren und der Agent an einem
