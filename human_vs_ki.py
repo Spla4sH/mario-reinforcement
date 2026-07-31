@@ -99,12 +99,40 @@ def _make_human_env(world: int, stage: int):
     return env
 
 
+# NES-Controller-Bits -> Agenten-Aktion (JoypadSpace-Reihenfolge, s. wrappers.py).
+# Der Mensch spielt am rohen Env mit allen Tastenkombinationen; der Agent kennt nur
+# acht. Beim Klonen wird deshalb auf die nächstliegende Aktion abgebildet – Kombos
+# ohne Entsprechung (z. B. links+springen) fallen auf ihren Hauptknopf zurück.
+_A, _B, _UP, _DOWN, _LEFT, _RIGHT = 0x01, 0x02, 0x10, 0x20, 0x40, 0x80
+
+
+def _bitmaske_zu_aktion(bits: int) -> int:
+    """Bildet eine NES-Controller-Bitmaske auf die 8 Agenten-Aktionen ab."""
+    rechts, a, b = bits & _RIGHT, bits & _A, bits & _B
+    if rechts and a and b:
+        return 4
+    if rechts and a:
+        return 2
+    if rechts and b:
+        return 3
+    if rechts:
+        return 1
+    if bits & _DOWN:
+        return 7
+    if a:
+        return 5
+    if bits & _LEFT:
+        return 6
+    return 0
+
+
 def record_human(world: int, stage: int, out: str) -> None:
     """Öffnet das Spiel-Fenster und zeichnet die erste Episode (bis done) auf."""
     from nes_py.app.play_human import play_human
 
     env = _make_human_env(world, stage)
     frames: list[np.ndarray] = []
+    tasten: list[int] = []
     state = {"done": False}
 
     def on_step(obs, action, reward, done, next_obs):
@@ -118,9 +146,16 @@ def record_human(world: int, stage: int, out: str) -> None:
         if not frames and action == 0:
             return
         frames.append(np.array(env.unwrapped.screen, copy=True))
+        tasten.append(int(action))
         if done:
             state["done"] = True
-            np.savez_compressed(out, frames=np.array(frames[::4]))  # jede 4. (wie SkipFrame)
+            # Neben den Frames (fürs GIF) auch die Tastenfolge sichern: nur damit
+            # lässt sich eine menschliche Demo per Behavior Cloning klonen. Die
+            # NES-Bitmaske wird dafür auf die Agenten-Aktionen abgebildet.
+            np.savez_compressed(out, frames=np.array(frames[::4]),  # jede 4. (wie SkipFrame)
+                                tasten=np.array(tasten, dtype=np.int16),
+                                aktionen=np.array([_bitmaske_zu_aktion(t) for t in tasten[::4]],
+                                                  dtype=np.int8))
             print(f"\nEpisode beendet – {len(frames)} Frames gespeichert -> {out}")
             print("Fenster jetzt mit ESC schließen, dann 'compose' ausführen.")
 

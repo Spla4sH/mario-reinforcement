@@ -79,3 +79,24 @@ def test_create_env_signatur_kennt_action_set():
     parameter = inspect.signature(wrappers.create_env).parameters
     assert "action_set" in parameter
     assert parameter["action_set"].default is None
+
+
+def test_bitmaske_zu_aktion():
+    """Menschliche Tastenkombos werden auf die 8 Agenten-Aktionen abgebildet.
+
+    Der Mensch spielt am rohen Env mit allen NES-Kombos, der Agent kennt nur acht.
+    Kombos ohne Entsprechung fallen auf ihren Hauptknopf zurueck – bei links+springen
+    ist das der Sprung, weil die Traegheit die Richtung ohnehin traegt.
+    """
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("hvk", "human_vs_ki.py")
+    hvk = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(hvk)
+
+    assert hvk._bitmaske_zu_aktion(0x00) == 0      # nichts
+    assert hvk._bitmaske_zu_aktion(0x80) == 1      # rechts
+    assert hvk._bitmaske_zu_aktion(0x81) == 2      # rechts + A
+    assert hvk._bitmaske_zu_aktion(0x83) == 4      # rechts + A + B
+    assert hvk._bitmaske_zu_aktion(0x20) == 7      # runter (Roehren!)
+    assert hvk._bitmaske_zu_aktion(0x41) == 5      # links + A -> Sprung
