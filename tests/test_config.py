@@ -41,3 +41,25 @@ def test_output_dir_overrides(monkeypatch):
         monkeypatch.delenv("CHECKPOINT_DIR", raising=False)
         monkeypatch.delenv("HIGHLIGHT_DIR", raising=False)
         importlib.reload(config_module)
+
+
+def test_action_set_default_und_down(monkeypatch):
+    """ACTION_SET steuert den Aktionsraum: 7 Aktionen (Default) bzw. 8 mit 'down'.
+
+    'down' ist noetig fuer die Roehren in 8-4 – ohne die Aktion waere der
+    richtige Weg dort gar nicht erreichbar.
+    """
+    import importlib
+
+    import config
+
+    monkeypatch.delenv("ACTION_SET", raising=False)
+    importlib.reload(config)
+    assert config.ACTION_SET == "simple"
+
+    monkeypatch.setenv("ACTION_SET", "down")
+    importlib.reload(config)
+    assert config.ACTION_SET == "down"
+
+    monkeypatch.delenv("ACTION_SET", raising=False)
+    importlib.reload(config)

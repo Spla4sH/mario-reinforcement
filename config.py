@@ -91,3 +91,11 @@ FRAME_SKIP = _env_int("FRAME_SKIP", 4)
 # das Env große Rücksprünge auf 0 setzt statt zu bestrafen. Opt-in, damit die
 # übrigen Level ihren bewährten Reward behalten. Bei Eval/Play denselben Wert setzen.
 PROGRESS_REWARD = _env_bool("PROGRESS_REWARD", False)
+
+# Aktionsraum: "simple" = die 7 SIMPLE_MOVEMENT-Aktionen (Default, alle bisherigen
+# Modelle), "down" = zusätzlich ['down'] als 8. Aktion. Nötig für die Röhren in den
+# späten Labyrinth-Schlössern (8-4): Ohne "down" kann Mario nicht in eine Röhre
+# einsteigen, der richtige Weg wäre also gar nicht erreichbar.
+# ACHTUNG: Modelle sind an ihren Aktionsraum gebunden – bei Eval/Play/Demos
+# denselben Wert setzen (sonst passt die Ausgabegröße der Policy nicht).
+ACTION_SET = os.getenv("ACTION_SET", "simple").strip().lower()

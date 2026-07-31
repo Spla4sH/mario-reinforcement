@@ -143,7 +143,13 @@ def create_env(world=1, stage=1, render=True):
 
     # Vereinfachte Aktionen: SIMPLE_MOVEMENT hat 7 Aktionen
     # [['NOOP'], ['right'], ['right', 'A'], ['right', 'B'], ['right', 'A', 'B'], ['A'], ['left']]
-    env = JoypadSpace(env, SIMPLE_MOVEMENT)
+    #
+    # ACTION_SET="down" ergaenzt eine 8. Aktion ['down']: In den Labyrinth-Schloessern
+    # (v. a. 8-4) fuehrt der richtige Weg durch Roehren, und ohne "down" kann Mario
+    # nicht einsteigen – das Level waere prinzipiell unloesbar. Default bleibt bei
+    # 7 Aktionen, damit alle bisherigen Modelle unveraendert weiterlaufen.
+    actions = SIMPLE_MOVEMENT + [["down"]] if config.ACTION_SET == "down" else SIMPLE_MOVEMENT
+    env = JoypadSpace(env, actions)
 
     # Fortschritts-Reward (opt-in) direkt auf dem rohen NES-Env: sieht die echte
     # x-Position pro Frame, ersetzt den Δx-Reward gegen Loop-Farming (z. B. 4-4).
