@@ -44,9 +44,13 @@ def main() -> None:
     parser.add_argument("--success-x", type=int, default=10**9,
                         help="Erfolg, sobald x erreicht (oder Flagge)")
     parser.add_argument("--success-area", action="store_true",
-                        help="Erfolg = Bereichswechsel (SMB-RAM $0760) statt x-Schwelle. "
-                             "Pflicht fuer Loop-Level wie 8-4: dort zaehlt x_pos beim "
-                             "Im-Kreis-Laufen einfach weiter, jede x-Metrik luegt.")
+                        help="Erfolg = Wechsel des Bereichstyps (SMB-RAM $074E: 0 Wasser, "
+                             "1 oberirdisch, 2 unterirdisch, 3 Schloss) statt x-Schwelle. "
+                             "Fuer Loop-Level, in denen x_pos beim Im-Kreis-Laufen "
+                             "weiterzaehlt und damit jede x-Metrik luegt. ACHTUNG: erkennt "
+                             "nur TYPwechsel – ein Uebergang Schloss->Schloss (8-4, Raum 1 "
+                             "nach Raum 2) bleibt unsichtbar, dafuer taugt nur ein "
+                             "Bildvergleich gegen eine Kontrollgruppe.")
     parser.add_argument("--candidates", type=int, default=5000)
     parser.add_argument("--horizon", type=int, default=70, help="Agent-Steps je Kandidat")
     parser.add_argument("--seed", type=int, default=0)
@@ -98,13 +102,15 @@ def main() -> None:
     print(f"Anlauf: x={x} nach {len(head_actions)} Agent-Steps – Savestate gesichert.")
     nes._backup()
     backup_x_val = x
-    # SMB haelt in $0760 den "AreaPointer" – welche Karte gerade geladen ist.
-    # In Roehren-Labyrinthen (8-4) ist das die EINZIGE ehrliche Fortschrittsmessung:
-    # x_pos zaehlt beim Loop stur weiter (Page-Nummer wird nicht zurueckgesetzt),
-    # ein Bereichswechsel dagegen passiert nur durch eine echte Roehre.
-    start_area = int(nes.ram[0x0760])
+    # $074E haelt den Bereichstyp (0 Wasser, 1 oberirdisch, 2 unterirdisch, 3 Schloss).
+    # In Loop-Leveln ist x_pos wertlos – es zaehlt beim Im-Kreis-Laufen stur weiter,
+    # weil SMB die Page-Nummer beim Ruecksprung nicht zuruecksetzt. Der Bereichstyp
+    # dagegen aendert sich nur bei einem echten Kartenwechsel.
+    # Nachgemessen an der Bonus-Roehre in 1-1: dort springt $074E von 1 auf 2,
+    # waehrend $0760 (der naheliegende "AreaNumber") sich NIE aendert.
+    start_area = int(nes.ram[0x074E])
     if args.success_area:
-        print(f"Erfolgskriterium: Bereichswechsel (Start-Area {start_area})")
+        print(f"Erfolgskriterium: Wechsel des Bereichstyps (Start: $074E={start_area})")
 
     # 2) Zufallssuche ab Savestate: Segmente aus (Aktion, Haltedauer), damit
     # auch längere Sprünge/Anläufe entstehen statt reinem Aktions-Rauschen.
@@ -148,7 +154,7 @@ def main() -> None:
                     prev_x = x_now
                 elif delta <= 0 and x_now < 60000:
                     prev_x = x_now
-                if args.success_area and not done and int(nes.ram[0x0760]) != start_area:
+                if args.success_area and not done and int(nes.ram[0x074E]) != start_area:
                     area_hit = True
                     break
                 if done:
@@ -180,7 +186,7 @@ def main() -> None:
         if area_hit:
             solved = True
             print(f"BEREICHSWECHSEL bei Kandidat {cand}: Area {start_area} -> "
-                  f"{int(nes.ram[0x0760])} nach {len(seq)} Steps (x={int(info.get('x_pos', 0))})")
+                  f"{int(nes.ram[0x074E])} nach {len(seq)} Steps (x={int(info.get('x_pos', 0))})")
             break
         if info.get("flag_get") or cand_max >= args.success_x:
             solved = True
