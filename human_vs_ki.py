@@ -155,7 +155,8 @@ def record_human(world: int, stage: int, out: str) -> None:
             np.savez_compressed(out, frames=np.array(frames[::4]),  # jede 4. (wie SkipFrame)
                                 tasten=np.array(tasten, dtype=np.int16),
                                 aktionen=np.array([_bitmaske_zu_aktion(t) for t in tasten[::4]],
-                                                  dtype=np.int8))
+                                                  dtype=np.int8),
+                                world=world, stage=stage)
             print(f"\nEpisode beendet – {len(frames)} Frames gespeichert -> {out}")
             print("Fenster jetzt mit ESC schließen, dann 'compose' ausführen.")
 
