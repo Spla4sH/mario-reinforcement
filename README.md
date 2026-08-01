@@ -21,6 +21,13 @@ Eine KI lernt Super Mario Bros zu spielen – mit Live-Fenster zum Zuschauen!
 ![Demo](https://img.shields.io/badge/🤗%20Space-Live-green)
 ![Level](https://img.shields.io/badge/Level-32%2F32%20gel%C3%B6st-brightgreen)
 
+<p align="center">
+  <img src="ende_8-4.png" width="480" alt="Der Abspann von Super Mario Bros: THANK YOU MARIO! YOUR QUEST IS OVER.">
+</p>
+
+*Der Abspann, den das Spiel nach 8-4 zeigt – erreicht von einem Agenten, der nie etwas
+anderes gesehen hat als die Pixel auf dem Bildschirm.*
+
 ![Mario KI-Vision – Grad-CAM-Overlay eines greedy-Durchlaufs von Level 1-1](vision.gif)
 
 *Der trainierte Agent löst 1-1 – das rote Leuchten (Grad-CAM) zeigt, worauf das CNN pro Aktion achtet.*
