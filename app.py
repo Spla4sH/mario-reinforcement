@@ -56,6 +56,8 @@ _PPO = [
     ("8-1 · PPO (längstes Level)", "mario_ppo_8-1_r2.zip", 8, 1),
     ("8-2 · PPO (Bullet Bills, Go-Explore)", "mario_ppo_8-2_bc.zip", 8, 2),
     ("8-3 · PPO (Hammer-Brüder, Go-Explore)", "mario_ppo_8-3_bc.zip", 8, 3),
+    # 8-4 braucht die 8. Aktion (↓) – ohne sie kommt Mario in keine Röhre.
+    ("8-4 · PPO (Finale: Bowser)", "mario_ppo_8-4_bowser.zip", 8, 4, "down"),
 ]
 
 LEVELS: dict[str, dict] = {
