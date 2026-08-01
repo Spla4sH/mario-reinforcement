@@ -199,17 +199,33 @@ def bc_seq(seq_path: str, model_path: str, out: str, epochs: int, lr: float, bat
     from wrappers import create_env
 
     data = np.load(seq_path)
-    if int(data["frame_skip"]) != config.FRAME_SKIP:
-        raise SystemExit(
-            f"Sequenz wurde mit FRAME_SKIP={int(data['frame_skip'])} gesucht, "
-            f"aktuell ist {config.FRAME_SKIP} – FRAME_SKIP passend setzen!"
-        )
-    seq = np.concatenate([data["head"], data["tail"]]).astype(int)
-    world, stage = int(data["world"]), int(data["stage"])
-    print(f"Sequenz {world}-{stage}: {len(data['head'])} Anlauf- + {len(data['tail'])} Tail-Steps")
+    if "aktionen" in data:
+        # Menschliche Aufnahme aus human_vs_ki.py: eine durchgehende Aktionsfolge
+        # statt Anlauf+Tail. Nützlich, wo die Zufallssuche nicht durchkommt und ein
+        # Mensch den Weg einfach vorspielt (Labyrinth-Schlösser).
+        seq = data["aktionen"].astype(int)
+        world = int(data["world"]) if "world" in data else 1
+        stage = int(data["stage"]) if "stage" in data else 1
+        print(f"Menschliche Demo {world}-{stage}: {len(seq)} Steps")
+    else:
+        if int(data["frame_skip"]) != config.FRAME_SKIP:
+            raise SystemExit(
+                f"Sequenz wurde mit FRAME_SKIP={int(data['frame_skip'])} gesucht, "
+                f"aktuell ist {config.FRAME_SKIP} – FRAME_SKIP passend setzen!"
+            )
+        seq = np.concatenate([data["head"], data["tail"]]).astype(int)
+        world, stage = int(data["world"]), int(data["stage"])
+        print(f"Sequenz {world}-{stage}: {len(data['head'])} Anlauf- "
+              f"+ {len(data['tail'])} Tail-Steps")
 
     # 1) Replay durch den Wrapper-Stack -> (obs, action)-Paare im Agenten-Format
-    env = create_env(world=world, stage=stage, render=False)
+    # Enthält die Sequenz die 8. Aktion (↓), muss das Env sie auch kennen – sonst
+    # bricht das Replay ab. Betrifft die Röhren-Level, z. B. 8-4.
+    braucht_down = bool((seq == 7).any())
+    env = create_env(world=world, stage=stage, render=False,
+                     action_set="down" if braucht_down else None)
+    if braucht_down:
+        print("Sequenz nutzt ↓ – Aktionsraum auf 8 Aktionen gesetzt.")
     obs = env.reset()
     obs_list, act_list = [], []
     info: dict = {}
