@@ -11,6 +11,7 @@ checkpoints*/
 !tower_seq_2-1.npz
 !maze_seq_4-4.npz
 !maze_seq_7-4.npz
+!axt_seq_8-4.npz
 logs/
 plots/
 highlights/

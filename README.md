@@ -1,6 +1,6 @@
 # Super Mario Bros - Reinforcement Learning
 
-> 🏁 **Welt 1–7 komplett — alle 28 angegangenen Level gelöst.** Jedes Level erfüllt das
+> 🏁 **Super Mario Bros. komplett durchgespielt — alle 32 Level gelöst.** Jedes Level erfüllt das
 > vorab definierte Erfolgskriterium **20/20 greedy-Episoden bis zur Flagge**: 1-1 mit
 > selbst implementiertem Double DQN, alle übrigen mit PPO – und für die Stellen, an denen
 > reines RL scheiterte, jeweils ein eigenes Werkzeug: eine Go-Explore-Savestate-Suche
@@ -16,7 +16,7 @@ Eine KI lernt Super Mario Bros zu spielen – mit Live-Fenster zum Zuschauen!
 ![Python](https://img.shields.io/badge/Python-3.10+-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red)
 ![Demo](https://img.shields.io/badge/🤗%20Space-Live-green)
-![Level](https://img.shields.io/badge/Level-28%2F28%20gel%C3%B6st-brightgreen)
+![Level](https://img.shields.io/badge/Level-32%2F32%20gel%C3%B6st-brightgreen)
 
 ![Mario KI-Vision – Grad-CAM-Overlay eines greedy-Durchlaufs von Level 1-1](vision.gif)
 
@@ -25,7 +25,7 @@ Eine KI lernt Super Mario Bros zu spielen – mit Live-Fenster zum Zuschauen!
 ## Was passiert hier?
 
 Ein neuronales Netz lernt **Super Mario Bros nur aus den Pixeln** – und hat damit
-**alle 28 Level der Welten 1–7 gelöst**: Level 1-1 per **Double DQN** (selbst
+**alle 32 Level des Spiels gelöst**: Level 1-1 per **Double DQN** (selbst
 implementiert), alle übrigen per **PPO** (Stable-Baselines3). Die KI sieht denselben
 Bildschirm wie ein Mensch und lernt selbstständig zu laufen, zu springen und Gegnern
 auszuweichen – niemand sagt ihr, *wie* man spielt, nur dass rechts gut ist und
@@ -80,7 +80,7 @@ python train.py --episodes 300 --no-render
 - Python 3.10+
 - NVIDIA GPU mit CUDA empfohlen (CPU funktioniert, aber deutlich langsamer)
 
-> **Ohne eigenes Training loslegen:** Alle 28 trainierten Modelle gibt es als Release
+> **Ohne eigenes Training loslegen:** Alle 32 trainierten Modelle gibt es als Release
 > ([v1.0](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.0) = Welt 1–4,
 > [v1.1](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.1) = Welt 5,
 > [v1.2](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.2) = Welt 6) –
@@ -142,7 +142,7 @@ mario-reinforcement/
 ├── play_ppo.py       # PPO-Agenten live zuschauen (auch Zwischenstände)
 ├── visualize.py      # KI-Vision-Overlay (Grad-CAM) - was sieht die KI?
 ├── visualize_ppo.py  # Dasselbe für PPO (SB3-CnnPolicy) - DQN-vs-PPO-Vergleich
-├── app.py            # Gradio-Demo: 28 Level im Browser (Dropdown + Grad-CAM-Toggle)
+├── app.py            # Gradio-Demo: 32 Level im Browser (Dropdown + Grad-CAM-Toggle)
 ├── gen_demos.py      # Vorberechnete Demo-MP4s + results.json für den HF-Space erzeugen
 ├── eval_ppo.py       # Greedy-Eval eines PPO-Modells (Flaggen-Rate über N Episoden)
 ├── gif_ppo.py        # Deterministische PPO-Episode als GIF (README-Assets)
@@ -429,6 +429,7 @@ etwas anderes maß als gemeint war** – diesmal in meinem eigenen Suchcode.
 | 8-1 | **20/20** 🏁 | 9M Steps – das **längste Level des Spiels** (x 6009) |
 | 8-2 | **20/20** 🏁 | Go-Explore (4.603 Kandidaten) + Behavior Cloning in 13 Epochen |
 | 8-3 | **20/20** 🏁 | Go-Explore (1.431 Kandidaten) + Behavior Cloning in **6** Epochen |
+| 8-4 (Finale) | **20/20** 🏁 | 8. Aktion (↓), **sechsstufiges** Go-Explore + BC – s. unten |
 
 **Welt 8 scheiterte dreimal an einer einzelnen Timing-Stelle kurz vor dem Ziel** – nicht an
 zu wenig Training. Genau dafür ist Go-Explore da: Die Policy bringt Mario zuverlässig bis
@@ -445,6 +446,42 @@ behalten und die Entscheidung an der Metrik ausrichten, die dem Erfolgskriterium
 **8-3 ist der beste Beleg für die BC-Lektion aus 4-4:** Behavior Cloning erreichte die Flagge
 nach 6 Epochen bei **83,7 % Trefferquote** – ein Wert, bei dem eine reine Genauigkeitsschwelle
 längst abgebrochen hätte. *Nicht die Trefferquote zählt, sondern der Greedy-Lauf.*
+
+### 8-4: das Finale – und ein blindes Messgerät
+
+Das letzte Level brauchte drei Dinge, die vorher keins gebraucht hat:
+
+**1. Eine achte Aktion.** `SIMPLE_MOVEMENT` kennt kein **↓** – und ohne ↓ steigt man in
+keine Röhre. In 8-4 führt der Weg durch Röhren, das Level war also *prinzipiell unlösbar*,
+egal wie lange trainiert wird: Die Lösung lag außerhalb dessen, was der Agent tun konnte.
+Neuer opt-in-Schalter `ACTION_SET=down`, damit die 31 bestehenden Modelle unberührt bleiben.
+
+**2. Ein Erfolgssignal, das nicht lügt.** In der Loop-Passage zählt `x_pos` beim
+Im-Kreis-Laufen einfach weiter (SMB setzt die Seitennummer beim Rückwurf nicht zurück).
+Damit logen Reward, `ProgressReward` und das Go-Explore-Kriterium **gleichzeitig** – der
+fünfte Metrik-Fehler des Projekts.
+
+**3. Die Einsicht, dass mein Ersatz-Signal genauso blind war.** Statt x nahm ich den
+Bereichszeiger `$0760` aus einer RAM-Karte – und suchte damit **40.000 Kandidaten** lang
+vergeblich, dazu einen Sweep über 223 Positionen. Kein einziger Treffer, nicht mal eine
+falsche Röhre. Der Verdacht fiel deshalb auf das Messgerät: An der bekannten Bonus-Röhre in
+**1-1** getestet, rührte sich `$0760` ebenfalls nicht. Ein Vergleich des kompletten RAM
+vorher/nachher zeigte 444 veränderte Bytes – `$0760` war keins davon. Der Bereichstyp steht
+in **`$074E`**.
+
+> **Die Lehre:** Wenn eine Suche nichts findet, ist die erste Frage nicht *„wie suche ich
+> besser?"*, sondern **„würde ich einen Treffer überhaupt bemerken?"** Gemessen: mit dem
+> falschen Signal 40.000 Kandidaten ohne Treffer – mit einem generischen Signal fiel
+> dieselbe Röhre nach **34**.
+
+Weil auch `$074E` nur *Typ*wechsel erkennt (der Schlüsselübergang geht Schloss→Schloss),
+habe ich das Level einmal selbst gespielt. Die Aufnahme lieferte **nicht die Lösung** – die
+menschliche Tastenfolge ließ sich nicht klonen, da ein Mensch pro Frame eingibt und der
+Agent jede Aktion vier Frames hält (alle sieben Umrechnungen scheiterten). Sie lieferte das
+**Signal**: einen x-Sprung 2444 → 3128 ohne Bewegung. Danach fiel das Level in sechs Stufen
+(7 / 52 / 54 / 15 / 24 / 852 Kandidaten) bis zur Axt; Behavior Cloning der 685 Schritte
+brauchte 39 Epochen. Den unsichtbaren Block vor der Röhre hat die Suche selbst gefunden –
+an jeder Position senkrecht springen und auf Punkte-/Münzänderung prüfen (Treffer x 2387).
 
 ## Wenn der Agent scheitert
 
@@ -469,7 +506,7 @@ Alignment-Problem.
 *Gleiches Level – links Mensch, rechts der trainierte DQN-Agent. Beide erreichen die
 Flagge, die KI ist rund 25 Spielsekunden schneller (Restzeit 329 vs. 304).*
 
-Eigenen Lauf aufnehmen und antreten – **gegen jedes der 28 gelösten Level**. Der Mensch
+Eigenen Lauf aufnehmen und antreten – **gegen jedes der 32 gelösten Level**. Der Mensch
 spielt dabei mit **voller Original-Steuerung** (alle NES-Kombos inkl. Ducken und
 Links-Sprung), der Agent hat weiterhin nur seine 7 Aktions-Kombos:
 
@@ -578,7 +615,7 @@ pip install gradio
 python app.py        # öffnet eine lokale Web-Demo
 ```
 
-Eine **Gradio-App** zeigt jeden der **28 gelösten Level** im Browser – Dropdown zur
+Eine **Gradio-App** zeigt jeden der **32 gelösten Level** im Browser – Dropdown zur
 Level-Auswahl (1‑1 DQN, Rest PPO), Checkbox für das Grad-CAM-Overlay, Lauf bis zur Flagge.
 Lokal (`python app.py`) rechnet die App live; der öffentliche Space zeigt **vorberechnete
 Videos** (per `gen_demos.py` erzeugt).
@@ -636,7 +673,7 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] **Welt 5 komplett** – alle vier Level 20/20; 5-3 per **Transfer Learning** vom
   baugleichen Level 1-3 gelöst, nachdem vier andere Ansätze scheiterten
 - [ ] Alle Welten durchspielen
-- [x] **Vortrainierte Modelle bereitgestellt** – alle 28 Level + Welt-1-Generalist als
+- [x] **Vortrainierte Modelle bereitgestellt** – alle 32 Level + Welt-1-Generalist als
   Release [v1.0](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.0) (Welt 1–4),
   [v1.1](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.1) (Welt 5)
   und [v1.2](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.2) (Welt 6)
@@ -648,7 +685,7 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
 - [x] Tests + CI (pytest, ruff, GitHub Actions)
 - [x] Reward-Shaping + Greedy-Evaluation (Basis für „1-1 konsistent")
 - [x] Experiment-Tracking mit Weights & Biases (optional)
-- [x] Live-Demo (Gradio) als Hugging Face Space – **alle 28 gelösten Level** im Browser
+- [x] Live-Demo (Gradio) als Hugging Face Space – **alle 32 gelösten Level** im Browser
   (Dropdown + Grad-CAM-Toggle, vorberechnete Videos)
 - [x] Algorithmus-Upgrade: Double DQN → **PPO** (Stable-Baselines3 + shimmy) – löst 1-2, wo DQN scheiterte
 - [x] Grad-CAM für PPO (`visualize_ppo.py`) + DQN-vs-PPO-Vergleichs-GIF

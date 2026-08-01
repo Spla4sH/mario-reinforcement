@@ -40,7 +40,12 @@ def main() -> None:
                              "für mehrstufige Suchen (z. B. Labyrinth 4-4)")
     parser.add_argument("--world", type=int, default=2)
     parser.add_argument("--stage", type=int, default=1)
-    parser.add_argument("--backup-x", type=int, required=True, help="Savestate, sobald x erreicht")
+    parser.add_argument("--backup-x", type=int, default=0, help="Savestate, sobald x erreicht")
+    parser.add_argument("--head-full", action="store_true",
+                        help="Anlauf-Sequenz komplett abspielen statt bei --backup-x zu "
+                             "stoppen. Noetig, sobald die Suche ueber eine Bereichsgrenze "
+                             "hinausgeht: hinter einer Roehre faengt x wieder klein an, "
+                             "eine x-Schwelle wuerde sofort im alten Bereich ausloesen.")
     parser.add_argument("--success-x", type=int, default=10**9,
                         help="Erfolg, sobald x erreicht (oder Flagge)")
     parser.add_argument("--success-area", action="store_true",
@@ -83,7 +88,7 @@ def main() -> None:
             obs, _, done, info = env.step(action)
             head_actions.append(action)
             x = int(info["x_pos"])
-            if x >= args.backup_x or done:
+            if (not args.head_full and x >= args.backup_x) or done:
                 break
     else:
         from stable_baselines3 import PPO
@@ -96,8 +101,11 @@ def main() -> None:
             x = int(info["x_pos"])
             if x >= args.backup_x or done:
                 break
-    if x < args.backup_x:
+    if not args.head_full and x < args.backup_x:
         print(f"Anlauf gescheitert (x={x}) – Anlauf erreicht --backup-x nicht.")
+        sys.exit(1)
+    if args.head_full and done:
+        print("Anlauf gescheitert – die Sequenz endet mit Marios Tod.")
         sys.exit(1)
     print(f"Anlauf: x={x} nach {len(head_actions)} Agent-Steps – Savestate gesichert.")
     nes._backup()

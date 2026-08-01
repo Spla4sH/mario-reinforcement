@@ -225,7 +225,9 @@ def bc_seq(seq_path: str, model_path: str, out: str, epochs: int, lr: float, bat
     env = create_env(world=world, stage=stage, render=False,
                      action_set="down" if braucht_down else None)
     if braucht_down:
-        print("Sequenz nutzt ↓ – Aktionsraum auf 8 Aktionen gesetzt.")
+        # Kein Pfeil-Zeichen: die Windows-Konsole laeuft unter cp1252 und wirft
+        # dafuer einen UnicodeEncodeError.
+        print("Sequenz nutzt die Runter-Aktion - Aktionsraum auf 8 Aktionen gesetzt.")
     obs = env.reset()
     obs_list, act_list = [], []
     info: dict = {}

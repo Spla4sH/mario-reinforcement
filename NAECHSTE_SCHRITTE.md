@@ -337,11 +337,12 @@ noch gradio). **GIF → MP4**, weil H.264 die bunten CAM-Overlays ~10× besser k
 
 ---
 
-## Phase M — Welt 8: die letzte Welt (31.07.2026)
+## Phase M — Welt 8 komplett ✅ (01.08.2026): 32 von 32 Leveln, Spiel durchgespielt
 
-> **Stand: 8-1, 8-2, 8-3 je 20/20 → 31 von 32 Leveln.** Alle drei scheiterten *nicht* an
-> zu wenig Training, sondern an je einer Timing-Stelle kurz vor dem Ziel – das
-> Einsatzgebiet von Go-Explore. 8-1 ist mit x 6009 das längste Level des Spiels (9M Steps).
+> **Alle vier Level 20/20 – damit ist Super Mario Bros. komplett gelöst.** 8-1 bis 8-3
+> scheiterten *nicht* an zu wenig Training, sondern an je einer Timing-Stelle kurz vor dem
+> Ziel – das Einsatzgebiet von Go-Explore. 8-1 ist mit x 6009 das längste Level des Spiels
+> (9M Steps).
 >
 > **8-2 zeigte zwei Metriken in entgegengesetzte Richtungen:** Ein Resume steigerte den
 > Trainings-Reward und senkte die Greedy-Leistung (x 3042 → 2672). Kein Bug – der
@@ -349,18 +350,30 @@ noch gradio). **GIF → MP4**, weil H.264 die bunten CAM-Overlays ~10× besser k
 > deterministischer Lauf. *Optimiere und entscheide nach derselben Metrik.*
 > **8-3** erreichte die Flagge per Behavior Cloning schon bei **83,7 %** Trefferquote.
 >
-> **8-4 (Finale, in Arbeit)** brachte zwei Befunde:
+> **8-4 war das schwerste Level des Projekts – aber aus einem ungewohnten Grund:**
 > 1. **Ohne achte Aktion prinzipiell unlösbar** – `SIMPLE_MOVEMENT` kennt kein ↓, ohne das
 >    man keine Röhre betritt. Neuer opt-in-Schalter `ACTION_SET=down`.
-> 2. **Der fünfte Metrik-Fehler:** In der Loop-Passage zählt `x_pos` beim Im-Kreis-Laufen
->    einfach weiter (SMB setzt die Page-Nummer beim Rückwurf nicht zurück). Damit logen
->    Reward, `ProgressReward` *und* das Go-Explore-Kriterium gleichzeitig. Die einzige
->    ehrliche Größe steht im RAM: der **AreaPointer `$0760`** ändert sich nur bei einem
->    echten Röhrenwechsel → `goexplore.py --success-area`.
+> 2. **Fünfter Metrik-Fehler:** In der Loop-Passage zählt `x_pos` beim Im-Kreis-Laufen
+>    weiter – Reward, `ProgressReward` und Suchkriterium logen gleichzeitig.
+> 3. **Der eigentliche Zeitfresser war mein Ersatz-Signal.** Ich nahm `$0760` als
+>    Bereichszeiger und suchte damit 40.000 Kandidaten lang vergeblich. An der bekannten
+>    Bonus-Röhre in 1-1 gegengetestet: `$0760` rührt sich dort auch nicht. Ein RAM-Diff
+>    über 444 geänderte Bytes zeigte den richtigen Wert: **`$074E`** (Bereichstyp).
+> 4. **Menschliche Aufnahme als Diagnose, nicht als Lösung.** Weil `$074E` nur Typwechsel
+>    erkennt (der Schlüsselübergang geht Schloss→Schloss), habe ich das Level selbst
+>    gespielt. Die Tastenfolge ließ sich **nicht** klonen (Mensch: 1 Eingabe/Frame, Agent:
+>    4 Frames pro Aktion – alle sieben Umrechnungen scheiterten). Geliefert hat sie das
+>    *Signal*: x-Sprung 2444 → 3128 ohne Bewegung.
+> 5. **Gegentest gemacht statt behauptet:** dieselbe Suche ohne jedes Streckenwissen, nur
+>    mit generischem Signal → Treffer nach **34** Kandidaten (statt 40.000 ohne Treffer).
+>    Der Blocker war die Messung, nicht das Wissen.
 >
-> Der unsichtbare Block vor der schwebenden Röhre wurde nicht erraten, sondern **gemessen**:
-> an jeder x-Position senkrecht springen und auf Kachel-/Score-/Münzänderung prüfen –
-> Treffer bei x 2387 (+200 Punkte, +1 Münze).
+> Danach sechs Go-Explore-Stufen (7 / 52 / 54 / 15 / 24 / 852 Kandidaten) bis zur Axt,
+> Behavior Cloning der 685 Schritte in 39 Epochen → **20/20**.
+>
+> **Lehre fürs nächste Projekt:** Wenn eine Suche nichts findet, zuerst prüfen, *ob ein
+> Treffer überhaupt sichtbar wäre* – und den Detektor an einer Stelle testen, deren
+> Antwort man schon kennt.
 
 ---
 
