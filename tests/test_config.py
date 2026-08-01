@@ -69,16 +69,25 @@ def test_create_env_signatur_kennt_action_set():
     """create_env muss den Aktionsraum pro Aufruf setzen koennen.
 
     In der Demo-App laufen Modelle mit 7 und mit 8 Aktionen im selben Prozess –
-    eine Umgebungsvariable kann das nicht unterscheiden. (Geprueft wird nur die
-    Signatur: create_env braucht den Emulator und laeuft nicht in der CI.)
+    eine Umgebungsvariable kann das nicht unterscheiden.
+
+    Geprueft wird per AST statt per Import: ``wrappers`` zieht OpenCV nach, das in
+    der CI bewusst fehlt (die Tests sollen ohne Emulator und ohne GPU laufen).
     """
-    import inspect
+    import ast
+    import pathlib
 
-    import wrappers
+    quelle = pathlib.Path(__file__).resolve().parent.parent / "wrappers.py"
+    baum = ast.parse(quelle.read_text(encoding="utf-8"))
+    funktionen = {k.name: k for k in ast.walk(baum) if isinstance(k, ast.FunctionDef)}
+    assert "create_env" in funktionen
 
-    parameter = inspect.signature(wrappers.create_env).parameters
-    assert "action_set" in parameter
-    assert parameter["action_set"].default is None
+    args = funktionen["create_env"].args
+    namen = [a.arg for a in args.args]
+    assert "action_set" in namen
+    # Default None = "nimm config.ACTION_SET", damit bestehende Aufrufe gleich bleiben
+    default = args.defaults[namen.index("action_set") - (len(namen) - len(args.defaults))]
+    assert isinstance(default, ast.Constant) and default.value is None
 
 
 def test_bitmaske_zu_aktion():
@@ -89,8 +98,10 @@ def test_bitmaske_zu_aktion():
     ist das der Sprung, weil die Traegheit die Richtung ohnehin traegt.
     """
     import importlib.util
+    import pathlib
 
-    spec = importlib.util.spec_from_file_location("hvk", "human_vs_ki.py")
+    quelle = pathlib.Path(__file__).resolve().parent.parent / "human_vs_ki.py"
+    spec = importlib.util.spec_from_file_location("hvk", quelle)
     hvk = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(hvk)
 
