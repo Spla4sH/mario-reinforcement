@@ -3,9 +3,12 @@
 > 🏁 **Super Mario Bros. komplett durchgespielt — alle 32 Level gelöst.** Jedes Level erfüllt das
 > vorab definierte Erfolgskriterium **20/20 greedy-Episoden bis zur Flagge**: 1-1 mit
 > selbst implementiertem Double DQN, alle übrigen mit PPO – und für die Stellen, an denen
-> reines RL scheiterte, jeweils ein eigenes Werkzeug: eine Go-Explore-Savestate-Suche
-> (Trampolin-Turm in 2-1, Labyrinth in 4-4, samt einer echten Reward-Hacking-Geschichte)
-> und **Transfer Learning** zwischen baugleichen Leveln (5-3). Die Details erzählen die
+> reines RL scheiterte, jeweils ein eigenes Werkzeug: eine **Go-Explore-Savestate-Suche**
+> (Trampolin-Turm in 2-1, Labyrinthe in 4-4 und 7-4), **Behavior Cloning** und
+> **Transfer Learning** zwischen baugleichen Leveln (5-3). Unterwegs sind mir **fünf
+> Metriken aufgefallen, die etwas anderes gemessen haben als gemeint** – vom Agenten, der
+> im Kreis lief und dafür bezahlt wurde, bis zum Finale 8-4, wo ich 40.000 Suchläufe lang
+> ein RAM-Byte beobachtet habe, das sich nie ändert. Die Details erzählen die
 > Welt-Abschnitte weiter unten.
 
 Eine KI lernt Super Mario Bros zu spielen – mit Live-Fenster zum Zuschauen!
@@ -83,7 +86,8 @@ python train.py --episodes 300 --no-render
 > **Ohne eigenes Training loslegen:** Alle 32 trainierten Modelle gibt es als Release
 > ([v1.0](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.0) = Welt 1–4,
 > [v1.1](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.1) = Welt 5,
-> [v1.2](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.2) = Welt 6) –
+> [v1.2](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.2) = Welt 6,
+> [v1.3](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.3) = Welt 7+8) –
 > `mario_best.pt` nach `checkpoints/`, die `.zip`-Modelle nach `checkpoints_ppo/` legen,
 > dann direkt `python play.py` bzw. `python play_ppo.py --model … --world … --stage …`.
 
@@ -677,11 +681,15 @@ In `config.py` lassen sich alle Hyperparameter anpassen:
   bei 6-3 wurde ein Transfer getestet und begründet verworfen
 - [x] **Welt 5 komplett** – alle vier Level 20/20; 5-3 per **Transfer Learning** vom
   baugleichen Level 1-3 gelöst, nachdem vier andere Ansätze scheiterten
-- [ ] Alle Welten durchspielen
+- [x] **Welt 8 komplett** – 8-4 (Finale mit Bowser) per sechsstufigem Go-Explore +
+  Behavior Cloning; brauchte eine achte Aktion (↓) und die Korrektur eines blinden
+  Erfolgs-Detektors
+- [x] **Alle Welten durchgespielt – 32 von 32 Leveln gelöst** 🏁
 - [x] **Vortrainierte Modelle bereitgestellt** – alle 32 Level + Welt-1-Generalist als
   Release [v1.0](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.0) (Welt 1–4),
-  [v1.1](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.1) (Welt 5)
-  und [v1.2](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.2) (Welt 6)
+  [v1.1](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.1) (Welt 5),
+  [v1.2](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.2) (Welt 6)
+  und [v1.3](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.3) (Welt 7+8)
 
 ### Vision / Weiterentwicklung
 
