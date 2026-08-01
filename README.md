@@ -424,6 +424,11 @@ etwas anderes maß als gemeint war** – diesmal in meinem eigenen Suchcode.
 
 ## Welt 8: die letzte Welt
 
+![PPO-Agent besiegt Bowser in Level 8-4 und erreicht die Axt](ppo_8-4.gif)
+
+*Das Finale: 8-4, der echte Bowser – Feuer und Hämmer. Der Agent läuft hindurch und
+berührt die Axt (x 4805). Damit sind alle 32 Level gelöst.*
+
 | Level | Ergebnis | Der entscheidende Hebel |
 |---|---|---|
 | 8-1 | **20/20** 🏁 | 9M Steps – das **längste Level des Spiels** (x 6009) |
