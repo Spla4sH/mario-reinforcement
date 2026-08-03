@@ -109,7 +109,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Todes-Dichten über dem Level-Panorama.")
     parser.add_argument("--csv", default="logs/run_20260703_133635.csv")
     parser.add_argument("--checkpoint", default="checkpoints/mario_best.pt")
-    parser.add_argument("--out", default="death_heatmap.png")
+    parser.add_argument("--out", default="assets/death_heatmap.png")
     parser.add_argument("--phases", type=int, default=6)
     args = parser.parse_args()
 

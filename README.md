@@ -22,13 +22,13 @@ Eine KI lernt Super Mario Bros zu spielen – mit Live-Fenster zum Zuschauen!
 ![Level](https://img.shields.io/badge/Level-32%2F32%20gel%C3%B6st-brightgreen)
 
 <p align="center">
-  <img src="ende_8-4.png" width="480" alt="Der Abspann von Super Mario Bros: THANK YOU MARIO! YOUR QUEST IS OVER.">
+  <img src="assets/ende_8-4.png" width="480" alt="Der Abspann von Super Mario Bros: THANK YOU MARIO! YOUR QUEST IS OVER.">
 </p>
 
 *Der Abspann, den das Spiel nach 8-4 zeigt – erreicht von einem Agenten, der nie etwas
 anderes gesehen hat als die Pixel auf dem Bildschirm.*
 
-![Mario KI-Vision – Grad-CAM-Overlay eines greedy-Durchlaufs von Level 1-1](vision.gif)
+![Mario KI-Vision – Grad-CAM-Overlay eines greedy-Durchlaufs von Level 1-1](assets/vision.gif)
 
 *Der trainierte Agent löst 1-1 – das rote Leuchten (Grad-CAM) zeigt, worauf das CNN pro Aktion achtet.*
 
@@ -179,7 +179,7 @@ mario-reinforcement/
 
 ## PPO-Agent: Welt 1 komplett (Stable-Baselines3)
 
-![PPO-Agent löst Level 1-2 – deterministischer Durchlauf bis zur Flagge](ppo_1-2.gif)
+![PPO-Agent löst Level 1-2 – deterministischer Durchlauf bis zur Flagge](assets/ppo_1-2.gif)
 
 *Der PPO-Agent löst Level 1-2 – das Level, an dem Double DQN scheiterte. Training:
 `train_ppo.py` (separates venv, siehe `requirements-ppo.txt`).*
@@ -212,7 +212,7 @@ den Trainingskurven (`runs_ppo/`, TensorBoard) nachvollziehbar.
 
 ## Welt 2 komplett: Hard Exploration am Trampolin-Turm
 
-![PPO-Agent löst Level 2-1 – Superbounce über den Trampolin-Turm bis zur Flagge](ppo_2-1.gif)
+![PPO-Agent löst Level 2-1 – Superbounce über den Trampolin-Turm bis zur Flagge](assets/ppo_2-1.gif)
 
 *Level 2-1, gelöst: 20/20 greedy-Episoden Flagge. Der Sprung über den Turm am Ende ist ein
 Trampolin-„Superbounce" – die Stelle, an der reines RL 12 Millionen Steps lang scheiterte.*
@@ -242,14 +242,14 @@ Nebenbefund mit Lehrwert: Eine erste Probe mit 45 *handgeskripteten* Sprungvaria
 nahe, der Sprung sei bei 4-Frame-Taktung physikalisch unmöglich. Die breite Zufallssuche
 widerlegte das – die Hypothese war ein Artefakt des zu engen Suchraums.
 
-![PPO-Agent löst das Wasser-Level 2-2 – Schwimmen bis zur Flagge](ppo_2-2.gif)
+![PPO-Agent löst das Wasser-Level 2-2 – Schwimmen bis zur Flagge](assets/ppo_2-2.gif)
 
 ***2-2** war der Gegenbeweis, dass nicht jede Hürde ein Spezialwerkzeug braucht: Nach 3M Steps
 strandeten alle Greedy-Episoden an einem Gegner bei x&nbsp;2563 – aber die Trainingskurve stieg
 noch. Also kein Methodenwechsel, sondern Resume um weitere 3M Steps → 20/20. Die Schwimm-Physik
 (A-Taste = Schwimmstoß statt Sprung) lernte PPO ohne jede Anpassung aus den Pixeln.*
 
-![PPO-Agent löst das Schloss-Level 2-4 – vorbei an den Feuerstäben bis zur Axt hinter Bowser](ppo_2-4.gif)
+![PPO-Agent löst das Schloss-Level 2-4 – vorbei an den Feuerstäben bis zur Axt hinter Bowser](assets/ppo_2-4.gif)
 
 *Das Welt-Finale: 2-3 und 2-4 fielen mit dem Standard-Rezept jeweils im ersten Anlauf –
 Feuerstäbe, Lava und Bowser inklusive. Faustregel aus Welt 2: **steigt die Trainingskurve
@@ -272,7 +272,7 @@ gelöst** (Welt 1–3, je 20/20 greedy).
 
 ## Welt 4 komplett: Reward-Hacking im Labyrinth
 
-![PPO-Agent löst das Labyrinth-Level 4-4 – über die richtige Route bis zur Axt hinter Bowser](ppo_4-4.gif)
+![PPO-Agent löst das Labyrinth-Level 4-4 – über die richtige Route bis zur Axt hinter Bowser](assets/ppo_4-4.gif)
 
 *Level 4-4, gelöst: 20/20 greedy-Episoden bis zur Axt (x 2772). Das unscheinbare Labyrinth
 war das härteste Level des Projekts – es brauchte zwei Reward-Fixes und eine mehrstufige
@@ -314,7 +314,7 @@ seither wird jede Epoche greedy verifiziert und der beste Stand behalten.
 
 ## Welt 5 komplett: als ein Modell aus Welt 1 die Lösung brachte
 
-![PPO-Agent löst Level 5-3 – der Sprung über die Lücke, den erst der Transfer von 1-3 brachte](ppo_5-3.gif)
+![PPO-Agent löst Level 5-3 – der Sprung über die Lücke, den erst der Transfer von 1-3 brachte](assets/ppo_5-3.gif)
 
 *Level 5-3, gelöst: Genau dieser Sprung über die Lücke war die Wand, an der vier Ansätze
 scheiterten – bis ein Modell aus Welt 1 ihn auf Anhieb konnte.*
@@ -394,7 +394,7 @@ frisches Training mit 6M Steps am Stück löste 6-3 dann problemlos.
 
 ## Welt 7 komplett: das härteste Level des Projekts
 
-![PPO-Agent löst das Labyrinth-Schloss 7-4 – durch fünf Gates bis zur Axt](ppo_7-4.gif)
+![PPO-Agent löst das Labyrinth-Schloss 7-4 – durch fünf Gates bis zur Axt](assets/ppo_7-4.gif)
 
 *Level 7-4, gelöst: fünf Entscheidungspunkte, Sprungpassagen und Feuerstellen – vier
 Go-Explore-Stufen und ein 762 Schritte langer geklonter Weg bis zur Axt (x 3283).*
@@ -435,7 +435,7 @@ etwas anderes maß als gemeint war** – diesmal in meinem eigenen Suchcode.
 
 ## Welt 8: die letzte Welt
 
-![PPO-Agent besiegt Bowser in Level 8-4 und erreicht die Axt](ppo_8-4.gif)
+![PPO-Agent besiegt Bowser in Level 8-4 und erreicht die Axt](assets/ppo_8-4.gif)
 
 *Das Finale: 8-4, der echte Bowser – Feuer und Hämmer. Der Agent läuft hindurch und
 berührt die Axt (x 4805). Damit sind alle 32 Level gelöst.*
@@ -507,9 +507,9 @@ konkreten Fix im Code.
 
 | | |
 |---|---|
-| ![4-4: der Agent läuft im Kreis statt zum Ziel](problem_4-4.gif) | **4-4 · Reward-Hacking.** Der Agent hat den Ausgang nie gesucht – er läuft die Loop-Passage im Kreis und kassiert jedes Mal dieselbe Δx-Belohnung. 13.824 Reward-Punkte, 0 % Flagge. Fix: `ProgressReward` belohnt nur noch **neues** x-Maximum. |
-| ![7-4: der Agent wird immer wieder zurückgeworfen und bleibt stehen](problem_7-4.gif) | **7-4 · Resignation.** Achtmal am Gate zurückgeworfen, dann bleibt der Agent bei x 408 einfach stehen. Weiterlaufen kostet Leben, Stehenbleiben nichts – ein lokales Optimum, aus dem kein Gradient herausführt. Fix: Go-Explore ab Savestate. |
-| ![8-2: der Agent hüpft vor den Bullet-Bill-Kanonen auf der Stelle](problem_8-2.gif) | **8-2 · Sicherheit vor Fortschritt.** Vor den Bullet-Bill-Kanonen hüpft der Agent auf der Stelle, bis die Zeit abläuft. Ausweichen ist riskant, Warten sicher. Fix: Go-Explore + Behavior Cloning der gefundenen Passage. |
+| ![4-4: der Agent läuft im Kreis statt zum Ziel](assets/problem_4-4.gif) | **4-4 · Reward-Hacking.** Der Agent hat den Ausgang nie gesucht – er läuft die Loop-Passage im Kreis und kassiert jedes Mal dieselbe Δx-Belohnung. 13.824 Reward-Punkte, 0 % Flagge. Fix: `ProgressReward` belohnt nur noch **neues** x-Maximum. |
+| ![7-4: der Agent wird immer wieder zurückgeworfen und bleibt stehen](assets/problem_7-4.gif) | **7-4 · Resignation.** Achtmal am Gate zurückgeworfen, dann bleibt der Agent bei x 408 einfach stehen. Weiterlaufen kostet Leben, Stehenbleiben nichts – ein lokales Optimum, aus dem kein Gradient herausführt. Fix: Go-Explore ab Savestate. |
+| ![8-2: der Agent hüpft vor den Bullet-Bill-Kanonen auf der Stelle](assets/problem_8-2.gif) | **8-2 · Sicherheit vor Fortschritt.** Vor den Bullet-Bill-Kanonen hüpft der Agent auf der Stelle, bis die Zeit abläuft. Ausweichen ist riskant, Warten sicher. Fix: Go-Explore + Behavior Cloning der gefundenen Passage. |
 
 Gemeinsamer Nenner: **Der Agent optimiert exakt das, was gemessen wird** – nie das, was
 gemeint war. Dieselbe Lücke, die hier nur ein Level kostet, heißt in echten Systemen
@@ -517,7 +517,7 @@ Alignment-Problem.
 
 ## Mensch vs. KI
 
-![Mensch und KI spielen Level 1-1 Seite an Seite](mensch_vs_ki.gif)
+![Mensch und KI spielen Level 1-1 Seite an Seite](assets/mensch_vs_ki.gif)
 
 *Gleiches Level – links Mensch, rechts der trainierte DQN-Agent. Beide erreichen die
 Flagge, die KI ist rund 25 Spielsekunden schneller (Restzeit 329 vs. 304).*
@@ -542,7 +542,7 @@ entfällt das Menü – Details im Skript-Docstring.
 
 ## Analyse: Wo stirbt Mario?
 
-![Todesorte in Level 1-1 über das DQN-Training – Dichtekurven über dem Level-Panorama](death_heatmap.png)
+![Todesorte in Level 1-1 über das DQN-Training – Dichtekurven über dem Level-Panorama](assets/death_heatmap.png)
 
 *Todespositionen aus 5.409 DQN-Trainingsepisoden (Level 1-1) als Dichtekurven je
 Trainingsphase – gezeichnet **über einem Panorama des Levels**, das aus einem
@@ -555,7 +555,7 @@ rechts „erobert". Erzeugt mit `death_map.py`.*
 
 ## MLOps: Hyperparameter-Sweep als parallele Kubernetes-Jobs
 
-![Sweep-Vergleich: Epsilon, Loss und x-Position der vier Varianten](sweep.png)
+![Sweep-Vergleich: Epsilon, Loss und x-Position der vier Varianten](assets/sweep.png)
 
 *Vier Trainingsläufe mit unterschiedlichen Hyperparametern — als **vier parallele
 Kubernetes-Jobs** in einem lokalen [kind](https://kind.sigs.k8s.io/)-Cluster ausgeführt,
@@ -574,7 +574,7 @@ kubectl get pods -l sweep=mario -w              # zuschauen
 # danach: Ergebnisse einsammeln + Vergleichsplot
 kubectl apply -f k8s/reader-pod.yaml && kubectl wait --for=condition=Ready pod/mario-sweep-reader
 kubectl cp mario-sweep-reader:/data/logs ./sweep_results
-python sweep_plot.py --dir sweep_results --out sweep.png
+python sweep_plot.py --dir sweep_results --out assets/sweep.png
 ```
 
 Der Weg dahin war lehrreicher als das Ergebnis (Details in den Manifest-Kommentaren):
@@ -602,7 +602,7 @@ python plot.py
 python visualize.py --episodes 2
 
 # Zusätzlich als GIF speichern (z. B. für dieses README)
-python visualize.py --episodes 1 --save vision.gif
+python visualize.py --episodes 1 --save assets/vision.gif
 ```
 
 Per **Grad-CAM** wird der letzte Convolution-Layer ausgewertet und als Heatmap über
@@ -612,7 +612,7 @@ des Agenten.
 
 #### DQN vs. PPO: zwei Algorithmen, zwei Blickweisen
 
-![Grad-CAM-Vergleich: DQN (links) und PPO (rechts) spielen Level 1-1](vision_dqn_vs_ppo.gif)
+![Grad-CAM-Vergleich: DQN (links) und PPO (rechts) spielen Level 1-1](assets/vision_dqn_vs_ppo.gif)
 
 *Beide Agenten lösen 1-1 – aber sie schauen unterschiedlich hin: Das **DQN** konzentriert
 seine Aufmerksamkeit punktuell auf den Boden direkt vor Mario, das **PPO**-Modell (der

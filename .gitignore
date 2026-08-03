@@ -23,7 +23,7 @@ runs_ppo/
 hf_space/
 
 # Nur lokal (im README waere es redundant zu ppo_2-1/2-2/2-4)
-ppo_2-3.gif
+assets/ppo_2-3.gif
 
 # Persönliche Interview-Vorbereitung (nicht veröffentlichen)
 INTERVIEW.md

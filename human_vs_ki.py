@@ -275,7 +275,7 @@ def main() -> None:
     p_cmp.add_argument("--checkpoint", default="checkpoints/mario_best.pt")
     p_cmp.add_argument("--world", type=int, default=None, help="ohne Angabe: Level-Menü (wählt auch das Modell)")
     p_cmp.add_argument("--stage", type=int, default=None)
-    p_cmp.add_argument("--out", default=None, help="Standard: mensch_vs_ki_<world>-<stage>.gif")
+    p_cmp.add_argument("--out", default=None, help="Standard: assets/mensch_vs_ki_<world>-<stage>.gif")
     p_cmp.add_argument(
         "--trim-start", type=int, default=0,
         help="So viele Frames vom Anfang der Mensch-Aufnahme abschneiden (15 ≈ 1 Sek.)",
@@ -300,7 +300,7 @@ def main() -> None:
         record_human(world, stage, out)
     else:
         human = args.human or f"mensch_{world}-{stage}.npz"
-        out = args.out or f"mensch_vs_ki_{world}-{stage}.gif"
+        out = args.out or f"assets/mensch_vs_ki_{world}-{stage}.gif"
         compose(human, out, args.checkpoint, world, stage, args.trim_start, ppo)
 
 

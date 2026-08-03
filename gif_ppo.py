@@ -25,7 +25,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--model", default="checkpoints_ppo/mario_ppo_tuned.zip")
 parser.add_argument("--world", type=int, default=1)
 parser.add_argument("--stage", type=int, default=2)
-parser.add_argument("--out", default="ppo_1-2.gif")
+parser.add_argument("--out", default="assets/ppo_1-2.gif")
 args = parser.parse_args()
 
 model = PPO.load(args.model)

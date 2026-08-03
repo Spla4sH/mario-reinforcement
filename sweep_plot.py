@@ -52,7 +52,7 @@ def _smooth(a: np.ndarray, window: int) -> np.ndarray:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Sweep-Varianten vergleichen.")
     parser.add_argument("--dir", default="sweep_results", help="Ordner mit <variante>/run_*.csv")
-    parser.add_argument("--out", default="plots/sweep.png")
+    parser.add_argument("--out", default="assets/sweep.png")
     parser.add_argument("--window", type=int, default=20, help="Glättungsfenster (Episoden)")
     args = parser.parse_args()
 
