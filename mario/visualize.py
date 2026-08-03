@@ -18,8 +18,8 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 
-import config
-from agent import MarioAgent
+from mario import config
+from mario.agent import MarioAgent
 
 
 class GradCAM:
@@ -101,7 +101,7 @@ def visualize(
 
     import cv2  # lazy: nur für Anzeige/Overlay nötig
 
-    from wrappers import create_env  # lazy: zieht cv2/gym nach sich
+    from mario.wrappers import create_env  # lazy: zieht cv2/gym nach sich
 
     env = create_env(world=config.WORLD, stage=config.STAGE, render=False)
     agent = MarioAgent(env.action_space.n)

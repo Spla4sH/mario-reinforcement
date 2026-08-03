@@ -9,6 +9,7 @@ Erst wenn das klappt, lohnt sich Reward-Shaping/Tuning oder das Hinzunehmen weit
 ## 0. Vorbereitung (einmalig)
 ```bash
 pip install -r requirements.txt   # falls noch nicht geschehen
+pip install -e .                  # Paket 'mario' fuer scripts/ verfuegbar machen
 python -c "import torch; print('CUDA:', torch.cuda.is_available())"
 ```
 - [ ] `CUDA: True` → läuft auf der GPU (bei `False` trainiert es auf der CPU, viel langsamer)
@@ -43,7 +44,7 @@ Replay-Buffer, deshalb rutschte der Bug durch die grüne CI.
 
 ## 1. Kurzer Probelauf starten
 ```bash
-python train.py --episodes 300
+python scripts/train.py --episodes 300
 ```
 - Öffnet das Original-NES-Fenster und trainiert 300 Episoden.
 - Schreibt Metriken nach `logs/run_*.csv`, plottet alle 50 Episoden nach `plots/`.
@@ -51,7 +52,7 @@ python train.py --episodes 300
 
 Optional schneller/ohne Fenster:
 ```bash
-python train.py --episodes 300 --no-render
+python scripts/train.py --episodes 300 --no-render
 ```
 
 ## 2. Während des Laufs in der Konsole beobachten
@@ -62,7 +63,7 @@ Jede Zeile zeigt u. a. `Position`, `Best X`, `Epsilon`, `Loss`.
 
 ## 3. Graphen prüfen
 ```bash
-python plot.py
+python -m mario.plot
 ```
 Öffne das PNG in `plots/`. Erfolgskriterien:
 - [ ] **Level-Fortschritt (x_pos):** Trend (Ø-Linie) zeigt nach oben
@@ -72,7 +73,7 @@ python plot.py
 
 ## 4. Trainierten Agenten ansehen
 ```bash
-python play.py --episodes 3
+python scripts/play.py --episodes 3
 ```
 - [ ] Mario spielt im Original-Bild **greedy** (keine Zufallszüge)
 - [ ] Er kommt sichtbar weiter als ein zufälliger Anfänger (vergleiche mit erster Episode)
@@ -86,8 +87,8 @@ python play.py --episodes 3
 ## Referenz: nützliche Befehle
 | Zweck | Befehl |
 |---|---|
-| Kurzer Probelauf | `python train.py --episodes 300` |
-| Volles Training | `python train.py` |
-| Ohne Fenster (schneller) | `python train.py --no-render` |
-| Graphen erzeugen | `python plot.py` |
-| Agent zuschauen | `python play.py --episodes 3` |
+| Kurzer Probelauf | `python scripts/train.py --episodes 300` |
+| Volles Training | `python scripts/train.py` |
+| Ohne Fenster (schneller) | `python scripts/train.py --no-render` |
+| Graphen erzeugen | `python -m mario.plot` |
+| Agent zuschauen | `python scripts/play.py --episodes 3` |

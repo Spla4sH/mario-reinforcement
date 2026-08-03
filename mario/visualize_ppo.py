@@ -18,7 +18,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from visualize import GradCAM, make_overlay, _save_gif
+from mario.visualize import GradCAM, make_overlay, _save_gif
 
 
 class PolicyLogits(torch.nn.Module):
@@ -48,7 +48,7 @@ def visualize_ppo(
     import cv2  # lazy: nur für Anzeige/Overlay nötig
     from stable_baselines3 import PPO
 
-    from wrappers import create_env
+    from mario.wrappers import create_env
 
     model = PPO.load(model_path)
     policy = model.policy

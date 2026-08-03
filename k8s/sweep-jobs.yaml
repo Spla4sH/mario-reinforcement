@@ -47,7 +47,7 @@ spec:
         - name: trainer
           image: mario-rl:latest
           imagePullPolicy: Never   # Image wurde per `kind load docker-image` geladen
-          args: ["python", "train.py", "--no-render", "--episodes", "150"]
+          args: ["python", "scripts/train.py", "--no-render", "--episodes", "150"]
           env:
             - {name: LEARNING_RATE, value: "0.00025"}
             - {name: EPSILON_DECAY, value: "100000"}
@@ -81,7 +81,7 @@ spec:
         - name: trainer
           image: mario-rl:latest
           imagePullPolicy: Never
-          args: ["python", "train.py", "--no-render", "--episodes", "150"]
+          args: ["python", "scripts/train.py", "--no-render", "--episodes", "150"]
           env:
             - {name: LEARNING_RATE, value: "0.00025"}
             - {name: EPSILON_DECAY, value: "500000"}
@@ -115,7 +115,7 @@ spec:
         - name: trainer
           image: mario-rl:latest
           imagePullPolicy: Never
-          args: ["python", "train.py", "--no-render", "--episodes", "150"]
+          args: ["python", "scripts/train.py", "--no-render", "--episodes", "150"]
           env:
             - {name: LEARNING_RATE, value: "0.001"}
             - {name: EPSILON_DECAY, value: "100000"}
@@ -149,7 +149,7 @@ spec:
         - name: trainer
           image: mario-rl:latest
           imagePullPolicy: Never
-          args: ["python", "train.py", "--no-render", "--episodes", "150"]
+          args: ["python", "scripts/train.py", "--no-render", "--episodes", "150"]
           env:
             - {name: LEARNING_RATE, value: "0.0001"}
             - {name: EPSILON_DECAY, value: "100000"}

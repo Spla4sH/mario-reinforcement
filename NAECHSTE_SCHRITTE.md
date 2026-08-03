@@ -16,9 +16,9 @@ Nicht skalieren, bevor das Fundament bewiesen ist.
 ## Phase A — Smoke Test (Tag 1) ✅ bestanden
 Komplett in [TESTLAUF.md](TESTLAUF.md) beschrieben. Kurz:
 ```bash
-python train.py --episodes 300
-python plot.py
-python play.py --episodes 3
+python scripts/train.py --episodes 300
+python -m mario.plot
+python scripts/play.py --episodes 3
 ```
 **Gate:** Steigt `x_pos`/Reward im Trend? Sinkt der Loss kontrolliert?
 - ✅ Ja → weiter zu Phase B.
@@ -27,7 +27,7 @@ python play.py --episodes 3
 **Vision-GIF fürs README aufnehmen** (sobald ein halbwegs brauchbarer Checkpoint da ist –
 auch ein teiltrainierter Agent gibt schon ein cooles GIF):
 ```bash
-python visualize.py --episodes 1 --save vision.gif
+python -m mario.visualize --episodes 1 --save vision.gif
 ```
 Dann ins README einbinden (`![KI-Vision](vision.gif)`). Nach Phase B nochmal mit dem
 finalen `mario_best.pt` neu aufnehmen für die polierte Version.
@@ -390,7 +390,7 @@ für Besucher die erste Ansicht des Projekts. Vorgesehen, sortiert nach Nutzen/R
    death_map, plot, sweep_plot). **Mitziehen:** Imports, `Dockerfile`, CI-Workflow,
    `k8s/*.yaml`, `tests/`, `gen_demos.py` (importiert `app`), Space-Kopie in `deploy/`.
 3. Danach einmal komplett verifizieren: ruff, pytest, Kurz-Training, ein Eval,
-   `gen_demos.py <level>`, `python app.py`.
+   `gen_demos.py <level>`, `python scripts/app.py`.
 
 **Wichtig:** als *ein* Commit, der nur verschiebt und Pfade anpasst (keine inhaltlichen
 Änderungen), und **nicht** zwischen zwei langen Trainingsläufen – ein Fehler soll keinen

@@ -1,6 +1,6 @@
 """Tests für die Greedy-Evaluation (evaluate.evaluate) mit Fake-Objekten."""
 
-from evaluate import evaluate
+from mario.evaluate import evaluate
 
 
 class FakeAgent:

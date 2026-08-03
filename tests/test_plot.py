@@ -4,8 +4,8 @@ from pathlib import Path
 
 import numpy as np
 
-from metrics import MetricsLogger
-from plot import _moving_average, _read_csv, generate_plots
+from mario.metrics import MetricsLogger
+from mario.plot import _moving_average, _read_csv, generate_plots
 
 
 def test_moving_average_basic():

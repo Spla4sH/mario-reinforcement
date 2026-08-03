@@ -7,8 +7,8 @@ import gym
 import numpy as np
 from gym.spaces import Box
 
-import config
-from reward import shape_reward
+from mario import config
+from mario.reward import shape_reward
 
 
 class SkipFrame(gym.Wrapper):

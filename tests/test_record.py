@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from record import record_frames
+from mario.record import record_frames
 
 
 class FakeAgent:

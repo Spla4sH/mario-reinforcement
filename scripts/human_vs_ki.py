@@ -46,7 +46,7 @@ def _level_menu() -> dict:
     an der Level und Modelle gepflegt werden. Rückgabe: dict mit
     ``type`` (dqn/ppo), ``path`` (Modell), ``world``, ``stage``.
     """
-    from app import LEVELS
+    from mario.demo import LEVELS
 
     entries = list(LEVELS.items())
     print("\nGegen welches Level willst du antreten?")
@@ -184,8 +184,8 @@ def compose(
     """Baut das Side-by-Side-GIF: links Mensch, rechts Agent (greedy)."""
     from PIL import Image, ImageDraw
 
-    from record import record_frames, save_gif
-    from wrappers import create_env
+    from mario.record import record_frames, save_gif
+    from mario.wrappers import create_env
 
     import os
 
@@ -223,7 +223,7 @@ def compose(
         agent = _PpoGreedy(ppo)
         ki_label = "KI (PPO)"
     else:
-        from agent import MarioAgent
+        from mario.agent import MarioAgent
 
         agent = MarioAgent(env.action_space.n)
         agent.load(checkpoint)

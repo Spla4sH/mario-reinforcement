@@ -195,8 +195,8 @@ def bc_seq(seq_path: str, model_path: str, out: str, epochs: int, lr: float, bat
     import torch
     from stable_baselines3 import PPO
 
-    import config
-    from wrappers import create_env
+    from mario import config
+    from mario.wrappers import create_env
 
     data = np.load(seq_path)
     if "aktionen" in data:

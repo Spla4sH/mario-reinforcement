@@ -32,7 +32,7 @@ spec:
         - name: trainer
           # An deine Registry anpassen (z. B. GHCR):
           image: ghcr.io/spla4sh/mario-reinforcement:latest
-          args: ["python", "train.py", "--no-render", "--episodes", "2000"]
+          args: ["python", "scripts/train.py", "--no-render", "--episodes", "2000"]
           resources:
             limits:
               nvidia.com/gpu: 1   # eine GPU anfordern

@@ -19,7 +19,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Das Paket "mario" editierbar installieren, damit scripts/*.py es findet.
+RUN pip install --no-cache-dir -e .
+
 # Standard: Training ohne Live-Fenster (im Container gibt es kein Display).
 # Episodenzahl o. Ä. lassen sich beim Start überschreiben:
-#   docker run --gpus all mario-rl python train.py --no-render --episodes 2000
-CMD ["python", "train.py", "--no-render"]
+#   docker run --gpus all mario-rl python scripts/train.py --no-render --episodes 2000
+CMD ["python", "scripts/train.py", "--no-render"]

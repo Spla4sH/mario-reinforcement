@@ -11,9 +11,9 @@ import argparse
 import time
 from pathlib import Path
 
-import config
-from wrappers import create_env
-from agent import MarioAgent
+from mario import config
+from mario.wrappers import create_env
+from mario.agent import MarioAgent
 
 
 def play(episodes=5, checkpoint="checkpoints/mario_agent.pt"):

@@ -65,8 +65,8 @@ def main() -> None:
     if not args.model and not args.head_seq:
         parser.error("--model oder --head-seq angeben")
 
-    import config
-    from wrappers import create_env
+    from mario import config
+    from mario.wrappers import create_env
 
     print(f"FRAME_SKIP={config.FRAME_SKIP} | Anlauf: {args.head_seq or args.model}")
 

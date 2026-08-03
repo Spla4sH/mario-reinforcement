@@ -2,8 +2,8 @@
 
 import torch
 
-from model import MarioNet
-from visualize import GradCAM
+from mario.model import MarioNet
+from mario.visualize import GradCAM
 
 
 def test_gradcam_returns_valid_action_and_heatmap():

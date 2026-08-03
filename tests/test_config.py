@@ -2,7 +2,7 @@
 
 import importlib
 
-import config as config_module
+from mario import config as config_module
 
 
 def test_env_overrides_apply(monkeypatch):
@@ -51,7 +51,7 @@ def test_action_set_default_und_down(monkeypatch):
     """
     import importlib
 
-    import config
+    from mario import config
 
     monkeypatch.delenv("ACTION_SET", raising=False)
     importlib.reload(config)
@@ -77,7 +77,7 @@ def test_create_env_signatur_kennt_action_set():
     import ast
     import pathlib
 
-    quelle = pathlib.Path(__file__).resolve().parent.parent / "wrappers.py"
+    quelle = pathlib.Path(__file__).resolve().parent.parent / "mario" / "wrappers.py"
     baum = ast.parse(quelle.read_text(encoding="utf-8"))
     funktionen = {k.name: k for k in ast.walk(baum) if isinstance(k, ast.FunctionDef)}
     assert "create_env" in funktionen
@@ -100,7 +100,7 @@ def test_bitmaske_zu_aktion():
     import importlib.util
     import pathlib
 
-    quelle = pathlib.Path(__file__).resolve().parent.parent / "human_vs_ki.py"
+    quelle = pathlib.Path(__file__).resolve().parent.parent / "scripts" / "human_vs_ki.py"
     spec = importlib.util.spec_from_file_location("hvk", quelle)
     hvk = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(hvk)

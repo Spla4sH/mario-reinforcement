@@ -85,8 +85,8 @@ class _DqnPredictor:
     def __init__(self, path: str):
         import torch
 
-        from agent import MarioAgent
-        from visualize import GradCAM
+        from mario.agent import MarioAgent
+        from mario.visualize import GradCAM
 
         self._torch = torch
         self.agent = MarioAgent(_ACTIONS)
@@ -118,8 +118,8 @@ class _PpoPredictor:
 
         from stable_baselines3 import PPO
 
-        from visualize import GradCAM
-        from visualize_ppo import PolicyLogits
+        from mario.visualize import GradCAM
+        from mario.visualize_ppo import PolicyLogits
 
         self._torch = torch
         self.model = PPO.load(path)
@@ -159,9 +159,9 @@ def _upscale(rgb, scale: int = 2):
 
 def run_episode(level_key: str, show_cam: bool = True):
     """Spielt eine greedy Episode des gewählten Levels; gibt (GIF-Pfad, Text) zurück."""
-    from visualize import make_overlay
-    from record import save_gif
-    from wrappers import create_env
+    from mario.visualize import make_overlay
+    from mario.record import save_gif
+    from mario.wrappers import create_env
 
     level = LEVELS.get(level_key) or next(iter(LEVELS.values()))
     if not os.path.exists(level["path"]):

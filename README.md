@@ -78,12 +78,15 @@ cd mario-reinforcement
 # Abhängigkeiten installieren
 pip install -r requirements.txt
 
+# Paket editierbar installieren, damit scripts/ die Kernmodule findet
+pip install -e .
+
 # Training starten (öffnet Live-Spielfenster)
-python train.py
+python scripts/train.py
 
 # Kurzer Probelauf (z. B. zum Testen), optional ohne Fenster
-python train.py --episodes 300
-python train.py --episodes 300 --no-render
+python scripts/train.py --episodes 300
+python scripts/train.py --episodes 300 --no-render
 ```
 
 **Voraussetzungen:**
@@ -96,7 +99,7 @@ python train.py --episodes 300 --no-render
 > [v1.2](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.2) = Welt 6,
 > [v1.3](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.3) = Welt 7+8) –
 > `mario_best.pt` nach `checkpoints/`, die `.zip`-Modelle nach `checkpoints_ppo/` legen,
-> dann direkt `python play.py` bzw. `python play_ppo.py --model … --world … --stage …`.
+> dann direkt `python scripts/play.py` bzw. `python scripts/play_ppo.py --model … --world … --stage …`.
 
 > Erster Probelauf? Folge der Checkliste in [TESTLAUF.md](TESTLAUF.md).
 
@@ -107,7 +110,7 @@ python train.py --episodes 300 --no-render
 docker build -t mario-rl .
 
 # Training im Container starten (GPU durchreichen)
-docker run --gpus all mario-rl python train.py --no-render --episodes 2000
+docker run --gpus all mario-rl python scripts/train.py --no-render --episodes 2000
 ```
 
 Für den Cluster liegt unter [k8s/](k8s/) ein Kubernetes-`Job` inkl. `PersistentVolumeClaim`
@@ -131,7 +134,7 @@ Push automatisch per [GitHub Actions](.github/workflows/ci.yml) ausgeführt.
 
 ```bash
 pip install wandb && wandb login
-USE_WANDB=1 python train.py --no-render
+USE_WANDB=1 python scripts/train.py --no-render
 ```
 
 Loggt Live-Metriken (Reward, x-Position, Epsilon, Loss) und die Greedy-Eval in ein
@@ -143,37 +146,44 @@ Training unverändert ohne Tracking weiter.
 
 ```
 mario-reinforcement/
-├── train.py          # Hauptskript - DQN-Training mit Live-Anzeige
-├── train_ppo.py      # PPO-Training (Stable-Baselines3, separates venv, s. requirements-ppo.txt)
-├── mario_ppo_env.py  # Gymnasium-Brücke (shimmy) für PPO
-├── goexplore.py      # Savestate-Suche gegen Hard-Exploration-Stellen (Go-Explore-Idee)
-├── imitate.py        # Demo aufnehmen + Behavior Cloning (bc / bc-seq)
-├── human_vs_ki.py    # Eigenen Lauf aufnehmen + Side-by-Side-GIF gegen den Agenten
-├── play.py           # Trainierten Agenten greedy zuschauen (Originalbild)
-├── play_ppo.py       # PPO-Agenten live zuschauen (auch Zwischenstände)
-├── visualize.py      # KI-Vision-Overlay (Grad-CAM) - was sieht die KI?
-├── visualize_ppo.py  # Dasselbe für PPO (SB3-CnnPolicy) - DQN-vs-PPO-Vergleich
-├── app.py            # Gradio-Demo: 32 Level im Browser (Dropdown + Grad-CAM-Toggle)
-├── gen_demos.py      # Vorberechnete Demo-MP4s + results.json für den HF-Space erzeugen
-├── eval_ppo.py       # Greedy-Eval eines PPO-Modells (Flaggen-Rate über N Episoden)
-├── gif_ppo.py        # Deterministische PPO-Episode als GIF (README-Assets)
-├── record.py         # Episode als GIF aufnehmen (Auto-Highlight + Demo)
-├── death_map.py      # „Wo stirbt Mario?"-Grafik: Todes-Dichten über Level-Panorama
-├── agent.py          # Double DQN Agent + Replay Memory
-├── model.py          # CNN-Architektur
-├── wrappers.py       # Bildvorverarbeitung & Environment-Wrapper
-├── reward.py         # Reward-Shaping (Skalierung/Clipping)
-├── evaluate.py       # Greedy-Evaluation (flag_get-Rate, x-Position)
-├── metrics.py        # CSV-Logging der Trainingsmetriken
-├── plot.py           # Graphen aus den Metriken erzeugen
-├── sweep_plot.py     # Sweep-Varianten vergleichen (Epsilon/Loss/x-Position)
-├── tracking.py       # Optionales W&B-Experiment-Tracking (ausfallsicher)
-├── config.py         # Hyperparameter (per Env-Variablen überschreibbar)
-├── tests/            # pytest-Suite
-├── Dockerfile        # Headless-Training als Container
-├── k8s/              # Kubernetes: Trainings-Job, Hyperparameter-Sweep, Reader-Pod
-├── deploy/           # Hugging Face Space (statische Demo-App) – siehe DEPLOY.md
-├── .github/          # GitHub-Actions-CI (Lint + Tests)
+├── mario/                # importierbares Paket (alles, was mehrfach gebraucht wird)
+│   ├── agent.py          # Double DQN Agent + Replay Memory
+│   ├── model.py          # CNN-Architektur
+│   ├── wrappers.py       # Bildvorverarbeitung & Environment-Wrapper
+│   ├── reward.py         # Reward-Shaping (Skalierung/Clipping, ProgressReward)
+│   ├── config.py         # Hyperparameter (per Env-Variablen überschreibbar)
+│   ├── metrics.py        # CSV-Logging der Trainingsmetriken
+│   ├── evaluate.py       # Greedy-Evaluation (flag_get-Rate, x-Position)
+│   ├── tracking.py       # Optionales W&B-Experiment-Tracking (ausfallsicher)
+│   ├── mario_ppo_env.py  # Gymnasium-Brücke (shimmy) für PPO
+│   ├── record.py         # Frames sammeln + als GIF speichern
+│   ├── plot.py           # Graphen aus den Metriken
+│   ├── visualize.py      # Grad-CAM fürs DQN – auch per `python -m mario.visualize`
+│   ├── visualize_ppo.py  # Grad-CAM für PPO (SB3-CnnPolicy)
+│   └── demo.py           # Level-Tabelle + Predictoren der Gradio-Demo
+│
+├── scripts/              # alles Ausführbare
+│   ├── train.py          # DQN-Training mit Live-Anzeige
+│   ├── train_ppo.py      # PPO-Training (Stable-Baselines3, eigenes venv)
+│   ├── play.py           # Trainierten DQN-Agenten greedy zuschauen
+│   ├── play_ppo.py       # PPO-Agenten live zuschauen (auch Zwischenstände)
+│   ├── eval_ppo.py       # Greedy-Eval: Flaggen-Rate über N Episoden
+│   ├── goexplore.py      # Savestate-Suche gegen Hard-Exploration-Stellen
+│   ├── imitate.py        # Behavior Cloning (bc / bc-seq)
+│   ├── human_vs_ki.py    # Eigenen Lauf aufnehmen + Side-by-Side-GIF
+│   ├── gen_demos.py      # Demo-MP4s + results.json für den HF-Space
+│   ├── gif_ppo.py        # Deterministische PPO-Episode als GIF
+│   ├── death_map.py      # „Wo stirbt Mario?" – Todes-Dichten über Level-Panorama
+│   ├── sweep_plot.py     # Sweep-Varianten vergleichen
+│   └── app.py            # Startet die lokale Gradio-Demo
+│
+├── assets/               # GIFs und Grafiken fürs README
+├── tests/                # pytest-Suite (läuft ohne Emulator und GPU)
+├── k8s/                  # Kubernetes: Trainings-Job, Sweep, Reader-Pod
+├── deploy/               # Hugging Face Space (statische Demo) – siehe DEPLOY.md
+├── .github/              # GitHub-Actions-CI (Lint + Tests)
+├── Dockerfile            # Headless-Training als Container
+├── pyproject.toml        # Paket-, Lint- und Test-Konfiguration
 └── requirements.txt
 ```
 
@@ -530,11 +540,11 @@ Links-Sprung), der Agent hat weiterhin nur seine 7 Aktions-Kombos:
 # 1. Selbst spielen – ein Terminal-Menü fragt das Level ab (1-1 … 4-4).
 #    Steuerung: WASD = laufen/ducken, Leertaste/O = springen, Shift/P = rennen;
 #    ESC beendet. Aufgenommen wird ab der ersten Eingabe bis Tod oder Flagge.
-python human_vs_ki.py record
+python scripts/human_vs_ki.py record
 
 # 2. Side-by-Side-GIF bauen – dasselbe Menü wählt auch das passende Modell
 #    (1-1 = DQN; alle PPO-Level im .venv-ppo ausführen):
-python human_vs_ki.py compose
+python scripts/human_vs_ki.py compose
 ```
 
 Level und Modell lassen sich auch explizit setzen (`--world/--stage/--ppo`), dann
@@ -574,7 +584,7 @@ kubectl get pods -l sweep=mario -w              # zuschauen
 # danach: Ergebnisse einsammeln + Vergleichsplot
 kubectl apply -f k8s/reader-pod.yaml && kubectl wait --for=condition=Ready pod/mario-sweep-reader
 kubectl cp mario-sweep-reader:/data/logs ./sweep_results
-python sweep_plot.py --dir sweep_results --out assets/sweep.png
+python scripts/sweep_plot.py --dir sweep_results --out assets/sweep.png
 ```
 
 Der Weg dahin war lehrreicher als das Ergebnis (Details in den Manifest-Kommentaren):
@@ -589,20 +599,20 @@ hochdrehen.
 
 ```bash
 # Einem trainierten Agenten live im Original-Spielbild zuschauen (kein Training)
-python play.py --episodes 5
+python scripts/play.py --episodes 5
 
 # Graphen aus der neuesten Trainings-CSV erzeugen (logs/ -> plots/)
-python plot.py
+python -m mario.plot
 ```
 
 ### KI-Vision: Was sieht die KI? (Grad-CAM)
 
 ```bash
 # Heatmap-Overlay live anzeigen – rot = wichtig für die gewählte Aktion
-python visualize.py --episodes 2
+python -m mario.visualize --episodes 2
 
 # Zusätzlich als GIF speichern (z. B. für dieses README)
-python visualize.py --episodes 1 --save assets/vision.gif
+python -m mario.visualize --episodes 1 --save assets/vision.gif
 ```
 
 Per **Grad-CAM** wird der letzte Convolution-Layer ausgewertet und als Heatmap über
@@ -621,19 +631,19 @@ diffuseren Grundpegel. Nebenbefund: PPO erreicht die Flagge ~25 % schneller. PPO
 
 ```bash
 # PPO-Vision (im .venv-ppo; --no-window für headless GIF-Export)
-python visualize_ppo.py --model checkpoints_ppo/mario_ppo_gen_welt1.zip --episodes 1
+python -m mario.visualize_ppo --model checkpoints_ppo/mario_ppo_gen_welt1.zip --episodes 1
 ```
 
 ### Live-Demo im Browser (Gradio)
 
 ```bash
 pip install gradio
-python app.py        # öffnet eine lokale Web-Demo
+python scripts/app.py        # öffnet eine lokale Web-Demo
 ```
 
 Eine **Gradio-App** zeigt jeden der **32 gelösten Level** im Browser – Dropdown zur
 Level-Auswahl (1‑1 DQN, Rest PPO), Checkbox für das Grad-CAM-Overlay, Lauf bis zur Flagge.
-Lokal (`python app.py`) rechnet die App live; der öffentliche Space zeigt **vorberechnete
+Lokal (`python scripts/app.py`) rechnet die App live; der öffentliche Space zeigt **vorberechnete
 Videos** (per `gen_demos.py` erzeugt).
 
 **➡️ Live ausprobieren: [huggingface.co/spaces/Spl4sH/mario-reinforcement](https://huggingface.co/spaces/Spl4sH/mario-reinforcement)** 🍄

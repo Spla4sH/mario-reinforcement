@@ -46,8 +46,8 @@ SKY = (104, 136, 252)  # SMB-Himmelblau für nie gesehene Spalten
 
 def build_panorama(x_max: int, checkpoint: str) -> np.ndarray:
     """Greedy-Lauf aufnehmen und die Frames zu einem Level-Streifen vernähen."""
-    from agent import MarioAgent
-    from wrappers import create_env
+    from mario.agent import MarioAgent
+    from mario.wrappers import create_env
 
     env = create_env(world=1, stage=1, render=False)
     nes = env.unwrapped

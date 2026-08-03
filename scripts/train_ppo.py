@@ -70,7 +70,7 @@ def main() -> None:
         VecNormalize,
     )
 
-    from mario_ppo_env import mario_env_thunk
+    from mario.mario_ppo_env import mario_env_thunk
 
     # Generalist-Modus: parallele Envs round-robin auf mehrere Stages verteilen,
     # damit jeder Rollout-Batch alle Level gleichzeitig enthält.

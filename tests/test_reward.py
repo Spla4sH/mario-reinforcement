@@ -1,6 +1,6 @@
 """Tests für das Reward-Shaping (reward.shape_reward)."""
 
-from reward import shape_reward
+from mario.reward import shape_reward
 
 
 def test_scale_divides():

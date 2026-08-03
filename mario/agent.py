@@ -7,8 +7,8 @@ import torch.nn.functional as F
 from collections import deque
 from pathlib import Path
 
-from model import MarioNet
-import config
+from mario.model import MarioNet
+from mario import config
 
 
 class ReplayMemory:

@@ -8,25 +8,25 @@ Hugging-Face-Space hochgeladen (siehe DEPLOY.md) – der Space braucht dann kein
 ML-Stack mehr.
 
 Ausführen im .venv-ppo (braucht torch für DQN *und* SB3 für PPO), aus dem Repo-Root:
-    .venv-ppo/Scripts/python gen_demos.py            # alle Level
-    .venv-ppo/Scripts/python gen_demos.py 4-4        # nur Level, deren Name "4-4" enthält
+    .venv-ppo/Scripts/python scripts/gen_demos.py            # alle Level
+    .venv-ppo/Scripts/python scripts/gen_demos.py 4-4        # nur Level, deren Name "4-4" enthält
                                                      # (results.json wird dabei ergänzt)
 """
 import json
 import os
 import sys
 
-sys.stdout.reconfigure(encoding="utf-8")
+import imageio.v2 as imageio
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from mario import demo as app  # liefert LEVELS + Predictoren
+from mario.visualize import make_overlay
+from mario.wrappers import create_env
 
-import imageio.v2 as imageio  # noqa: E402
+sys.stdout.reconfigure(encoding="utf-8")  # Level-Labels enthalten Umlaute
 
-import app  # noqa: E402  (die lokale Live-App liefert LEVELS + Predictoren)
-from visualize import make_overlay  # noqa: E402
-from wrappers import create_env  # noqa: E402
-
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "hf_space", "demos")
+# Repo-Wurzel = ein Verzeichnis ueber scripts/
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUT = os.path.join(_ROOT, "hf_space", "demos")
 os.makedirs(OUT, exist_ok=True)
 
 

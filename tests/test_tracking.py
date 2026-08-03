@@ -4,7 +4,7 @@ In der Testumgebung ist ``wandb`` nicht installiert – der Tracker muss in jede
 Fall geräuschlos zur No-Op werden, ohne das Training zu stören.
 """
 
-from tracking import Tracker
+from mario.tracking import Tracker
 
 
 def test_disabled_is_noop():

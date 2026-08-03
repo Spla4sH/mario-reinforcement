@@ -23,7 +23,7 @@ def main() -> None:
 
     from stable_baselines3 import PPO
 
-    from wrappers import create_env
+    from mario.wrappers import create_env
 
     # Altes gym-Env reicht hier: SB3s predict() arbeitet direkt auf der
     # Beobachtung (transponiert Bilder selbst), die 5er-Tupel-API ist egal.

@@ -9,14 +9,14 @@ from pathlib import Path
 import numpy as np
 import torch
 
-import config
-from agent import MarioAgent
-from evaluate import evaluate
-from metrics import MetricsLogger
-from plot import generate_plots
-from record import record_frames, save_gif
-from tracking import Tracker
-from wrappers import create_env
+from mario import config
+from mario.agent import MarioAgent
+from mario.evaluate import evaluate
+from mario.metrics import MetricsLogger
+from mario.plot import generate_plots
+from mario.record import record_frames, save_gif
+from mario.tracking import Tracker
+from mario.wrappers import create_env
 
 # Ausgabe auf UTF-8 zwingen: Windows schreibt beim Umleiten in eine Datei sonst
 # in cp1252 – Umlaute/ß/Ø erscheinen dann in UTF-8-Editoren als �. Best effort.

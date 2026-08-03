@@ -21,7 +21,7 @@ def make_mario_env(world: int = 1, stage: int = 1):
     """
     from shimmy import GymV21CompatibilityV0
 
-    from wrappers import create_env
+    from mario.wrappers import create_env
 
     old_gym_env = create_env(world=world, stage=stage, render=False)
     # shimmy bridget die alte gym-0.21–0.25-API auf Gymnasium – kein Env-Port.

@@ -17,7 +17,7 @@ braucht **nur Gradio** – kein torch, kein Stable-Baselines3, kein Emulator.
 
 1. **Demos lokal erzeugen** (einmalig bzw. wenn neue Level dazukommen):
    ```bash
-   .venv-ppo/Scripts/python gen_demos.py
+   .venv-ppo/Scripts/python scripts/gen_demos.py
    ```
    Erzeugt pro Level zwei MP4s (mit/ohne Grad-CAM, H.264, 512×480) plus `results.json`
    nach `hf_space/demos/` – zusammen ~93 MB für 28 Level.
@@ -79,6 +79,6 @@ Die dabei gesammelten Erkenntnisse, falls jemand den Weg erneut versucht:
 
 ## Alternative ohne Hosting
 
-Wenn dir der Space zu viel ist: lokal `python visualize.py --save vision.gif` (oder das
+Wenn dir der Space zu viel ist: lokal `python -m mario.visualize --save vision.gif` (oder das
 automatische `highlights/best_run.gif`) erzeugen und als GIF ins README einbetten – null
 Hosting, funktioniert immer.

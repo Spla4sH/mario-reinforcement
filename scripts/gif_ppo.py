@@ -13,7 +13,7 @@ import numpy as np
 from PIL import Image
 from stable_baselines3 import PPO
 
-from mario_ppo_env import make_mario_env
+from mario.mario_ppo_env import make_mario_env
 
 for _s in (sys.stdout, sys.stderr):
     try:

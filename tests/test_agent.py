@@ -3,9 +3,9 @@
 import numpy as np
 import torch
 
-import config
-from agent import MarioAgent
-from model import MarioNet
+from mario import config
+from mario.agent import MarioAgent
+from mario.model import MarioNet
 
 
 def _state():

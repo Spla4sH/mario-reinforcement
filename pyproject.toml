@@ -1,3 +1,21 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mario-rl"
+version = "1.3.0"
+description = "Reinforcement Learning fuer Super Mario Bros (Double DQN + PPO)"
+requires-python = ">=3.10"
+
+# Abhaengigkeiten bleiben bewusst in requirements.txt / requirements-ppo.txt:
+# DQN und PPO laufen in getrennten venvs mit unvereinbaren Pins (gym 0.25 gegen
+# gymnasium). Hier wird nur das Paket selbst installierbar gemacht ("pip install -e ."),
+# damit scripts/*.py die Kernmodule findet, ohne sys.path zu manipulieren.
+
+[tool.setuptools]
+packages = ["mario"]
+
 [tool.ruff]
 line-length = 120
 target-version = "py310"

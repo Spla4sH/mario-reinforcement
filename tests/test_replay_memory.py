@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from agent import ReplayMemory
+from mario.agent import ReplayMemory
 
 
 def _state():

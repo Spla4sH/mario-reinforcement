@@ -26,6 +26,8 @@ jobs:
             || pip install torch
           pip install numpy matplotlib
           pip install -r requirements-dev.txt
+          # Paket editierbar installieren: die Tests importieren mario.*
+          pip install -e .
 
       - name: Linting (ruff)
         run: ruff check .

@@ -2,7 +2,7 @@
 
 import csv
 
-from metrics import FIELDNAMES, MetricsLogger
+from mario.metrics import FIELDNAMES, MetricsLogger
 
 
 def test_writes_header_and_rows(tmp_path):
