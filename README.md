@@ -32,6 +32,16 @@ anderes gesehen hat als die Pixel auf dem Bildschirm.*
 
 *Der trainierte Agent löst 1-1 – das rote Leuchten (Grad-CAM) zeigt, worauf das CNN pro Aktion achtet.*
 
+**Inhalt:** [Scoreboard](#scoreboard-alle-32-level) ·
+[Welt für Welt](#ppo-agent-welt-1-komplett-stable-baselines3) ·
+[Wenn der Agent scheitert](#wenn-der-agent-scheitert) ·
+[Mensch vs. KI](#mensch-vs-ki) ·
+[Wo stirbt Mario?](#analyse-wo-stirbt-mario) ·
+[K8s-Sweep](#mlops-hyperparameter-sweep-als-parallele-kubernetes-jobs) ·
+[Grad-CAM](#ki-vision-was-sieht-die-ki-grad-cam) ·
+[Setup](#setup-selbst-ausprobieren) ·
+[Roadmap](#roadmap)
+
 ## Was passiert hier?
 
 Ein neuronales Netz lernt **Super Mario Bros nur aus den Pixeln** – und hat damit
@@ -42,6 +52,26 @@ auszuweichen – niemand sagt ihr, *wie* man spielt, nur dass rechts gut ist und
 Sterben schlecht.
 
 **Du kannst live zuschauen**, wie Mario anfangs planlos herumläuft und nach und nach besser wird.
+
+## Scoreboard: alle 32 Level
+
+Jede Zelle steht für ein gelöstes Level – **20 von 20 greedy-Episoden bis zur Flagge**,
+das Erfolgskriterium war vorab festgelegt.
+
+| Welt | -1 | -2 | -3 | -4 | Der interessante Fall dieser Welt |
+|:---:|:---:|:---:|:---:|:---:|---|
+| **1** | 🏁 | 🏁 | 🏁 | 🏁 | **1-1** als einziges Level mit selbst gebautem Double DQN; 1-2 zwang zum Umstieg auf PPO |
+| **2** | 🏁 | 🏁 | 🏁 | 🏁 | **2-1**: den Trampolin-Sprung fand kein Training – erst eine Savestate-Suche |
+| **3** | 🏁 | 🏁 | 🏁 | 🏁 | alle vier im ersten Anlauf – die Pipeline war eingespielt |
+| **4** | 🏁 | 🏁 | 🏁 | 🏁 | **4-4**: der Agent lernte, im Kreis zu laufen, weil genau das belohnt wurde |
+| **5** | 🏁 | 🏁 | 🏁 | 🏁 | **5-3**: gelöst per **Transfer** vom baugleichen 1-3, nachdem vier Ansätze scheiterten |
+| **6** | 🏁 | 🏁 | 🏁 | 🏁 | **6-3**: derselbe Transfer-Trick schlug fehl – ähnlicher Leveltyp ist kein Zwilling |
+| **7** | 🏁 | 🏁 | 🏁 | 🏁 | **7-4**: Labyrinth mit fünf Gates, vier Suchstufen, 762 geklonte Schritte |
+| **8** | 🏁 | 🏁 | 🏁 | 🏁 | **8-4**: das Finale gegen Bowser – und der teuerste Messfehler des Projekts |
+
+Die Umgebung ist bei greedy-Spiel deterministisch. „20/20" heißt also **zuverlässig
+reproduzierbar**, nicht robust gegen Störungen – die ehrliche Einordnung dazu steht
+in den Welt-Abschnitten.
 
 ## Wie funktioniert es?
 
@@ -66,125 +96,6 @@ Epsilon-Greedy Aktionsauswahl --> Mario bewegt sich
     |
     v
 Belohnung + neuer Zustand --> Replay Memory --> Training
-```
-
-## Setup
-
-```bash
-# Repository klonen
-git clone https://github.com/Spla4sH/mario-reinforcement.git
-cd mario-reinforcement
-
-# Abhängigkeiten installieren
-pip install -r requirements.txt
-
-# Paket editierbar installieren, damit scripts/ die Kernmodule findet
-pip install -e .
-
-# Training starten (öffnet Live-Spielfenster)
-python scripts/train.py
-
-# Kurzer Probelauf (z. B. zum Testen), optional ohne Fenster
-python scripts/train.py --episodes 300
-python scripts/train.py --episodes 300 --no-render
-```
-
-**Voraussetzungen:**
-- Python 3.10+
-- NVIDIA GPU mit CUDA empfohlen (CPU funktioniert, aber deutlich langsamer)
-
-> **Ohne eigenes Training loslegen:** Alle 32 trainierten Modelle gibt es als Release
-> ([v1.0](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.0) = Welt 1–4,
-> [v1.1](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.1) = Welt 5,
-> [v1.2](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.2) = Welt 6,
-> [v1.3](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.3) = Welt 7+8) –
-> `mario_best.pt` nach `checkpoints/`, die `.zip`-Modelle nach `checkpoints_ppo/` legen,
-> dann direkt `python scripts/play.py` bzw. `python scripts/play_ppo.py --model … --world … --stage …`.
-
-> Erster Probelauf? Folge der Checkliste in [TESTLAUF.md](TESTLAUF.md).
-
-### Mit Docker (headless Training)
-
-```bash
-# Image bauen
-docker build -t mario-rl .
-
-# Training im Container starten (GPU durchreichen)
-docker run --gpus all mario-rl python scripts/train.py --no-render --episodes 2000
-```
-
-Für den Cluster liegt unter [k8s/](k8s/) ein Kubernetes-`Job` inkl. `PersistentVolumeClaim`
-(GPU-Request, Checkpoints/Logs persistent) – und der
-[Hyperparameter-Sweep](#mlops-hyperparameter-sweep-als-parallele-kubernetes-jobs) weiter
-unten wurde damit real ausgeführt.
-
-### Tests & Linting
-
-```bash
-pip install -r requirements-dev.txt
-ruff check .   # Linting
-pytest         # Tests
-```
-
-Die Tests laufen ohne Emulator/GPU (sie prüfen Replay-Memory, Metriken, Plots,
-Reward-Shaping, Greedy-Eval, Grad-CAM-Logik und die Config) und werden bei jedem
-Push automatisch per [GitHub Actions](.github/workflows/ci.yml) ausgeführt.
-
-### Experiment-Tracking (optional, Weights & Biases)
-
-```bash
-pip install wandb && wandb login
-USE_WANDB=1 python scripts/train.py --no-render
-```
-
-Loggt Live-Metriken (Reward, x-Position, Epsilon, Loss) und die Greedy-Eval in ein
-**W&B-Dashboard** – ideal, um Trainingsläufe zu vergleichen und Hyperparameter-Sweeps
-auszuwerten. Ist `wandb` nicht installiert oder `USE_WANDB` nicht gesetzt, läuft das
-Training unverändert ohne Tracking weiter.
-
-## Projektstruktur
-
-```
-mario-reinforcement/
-├── mario/                # importierbares Paket (alles, was mehrfach gebraucht wird)
-│   ├── agent.py          # Double DQN Agent + Replay Memory
-│   ├── model.py          # CNN-Architektur
-│   ├── wrappers.py       # Bildvorverarbeitung & Environment-Wrapper
-│   ├── reward.py         # Reward-Shaping (Skalierung/Clipping, ProgressReward)
-│   ├── config.py         # Hyperparameter (per Env-Variablen überschreibbar)
-│   ├── metrics.py        # CSV-Logging der Trainingsmetriken
-│   ├── evaluate.py       # Greedy-Evaluation (flag_get-Rate, x-Position)
-│   ├── tracking.py       # Optionales W&B-Experiment-Tracking (ausfallsicher)
-│   ├── mario_ppo_env.py  # Gymnasium-Brücke (shimmy) für PPO
-│   ├── record.py         # Frames sammeln + als GIF speichern
-│   ├── plot.py           # Graphen aus den Metriken
-│   ├── visualize.py      # Grad-CAM fürs DQN – auch per `python -m mario.visualize`
-│   ├── visualize_ppo.py  # Grad-CAM für PPO (SB3-CnnPolicy)
-│   └── demo.py           # Level-Tabelle + Predictoren der Gradio-Demo
-│
-├── scripts/              # alles Ausführbare
-│   ├── train.py          # DQN-Training mit Live-Anzeige
-│   ├── train_ppo.py      # PPO-Training (Stable-Baselines3, eigenes venv)
-│   ├── play.py           # Trainierten DQN-Agenten greedy zuschauen
-│   ├── play_ppo.py       # PPO-Agenten live zuschauen (auch Zwischenstände)
-│   ├── eval_ppo.py       # Greedy-Eval: Flaggen-Rate über N Episoden
-│   ├── goexplore.py      # Savestate-Suche gegen Hard-Exploration-Stellen
-│   ├── imitate.py        # Behavior Cloning (bc / bc-seq)
-│   ├── human_vs_ki.py    # Eigenen Lauf aufnehmen + Side-by-Side-GIF
-│   ├── gen_demos.py      # Demo-MP4s + results.json für den HF-Space
-│   ├── gif_ppo.py        # Deterministische PPO-Episode als GIF
-│   ├── death_map.py      # „Wo stirbt Mario?" – Todes-Dichten über Level-Panorama
-│   ├── sweep_plot.py     # Sweep-Varianten vergleichen
-│   └── app.py            # Startet die lokale Gradio-Demo
-│
-├── assets/               # GIFs und Grafiken fürs README
-├── tests/                # pytest-Suite (läuft ohne Emulator und GPU)
-├── k8s/                  # Kubernetes: Trainings-Job, Sweep, Reader-Pod
-├── deploy/               # Hugging Face Space (statische Demo) – siehe DEPLOY.md
-├── .github/              # GitHub-Actions-CI (Lint + Tests)
-├── Dockerfile            # Headless-Training als Container
-├── pyproject.toml        # Paket-, Lint- und Test-Konfiguration
-└── requirements.txt
 ```
 
 ## PPO-Agent: Welt 1 komplett (Stable-Baselines3)
@@ -663,6 +574,125 @@ Während des Trainings werden alle Metriken pro Episode nach `logs/run_*.csv`
 geschrieben und bei jedem Checkpoint automatisch als Graph nach `plots/` geplottet.
 Die ROM ist im Paket `gym-super-mario-bros` enthalten – es muss nichts separat
 heruntergeladen werden.
+
+## Setup: selbst ausprobieren
+
+```bash
+# Repository klonen
+git clone https://github.com/Spla4sH/mario-reinforcement.git
+cd mario-reinforcement
+
+# Abhängigkeiten installieren
+pip install -r requirements.txt
+
+# Paket editierbar installieren, damit scripts/ die Kernmodule findet
+pip install -e .
+
+# Training starten (öffnet Live-Spielfenster)
+python scripts/train.py
+
+# Kurzer Probelauf (z. B. zum Testen), optional ohne Fenster
+python scripts/train.py --episodes 300
+python scripts/train.py --episodes 300 --no-render
+```
+
+**Voraussetzungen:**
+- Python 3.10+
+- NVIDIA GPU mit CUDA empfohlen (CPU funktioniert, aber deutlich langsamer)
+
+> **Ohne eigenes Training loslegen:** Alle 32 trainierten Modelle gibt es als Release
+> ([v1.0](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.0) = Welt 1–4,
+> [v1.1](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.1) = Welt 5,
+> [v1.2](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.2) = Welt 6,
+> [v1.3](https://github.com/Spla4sH/mario-reinforcement/releases/tag/v1.3) = Welt 7+8) –
+> `mario_best.pt` nach `checkpoints/`, die `.zip`-Modelle nach `checkpoints_ppo/` legen,
+> dann direkt `python scripts/play.py` bzw. `python scripts/play_ppo.py --model … --world … --stage …`.
+
+> Erster Probelauf? Folge der Checkliste in [TESTLAUF.md](TESTLAUF.md).
+
+### Mit Docker (headless Training)
+
+```bash
+# Image bauen
+docker build -t mario-rl .
+
+# Training im Container starten (GPU durchreichen)
+docker run --gpus all mario-rl python scripts/train.py --no-render --episodes 2000
+```
+
+Für den Cluster liegt unter [k8s/](k8s/) ein Kubernetes-`Job` inkl. `PersistentVolumeClaim`
+(GPU-Request, Checkpoints/Logs persistent) – und der
+[Hyperparameter-Sweep](#mlops-hyperparameter-sweep-als-parallele-kubernetes-jobs) weiter
+unten wurde damit real ausgeführt.
+
+### Tests & Linting
+
+```bash
+pip install -r requirements-dev.txt
+ruff check .   # Linting
+pytest         # Tests
+```
+
+Die Tests laufen ohne Emulator/GPU (sie prüfen Replay-Memory, Metriken, Plots,
+Reward-Shaping, Greedy-Eval, Grad-CAM-Logik und die Config) und werden bei jedem
+Push automatisch per [GitHub Actions](.github/workflows/ci.yml) ausgeführt.
+
+### Experiment-Tracking (optional, Weights & Biases)
+
+```bash
+pip install wandb && wandb login
+USE_WANDB=1 python scripts/train.py --no-render
+```
+
+Loggt Live-Metriken (Reward, x-Position, Epsilon, Loss) und die Greedy-Eval in ein
+**W&B-Dashboard** – ideal, um Trainingsläufe zu vergleichen und Hyperparameter-Sweeps
+auszuwerten. Ist `wandb` nicht installiert oder `USE_WANDB` nicht gesetzt, läuft das
+Training unverändert ohne Tracking weiter.
+
+## Projektstruktur
+
+```
+mario-reinforcement/
+├── mario/                # importierbares Paket (alles, was mehrfach gebraucht wird)
+│   ├── agent.py          # Double DQN Agent + Replay Memory
+│   ├── model.py          # CNN-Architektur
+│   ├── wrappers.py       # Bildvorverarbeitung & Environment-Wrapper
+│   ├── reward.py         # Reward-Shaping (Skalierung/Clipping, ProgressReward)
+│   ├── config.py         # Hyperparameter (per Env-Variablen überschreibbar)
+│   ├── metrics.py        # CSV-Logging der Trainingsmetriken
+│   ├── evaluate.py       # Greedy-Evaluation (flag_get-Rate, x-Position)
+│   ├── tracking.py       # Optionales W&B-Experiment-Tracking (ausfallsicher)
+│   ├── mario_ppo_env.py  # Gymnasium-Brücke (shimmy) für PPO
+│   ├── record.py         # Frames sammeln + als GIF speichern
+│   ├── plot.py           # Graphen aus den Metriken
+│   ├── visualize.py      # Grad-CAM fürs DQN – auch per `python -m mario.visualize`
+│   ├── visualize_ppo.py  # Grad-CAM für PPO (SB3-CnnPolicy)
+│   └── demo.py           # Level-Tabelle + Predictoren der Gradio-Demo
+│
+├── scripts/              # alles Ausführbare
+│   ├── train.py          # DQN-Training mit Live-Anzeige
+│   ├── train_ppo.py      # PPO-Training (Stable-Baselines3, eigenes venv)
+│   ├── play.py           # Trainierten DQN-Agenten greedy zuschauen
+│   ├── play_ppo.py       # PPO-Agenten live zuschauen (auch Zwischenstände)
+│   ├── eval_ppo.py       # Greedy-Eval: Flaggen-Rate über N Episoden
+│   ├── goexplore.py      # Savestate-Suche gegen Hard-Exploration-Stellen
+│   ├── imitate.py        # Behavior Cloning (bc / bc-seq)
+│   ├── human_vs_ki.py    # Eigenen Lauf aufnehmen + Side-by-Side-GIF
+│   ├── gen_demos.py      # Demo-MP4s + results.json für den HF-Space
+│   ├── gif_ppo.py        # Deterministische PPO-Episode als GIF
+│   ├── death_map.py      # „Wo stirbt Mario?" – Todes-Dichten über Level-Panorama
+│   ├── sweep_plot.py     # Sweep-Varianten vergleichen
+│   └── app.py            # Startet die lokale Gradio-Demo
+│
+├── assets/               # GIFs und Grafiken fürs README
+├── tests/                # pytest-Suite (läuft ohne Emulator und GPU)
+├── k8s/                  # Kubernetes: Trainings-Job, Sweep, Reader-Pod
+├── deploy/               # Hugging Face Space (statische Demo) – siehe DEPLOY.md
+├── .github/              # GitHub-Actions-CI (Lint + Tests)
+├── Dockerfile            # Headless-Training als Container
+├── pyproject.toml        # Paket-, Lint- und Test-Konfiguration
+└── requirements.txt
+```
 
 ## Konfiguration
 
