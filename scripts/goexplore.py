@@ -18,7 +18,7 @@ immer neu anlaufen.**
 Beispiel 2-1 (fand den Trampolin-Superbounce nach 81 Kandidaten):
     python goexplore.py --model checkpoints_ppo/mario_ppo_2-1_bc_ft.zip \\
         --world 2 --stage 1 --backup-x 2940 --success-x 3150 \\
-        --save-best tower_seq_2-1.npz
+        --save-best sequences/tower_seq_2-1.npz
 
 Nur im `.venv-ppo` lauffähig. FRAME_SKIP beachten – die gefundene Sequenz
 gilt für den Skip, mit dem gesucht wurde (wird in der .npz mitgespeichert).
@@ -27,6 +27,7 @@ gilt für den Skip, mit dem gesucht wurde (wird in der .npz mitgespeichert).
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 
 import numpy as np
@@ -211,6 +212,7 @@ def main() -> None:
     # mehreren Weichen) ist der beste Zwischenstand die Grundlage der nächsten
     # Stufe – ihn zu verwerfen würde die ganze Suche wiederholen.
     if args.save_best and best_seq:
+        os.makedirs(os.path.dirname(args.save_best) or ".", exist_ok=True)
         np.savez_compressed(
             args.save_best,
             head=np.array(head_actions, dtype=np.int8),

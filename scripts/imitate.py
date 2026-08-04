@@ -6,9 +6,9 @@ Policy auf diese Spur, PPO-Feintuning macht sie robust.
 
 Ablauf (alles im .venv-ppo):
   1) Demo aufnehmen (Fenster; bis Tod/Flagge spielen – mindestens über die Hängestelle):
-       python imitate.py record --world 2 --stage 1 --out demo_2-1.npz
+       python imitate.py record --world 2 --stage 1 --out recordings/demo_2-1.npz
   2) Behavior Cloning auf ein bestehendes Modell:
-       python imitate.py bc --demo demo_2-1.npz --model checkpoints_ppo/mario_ppo_2-1.zip \
+       python imitate.py bc --demo recordings/demo_2-1.npz --model checkpoints_ppo/mario_ppo_2-1.zip \
            --out checkpoints_ppo/mario_ppo_2-1_bc.zip
   3) PPO-Feintuning wie gewohnt:
        python train_ppo.py --world 2 --stage 1 --resume-from checkpoints_ppo/mario_ppo_2-1_bc.zip ...
@@ -18,7 +18,7 @@ Lösungssequenz (Policy-Anlauf + Such-Tail) in die Policy. Anders als beim
 menschlichen Demo-BC gibt es hier keinen Distribution Shift – der Anlauf IST
 das greedy-Verhalten der Policy. Trainiert bis die Policy den Lauf greedy
 exakt reproduziert (deterministisches Env → Flagge):
-       python imitate.py bc-seq --seq tower_seq_2-1.npz \
+       python imitate.py bc-seq --seq sequences/tower_seq_2-1.npz \
            --model checkpoints_ppo/mario_ppo_2-1.zip \
            --out checkpoints_ppo/mario_ppo_2-1_tower.zip
 """
@@ -26,6 +26,7 @@ exakt reproduziert (deterministisches Env → Flagge):
 from __future__ import annotations
 
 import argparse
+import os
 from collections import Counter, deque
 
 import numpy as np
@@ -57,6 +58,7 @@ def record(world: int, stage: int, out: str) -> None:
     """
     from nes_py.app.play_human import play_human
 
+    os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     env = _make_raw_env(world, stage)
     actions: list[int] = []
     state = {"attempt": 1, "best_x": 0}
@@ -320,10 +322,10 @@ def main() -> None:
     p_rec = sub.add_parser("record", help="menschliche Demo aufnehmen (öffnet Fenster)")
     p_rec.add_argument("--world", type=int, default=2)
     p_rec.add_argument("--stage", type=int, default=1)
-    p_rec.add_argument("--out", default="demo_2-1.npz")
+    p_rec.add_argument("--out", default="recordings/demo_2-1.npz")
 
     p_bc = sub.add_parser("bc", help="Behavior Cloning auf ein PPO-Modell")
-    p_bc.add_argument("--demo", default="demo_2-1.npz")
+    p_bc.add_argument("--demo", default="recordings/demo_2-1.npz")
     p_bc.add_argument("--model", default="checkpoints_ppo/mario_ppo_2-1.zip")
     p_bc.add_argument("--out", default="checkpoints_ppo/mario_ppo_2-1_bc.zip")
     p_bc.add_argument("--epochs", type=int, default=8)

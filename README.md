@@ -685,6 +685,7 @@ mario-reinforcement/
 │   └── app.py            # Startet die lokale Gradio-Demo
 │
 ├── assets/               # GIFs und Grafiken fürs README
+├── sequences/            # Lösungssequenzen der Go-Explore-Level (je ~1 KB, nachspielbar)
 ├── tests/                # pytest-Suite (läuft ohne Emulator und GPU)
 ├── k8s/                  # Kubernetes: Trainings-Job, Sweep, Reader-Pod
 ├── deploy/               # Hugging Face Space (statische Demo) – siehe DEPLOY.md

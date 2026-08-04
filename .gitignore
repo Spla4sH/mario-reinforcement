@@ -7,11 +7,12 @@ checkpoints/
 checkpoints*/
 *.pt
 *.npz
-# Ausnahme: die Lösungssequenzen (2-1, 4-4) sind winzig und machen das Ergebnis reproduzierbar
-!tower_seq_2-1.npz
-!maze_seq_4-4.npz
-!maze_seq_7-4.npz
-!axt_seq_8-4.npz
+# Ausnahme: die Loesungssequenzen sind winzig (je ~1 KB) und machen jede per
+# Go-Explore geknackte Passage Schritt fuer Schritt nachvollziehbar.
+# Zwischenstufen und eigene Spielaufnahmen bleiben lokal.
+!sequences/*.npz
+sequences/zwischenstufen/
+recordings/
 # Build-Artefakte von 'pip install -e .'
 *.egg-info/
 __pycache__/

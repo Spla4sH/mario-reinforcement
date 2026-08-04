@@ -3,7 +3,7 @@
 Einfachster Weg – ohne Level-Argumente starten, dann fragt ein Terminal-Menü das
 Level ab (1-1…4-4) und wählt das passende Modell automatisch:
 
-    python human_vs_ki.py record                # Menü -> spielen -> mensch_<w>-<s>.npz
+    python human_vs_ki.py record                # Menü -> spielen -> recordings/mensch_<w>-<s>.npz
     python human_vs_ki.py compose               # Menü -> GIF mensch_vs_ki_<w>-<s>.gif
     # PPO-Level (alles außer 1-1) für compose im .venv-ppo ausführen:
     .venv-ppo/Scripts/python human_vs_ki.py compose
@@ -28,6 +28,7 @@ ersten echten Eingabe – Fenster-Zurechtrücken landet nicht im GIF):
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 
 import numpy as np
@@ -130,6 +131,7 @@ def record_human(world: int, stage: int, out: str) -> None:
     """Öffnet das Spiel-Fenster und zeichnet die erste Episode (bis done) auf."""
     from nes_py.app.play_human import play_human
 
+    os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
     env = _make_human_env(world, stage)
     frames: list[np.ndarray] = []
     tasten: list[int] = []
@@ -268,10 +270,10 @@ def main() -> None:
     p_rec = sub.add_parser("record", help="eigenen Lauf aufnehmen (öffnet Fenster)")
     p_rec.add_argument("--world", type=int, default=None, help="ohne Angabe: Level-Menü")
     p_rec.add_argument("--stage", type=int, default=None)
-    p_rec.add_argument("--out", default=None, help="Standard: mensch_<world>-<stage>.npz")
+    p_rec.add_argument("--out", default=None, help="Standard: recordings/mensch_<world>-<stage>.npz")
 
     p_cmp = sub.add_parser("compose", help="Side-by-Side-GIF bauen")
-    p_cmp.add_argument("--human", default=None, help="Standard: mensch_<world>-<stage>.npz")
+    p_cmp.add_argument("--human", default=None, help="Standard: recordings/mensch_<world>-<stage>.npz")
     p_cmp.add_argument("--checkpoint", default="checkpoints/mario_best.pt")
     p_cmp.add_argument("--world", type=int, default=None, help="ohne Angabe: Level-Menü (wählt auch das Modell)")
     p_cmp.add_argument("--stage", type=int, default=None)
@@ -296,10 +298,10 @@ def main() -> None:
             ppo = level["path"]
 
     if args.cmd == "record":
-        out = args.out or f"mensch_{world}-{stage}.npz"
+        out = args.out or f"recordings/mensch_{world}-{stage}.npz"
         record_human(world, stage, out)
     else:
-        human = args.human or f"mensch_{world}-{stage}.npz"
+        human = args.human or f"recordings/mensch_{world}-{stage}.npz"
         out = args.out or f"assets/mensch_vs_ki_{world}-{stage}.gif"
         compose(human, out, args.checkpoint, world, stage, args.trim_start, ppo)
 
